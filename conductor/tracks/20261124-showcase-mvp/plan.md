@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-2, NFR-1, NFR-7, NFR-9, AC-1, AC-2, AC-16, AC-18, AC-22
 - **Touches:** `package.json`, `pnpm-lock.yaml`, `astro.config.mjs`, `tsconfig.json`, oxlint/oxfmt configs, `src/content.config.ts`, `src/lib/scene-manifest.ts`, `src/content/lessons/heart.mdx`, `src/pages/index.astro`, `src/pages/lessons/[slug].astro`, `src/styles/**`, `tests/unit/*manifest*.test.ts`, `LICENSE`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Scaffold pnpm + Astro 7 + React island integration + TS 6.0.3** — covers: FR-1
 - [ ] **P1.T2: Configure oxlint/oxfmt/Vitest/coverage against the copied style guides** — covers: NFR-7
