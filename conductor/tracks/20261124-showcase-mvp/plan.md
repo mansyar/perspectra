@@ -13,24 +13,21 @@
 - **Depends on:** none
 - **Covers:** FR-1, FR-2, NFR-1, NFR-7, NFR-9, AC-1, AC-2, AC-16, AC-18, AC-22
 - **Touches:** `package.json`, `pnpm-lock.yaml`, `astro.config.mjs`, `tsconfig.json`, oxlint/oxfmt configs, `src/content.config.ts`, `src/lib/scene-manifest.ts`, `src/content/lessons/heart.mdx`, `src/pages/index.astro`, `src/pages/lessons/[slug].astro`, `src/styles/**`, `tests/unit/*manifest*.test.ts`, `LICENSE`
-- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build`
-- **Status:** in_progress
+- **Verification:** `pnpm verify`
+- **Status:** verified
 
-- [ ] **P1.T1: Scaffold pnpm + Astro 7 + React island integration + TS 6.0.3** — covers: FR-1
-- [ ] **P1.T2: Configure oxlint/oxfmt/Vitest/coverage against the copied style guides** — covers: NFR-7
-- [ ] **P1.T3: Define lessons collection + generic Zod scene manifest** — covers: FR-2, NFR-9
-  - [ ] P1.T3.1: Manifest schema (model, camera, hotspots with IDs/positions)
-  - [ ] P1.T3.2: Build-time validation that every `data-hotspot` has a manifest ID
-- [ ] **P1.T4: Author heart lesson MDX with six hotspots and layered prose** — covers: FR-2
-- [ ] **P1.T5: Build static catalog + lesson page shell** — covers: FR-1, NFR-1
-- [ ] **P1.T6: Add contract tests, a second-topic simulation, and license file** — covers: AC-2, AC-16, AC-22
+- [x] **P1.T1: Scaffold pnpm + Astro 7 + React island integration + TS 6.0.3** — covers: FR-1
+- [x] **P1.T2: Configure oxlint/oxfmt/Vitest/coverage against the copied style guides** — covers: NFR-7
+- [x] **P1.T3: Define lessons collection + generic Zod scene manifest** — covers: FR-2, NFR-9
+  - [x] P1.T3.1: Manifest schema (model, camera, hotspots with IDs/positions)
+  - [x] P1.T3.2: Build-time validation that every `data-hotspot` has a manifest ID
+- [x] **P1.T4: Author heart lesson MDX with six hotspots and layered prose** — covers: FR-2
+- [x] **P1.T5: Build static catalog + lesson page shell** — covers: FR-1, NFR-1
+- [x] **P1.T6: Add contract tests, a second-topic simulation, and license file** — covers: AC-2, AC-16, AC-22
 
-<!--
-The primary appends after acceptance:
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** ecff8e7
 **Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-1.md
--->
 
 ## Phase 2: 3D Scene & Hotspot Binding
 
@@ -38,7 +35,7 @@ The primary appends after acceptance:
 - **Depends on:** Phase 1
 - **Covers:** FR-3, FR-4, FR-13, NFR-2, NFR-5, NFR-6, AC-3, AC-4, AC-5, AC-19
 - **Touches:** `assets/heart/**`, `public/assets/heart/**`, `src/components/scene/**`, `src/lib/hotspot-store.ts`, `src/components/prose/**`, `tests/unit/hotspot-store.test.ts`, `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts`
-- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build && pnpm smoke && pnpm test:e2e`
+- **Verification:** `pnpm verify && pnpm smoke && pnpm test:e2e`
 - **Status:** pending
 
 - [ ] **P2.T1: Write ASSET_CONTRACT.md and author the Blender recipe (MCP-assisted) producing GLB + poster** — covers: FR-13
@@ -63,7 +60,7 @@ The primary appends after acceptance:
 - **Depends on:** Phase 1
 - **Covers:** FR-6, FR-11, NFR-3, NFR-4, AC-7, AC-13, AC-21
 - **Touches:** `api/**`, `drizzle.config.ts`, `migrations/**`, `wrangler.toml`, `src/lib/offline-queue.ts`, `src/lib/api-client.ts`, `tests/integration/progress.test.ts`, `tests/unit/api-client.test.ts`
-- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build`
+- **Verification:** `pnpm verify`
 - **Status:** pending
 
 - [ ] **P3.T1: Scaffold Hono Worker with env bindings and health endpoint** — covers: NFR-4
@@ -86,7 +83,7 @@ The primary appends after acceptance:
 - **Depends on:** Phase 2, Phase 3
 - **Covers:** FR-5, FR-7, FR-8, NFR-3, NFR-4, NFR-6, AC-6, AC-8, AC-9, AC-10, AC-17, AC-20, AC-21
 - **Touches:** `api/src/routes/tutor.ts`, `api/src/lib/{retrieval,prompt,llm,quota,intent}.ts`, `scripts/embed-lessons.ts`, `src/components/tutor/**`, `src/lib/tutor-client.ts`, `tests/unit/{retrieval,prompt,quota,intent}.test.ts`, `tests/integration/tutor.test.ts`, `tests/e2e/tutor.spec.ts`
-- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build`
+- **Verification:** `pnpm verify`
 - **Status:** pending
 
 - [ ] **P4.T1: Chunk MDX, embed into pgvector, build hybrid BM25+vector retrieval** — covers: FR-7
@@ -109,7 +106,7 @@ The primary appends after acceptance:
 - **Depends on:** Phase 4
 - **Covers:** FR-9, FR-10, FR-12, AC-11, AC-12, AC-14, AC-15
 - **Touches:** `api/src/lib/mastery.ts`, `api/src/routes/{quiz,badge}.ts`, `api/src/lib/badge.ts`, `src/pages/verify.astro`, `src/components/mastery/**`, `src/components/quiz/**`, `tests/unit/{mastery,badge,quiz}.test.ts`, `tests/integration/badge.test.ts`, `tests/e2e/learning-loop.spec.ts`
-- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build && pnpm smoke && pnpm test:e2e`
+- **Verification:** `pnpm verify && pnpm smoke && pnpm test:e2e`
 - **Status:** pending
 
 - [ ] **P5.T1: BKT + FSRS mastery engine and heatmap state** — covers: FR-10
@@ -131,7 +128,7 @@ The primary appends after acceptance:
 - **Depends on:** Phase 5
 - **Covers:** FR-1, FR-14, NFR-1, NFR-5, NFR-6, NFR-8, AC-1, AC-18, AC-19, AC-20, AC-22
 - **Touches:** `README.md`, `src/styles/global.css`, `src/pages/index.astro`, `src/components/**`, `tests/e2e/**`, `lighthouse.config.*`, `docs/**`, `conductor/tracks/20261124-showcase-mvp/verification/**`
-- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build && pnpm smoke && pnpm test:e2e`
+- **Verification:** `pnpm verify && pnpm smoke && pnpm test:e2e`
 - **Status:** pending
 
 - [ ] **P6.T1: Design tokens, responsive polish, light reading surface** — covers: FR-1
