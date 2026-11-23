@@ -120,6 +120,15 @@ permissions:
   - action: shell
     resource: "pnpm verify *"
     effect: allow
+  - action: shell
+    resource: "pnpm verify"
+    effect: allow
+  - action: shell
+    resource: "pnpm smoke"
+    effect: allow
+  - action: shell
+    resource: "pnpm test:e2e"
+    effect: allow
 ---
 
 <!-- Conductor agent template: v2.3 -->
