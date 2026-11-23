@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "astro": true,
+  "ignorePatterns": [
+    "dist/**",
+    ".astro/**",
+    "node_modules/**",
+    "coverage/**",
+    "pnpm-lock.yaml",
+    ".opencode/**",
+    "conductor/**",
+    "AGENTS.md",
+    "LICENSE",
+    "*.md"
+  ],
+  "printWidth": 100,
+  "proseWrap": "preserve",
+  "singleQuote": true,
+  "sortPackageJson": false,
+  "tabWidth": 2
+}

@@ -1,0 +1,126 @@
+:root {
+  --color-accent: #0d6e6e;
+  --color-bg: #f7f7f4;
+  --color-ink: #16201f;
+  --color-muted: #54605e;
+  --color-surface: #fff;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgb(22 32 31 / 8%);
+  --space-lg: 2rem;
+  --space-md: 1rem;
+  --space-sm: 0.5rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.site-header {
+  border-bottom: 1px solid var(--color-bg);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.site-header__brand {
+  color: var(--color-ink);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.page {
+  margin: 0 auto;
+  max-width: 60rem;
+  padding: var(--space-lg);
+}
+
+.page__intro {
+  color: var(--color-muted);
+  font-size: 1.125rem;
+  max-width: 44rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-md);
+}
+
+.lesson-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  list-style: none;
+  margin: 0 0 var(--space-lg);
+  padding: 0;
+}
+
+.lesson-card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-md);
+}
+
+.lesson-card a {
+  color: inherit;
+  display: block;
+  text-decoration: none;
+}
+
+.lesson-card a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.lesson-card__topic {
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lesson-card h3 {
+  margin: var(--space-sm) 0;
+}
+
+.lesson-card p {
+  color: var(--color-muted);
+  margin: 0 0 var(--space-md);
+}
+
+.lesson-card__cta {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.lesson-card--placeholder {
+  border: 1px dashed var(--color-muted);
+  box-shadow: none;
+  opacity: 0.75;
+}
+
+.lesson-card__badge {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-bg);
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  padding: var(--space-md) var(--space-lg);
+}

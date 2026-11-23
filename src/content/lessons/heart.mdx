@@ -1,0 +1,135 @@
+---
+title: The Human Heart
+description: A guided tour of cardiac anatomy through six interactive landmarks.
+topic: cardiovascular
+status: live
+order: 1
+model:
+  src: /assets/heart/heart.glb
+  poster: /assets/heart/heart-poster.webp
+camera:
+  position: [0, 0.3, 4.2]
+  target: [0, 0, 0]
+  fov: 42
+hotspots:
+  - id: left_ventricle
+    label: Left ventricle
+    position: [0.22, -0.18, 0.38]
+  - id: right_ventricle
+    label: Right ventricle
+    position: [-0.24, -0.16, 0.34]
+  - id: aorta
+    label: Aorta
+    position: [0.05, 0.48, 0.12]
+  - id: pulmonary_artery
+    label: Pulmonary artery
+    position: [-0.08, 0.42, 0.28]
+  - id: mitral_valve
+    label: Mitral valve
+    position: [0.16, 0.06, 0.26]
+  - id: aortic_valve
+    label: Aortic valve
+    position: [0.04, 0.18, 0.2]
+---
+
+The heart is a four-chambered pump that moves blood through two circuits at once. The
+six landmarks below trace a single drop of blood from the body, through the lungs, and
+back out to the body again. Each landmark carries three layers of explanation: an
+overview, a structural detail, and a clinical note.
+
+<div id="left_ventricle" data-hotspot="left_ventricle">
+  <h2>Left ventricle</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The left ventricle is the strongest chamber. It pushes oxygen-rich
+    blood out through the aorta and into the systemic circulation.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> Its wall is roughly three times thicker than the right ventricle
+    because it must generate pressure sufficient to reach the brain, kidneys, and toes.
+  </p>
+  <p data-layer="clinical">
+    <strong>Clinical note.</strong> A weakened left ventricle reduces ejection fraction and is the
+    most common cause of systolic heart failure.
+  </p>
+</div>
+
+<div id="right_ventricle" data-hotspot="right_ventricle">
+  <h2>Right ventricle</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The right ventricle receives oxygen-poor blood from the right atrium
+    and sends it toward the lungs through the pulmonary artery.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> Its crescent-shaped cavity wraps around the left ventricle and operates
+    at a much lower pressure, because the pulmonary circuit offers far less resistance.
+  </p>
+  <p data-layer="clinical">
+    <strong>Clinical note.</strong> Right ventricular failure often shows as peripheral edema and is
+    a common consequence of severe lung disease.
+  </p>
+</div>
+
+<div id="aorta" data-hotspot="aorta">
+  <h2>Aorta</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The aorta is the largest artery in the body. It carries oxygenated
+    blood from the left ventricle to every systemic branch.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> The ascending aorta gives off the coronary arteries just above the
+    aortic valve, then arches to supply the head and upper limbs before descending.
+  </p>
+  <p data-layer="clinical">
+    <strong>Clinical note.</strong> Sudden tearing chest pain can indicate an aortic dissection, a
+    tear in the inner wall that requires emergency care.
+  </p>
+</div>
+
+<div id="pulmonary_artery" data-hotspot="pulmonary_artery">
+  <h2>Pulmonary artery</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The pulmonary artery is unusual: it is an artery that carries
+    oxygen-poor blood, on its way to the lungs for gas exchange.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> The main trunk branches into left and right pulmonary arteries,
+    following the bronchi into each lung and eventually forming a capillary network around the
+    alveoli.
+  </p>
+  <p data-layer="clinical">
+    <strong>Clinical note.</strong> A blockage here is a pulmonary embolism; elevated pressure in
+    this circuit is pulmonary hypertension.
+  </p>
+</div>
+
+<div id="mitral_valve" data-hotspot="mitral_valve">
+  <h2>Mitral valve</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The mitral valve sits between the left atrium and left ventricle. It
+    lets blood fill the ventricle and then seals to prevent backflow during contraction.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> Two leaflets are tethered to papillary muscles by chordae tendineae,
+    which stop the leaflets from prolapsing into the atrium under pressure.
+  </p>
+  <p data-layer="clinical">
+    <strong>Clinical note.</strong> Mitral regurgitation produces a systolic murmur; a common
+    degenerative cause is mitral valve prolapse.
+  </p>
+</div>
+
+<div id="aortic_valve" data-hotspot="aortic_valve">
+  <h2>Aortic valve</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The aortic valve guards the exit from the left ventricle into the
+    aorta, opening during systole and closing during diastole.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> It usually has three semilunar cusps whose pockets fill with
+    backflowing blood to seal the opening, and whose nearby sinuses feed the coronary arteries.
+  </p>
+  <p data-layer="clinical">
+    <strong>Clinical note.</strong> A congenital bicuspid aortic valve is common and can lead to
+    stenosis or regurgitation later in life.
+  </p>
+</div>

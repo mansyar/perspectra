@@ -1,1 +1,6 @@
 .conductor/
+node_modules/
+dist/
+.astro/
+coverage/
+
