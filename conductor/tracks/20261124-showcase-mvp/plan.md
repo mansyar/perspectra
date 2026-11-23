@@ -36,7 +36,7 @@
 - **Covers:** FR-3, FR-4, FR-13, NFR-2, NFR-5, NFR-6, AC-3, AC-4, AC-5, AC-19
 - **Touches:** `assets/heart/**`, `public/assets/heart/**`, `src/components/scene/**`, `src/lib/hotspot-store.ts`, `src/components/prose/**`, `tests/unit/hotspot-store.test.ts`, `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts`
 - **Verification:** `pnpm verify && pnpm smoke && pnpm test:e2e`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Write ASSET_CONTRACT.md and author the Blender recipe (MCP-assisted) producing GLB + poster** — covers: FR-13
   - [ ] P2.T1.1: Six named meshes matching hotspot IDs, Y-up glTF, semi-realistic low-poly, <1 MB
