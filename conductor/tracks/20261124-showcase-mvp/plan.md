@@ -35,7 +35,7 @@
 - **Depends on:** Phase 1
 - **Covers:** FR-3, FR-4, FR-13, NFR-2, NFR-5, NFR-6, AC-3, AC-4, AC-5, AC-19
 - **Touches:** `assets/heart/**`, `public/assets/heart/**`, `src/components/scene/**`, `src/lib/hotspot-store.ts`, `src/components/prose/**`, `tests/unit/hotspot-store.test.ts`, `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts`
-- **Verification:** `pnpm verify && pnpm smoke && pnpm test:e2e`
+- **Verification:** `pnpm verify:full`
 - **Status:** in_progress
 
 - [ ] **P2.T1: Write ASSET_CONTRACT.md and author the Blender recipe (MCP-assisted) producing GLB + poster** — covers: FR-13
@@ -106,7 +106,7 @@ The primary appends after acceptance:
 - **Depends on:** Phase 4
 - **Covers:** FR-9, FR-10, FR-12, AC-11, AC-12, AC-14, AC-15
 - **Touches:** `api/src/lib/mastery.ts`, `api/src/routes/{quiz,badge}.ts`, `api/src/lib/badge.ts`, `src/pages/verify.astro`, `src/components/mastery/**`, `src/components/quiz/**`, `tests/unit/{mastery,badge,quiz}.test.ts`, `tests/integration/badge.test.ts`, `tests/e2e/learning-loop.spec.ts`
-- **Verification:** `pnpm verify && pnpm smoke && pnpm test:e2e`
+- **Verification:** `pnpm verify:full`
 - **Status:** pending
 
 - [ ] **P5.T1: BKT + FSRS mastery engine and heatmap state** — covers: FR-10
@@ -128,7 +128,7 @@ The primary appends after acceptance:
 - **Depends on:** Phase 5
 - **Covers:** FR-1, FR-14, NFR-1, NFR-5, NFR-6, NFR-8, AC-1, AC-18, AC-19, AC-20, AC-22
 - **Touches:** `README.md`, `src/styles/global.css`, `src/pages/index.astro`, `src/components/**`, `tests/e2e/**`, `lighthouse.config.*`, `docs/**`, `conductor/tracks/20261124-showcase-mvp/verification/**`
-- **Verification:** `pnpm verify && pnpm smoke && pnpm test:e2e`
+- **Verification:** `pnpm verify:full`
 - **Status:** pending
 
 - [ ] **P6.T1: Design tokens, responsive polish, light reading surface** — covers: FR-1

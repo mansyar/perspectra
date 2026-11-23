@@ -124,6 +124,12 @@ permissions:
     resource: "pnpm verify"
     effect: allow
   - action: shell
+    resource: "pnpm verify:full *"
+    effect: allow
+  - action: shell
+    resource: "pnpm verify:full"
+    effect: allow
+  - action: shell
     resource: "pnpm smoke"
     effect: allow
   - action: shell
