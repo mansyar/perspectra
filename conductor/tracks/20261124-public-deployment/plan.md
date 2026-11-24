@@ -69,8 +69,8 @@ Review fixes are appended by `conductor-review` as needed.
 
 - **Goal:** The public workers.dev URL runs the full vertical slice against real Cloudflare, Neon, OAuth, and Gemini services.
 - **Depends on:** Phase 3
-- **Covers:** FR-7, FR-8, FR-9, AC-4, AC-5, AC-6, AC-7, AC-8, AC-10, NFR-2, NFR-4, NFR-6, NFR-8
-- **Touches:** ignored local environment files, `scripts/prepare-deploy.mjs`, `api/src/index.ts`, `tests/unit/prepare-deploy.test.ts`, `tests/integration/worker-assets.test.ts`, `docs/DEPLOYMENT.md`, production and browser evidence
+- **Covers:** FR-1, FR-2, FR-7, FR-8, FR-9, AC-2, AC-4, AC-5, AC-6, AC-7, AC-8, AC-10, NFR-2, NFR-4, NFR-6, NFR-8
+- **Touches:** ignored local environment files, `scripts/prepare-deploy.mjs`, `api/src/index.ts`, `api/src/db/schema.ts`, `migrations/**`, `tests/unit/prepare-deploy.test.ts`, `tests/integration/worker-assets.test.ts`, `tests/unit/auth-schema.test.ts`, `docs/DEPLOYMENT.md`, production and browser evidence
 - **Verification:** `pnpm verify:full`, `pnpm test:production`, and primary browser verification
 - **Status:** in_progress
 
@@ -79,6 +79,7 @@ Review fixes are appended by `conductor-review` as needed.
 - [ ] **P4.T3: Verify GitHub, Google, and email/password auth on the public origin** — covers: AC-5
 - [ ] **P4.T4: Verify anonymous and authenticated tutor, quiz, mastery, and badge flows** — covers: FR-9, AC-6, AC-7, AC-8
 - [ ] **P4.T5: Run production E2E, browser, console, and Lighthouse checks and record evidence** — covers: AC-9, AC-10, NFR-2, NFR-8
+- [ ] **P4.T6: Align the Better Auth session schema and migration with the installed adapter version** — covers: FR-2, FR-8, AC-2
 
 ## Phase 5: Integrated Verification & Proof
 
