@@ -31,13 +31,13 @@ The primary appends after acceptance:
 
 - **Goal:** Chat and embeddings both use Gemini, with deterministic 1536-dimensional vectors compatible with the existing schema.
 - **Depends on:** Phase 1
-- **Covers:** FR-3, FR-4, FR-5, AC-3, AC-4
+- **Covers:** FR-3, FR-4, FR-5, NFR-4, AC-3, AC-4
 - **Touches:** `api/src/env.ts`, `api/src/lib/llm.ts`, `scripts/embed-lessons.ts`, relevant unit/integration tests
 - **Verification:** `pnpm verify:full`
 - **Status:** pending
 
 - [ ] **P2.T1: Extend environment and LLM adapter contracts for Gemini embeddings** — covers: FR-3
-- [ ] **P2.T2: Implement gemini-embedding-2 batch requests, dimension validation, and normalization** — covers: FR-4
+- [ ] **P2.T2: Implement gemini-embedding-2 batch requests, dimension validation, and normalization** — covers: FR-4, NFR-4
 - [ ] **P2.T3: Update lesson ingestion to use the shared adapter and reject mixed embedding spaces** — covers: FR-5
 - [ ] **P2.T4: Add Gemini request, response, ordering, dimension, and failure tests** — covers: FR-3, FR-4, AC-3
 - [ ] **P2.T5: Record phase 2 evidence** — covers: FR-5, AC-4
