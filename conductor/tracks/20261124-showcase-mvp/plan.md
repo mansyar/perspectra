@@ -57,7 +57,7 @@
 - **Covers:** FR-6, FR-11, NFR-3, NFR-4, AC-7, AC-13, AC-21
 - **Touches:** `api/**`, `drizzle.config.ts`, `migrations/**`, `wrangler.toml`, `src/lib/offline-queue.ts`, `src/lib/api-client.ts`, `tests/integration/progress.test.ts`, `tests/unit/api-client.test.ts`
 - **Verification:** `pnpm verify`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Scaffold Hono Worker with env bindings and health endpoint** — covers: NFR-4
 - [ ] **P3.T2: Drizzle schema + Neon pgvector migration + lesson seed** — covers: FR-6
