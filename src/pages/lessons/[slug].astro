@@ -1,5 +1,7 @@
 ---
 import { getCollection, getEntry, render } from 'astro:content';
+import { MasteryPanel } from '../../components/mastery/MasteryPanel';
+import { QuizPanel } from '../../components/quiz/QuizPanel';
 import { ProseHotspotBinder } from '../../components/prose/ProseHotspotBinder';
 import { SceneIsland } from '../../components/scene/SceneIsland';
 import { TutorDock } from '../../components/tutor/TutorDock';
@@ -81,6 +83,12 @@ const modelSrc = modelAssets[modelKey] ?? manifest.model.src;
         lessonId={entry.id}
         hotspots={manifest.hotspots.map((hotspot) => hotspot.id)}
       />
+      <MasteryPanel
+        client:load
+        lessonId={entry.id}
+        hotspots={manifest.hotspots.map((hotspot) => hotspot.id)}
+      />
+      <QuizPanel client:load lessonId={entry.id} />
       <ProseHotspotBinder client:load />
     </main>
     <footer class="site-footer">

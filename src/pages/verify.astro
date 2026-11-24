@@ -1,0 +1,86 @@
+---
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Verify a Perspectra Open Badge credential." />
+    <title>Verify credential — Perspectra</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-header__brand" href="/">
+        Perspectra
+      </a>
+    </header>
+    <main class="page">
+      <h1>Credential verification</h1>
+      <p data-verify-status role="status">
+        Checking credential…
+      </p>
+      <dl data-verify-details hidden>
+        <dt>Achievement</dt>
+        <dd data-verify-achievement></dd>
+        <dt>Issuer</dt>
+        <dd data-verify-issuer></dd>
+        <dt>Issued</dt>
+        <dd data-verify-issued></dd>
+      </dl>
+    </main>
+  </body>
+</html>
+
+<script>
+  function setText(selector: string, value: string): void {
+    const node = document.querySelector<HTMLElement>(selector);
+    if (node) {
+      node.textContent = value;
+    }
+  }
+
+  void (async () => {
+    const status = document.querySelector<HTMLElement>('[data-verify-status]');
+    const details = document.querySelector<HTMLElement>('[data-verify-details]');
+    const credential = new URLSearchParams(location.search).get('credential');
+    if (!credential) {
+      setText('[data-verify-status]', 'No credential was supplied.');
+      return;
+    }
+    try {
+      const base = import.meta.env.PUBLIC_API_URL ?? '';
+      const response = await fetch(`${base}/api/badge/verify`, {
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+        body: JSON.stringify({ credential }),
+      });
+      const result = (await response.json()) as {
+        valid: boolean;
+        reason?: string;
+        credential?: Record<string, unknown>;
+      };
+      if (!response.ok || !result.valid) {
+        setText('[data-verify-status]', `Invalid credential: ${result.reason ?? 'unavailable'}`);
+        return;
+      }
+      const parsed = result.credential ?? {};
+      const subject = parsed.credentialSubject as { achievement?: { name?: string } } | undefined;
+      const issuer = parsed.issuer as { name?: string } | undefined;
+      setText('[data-verify-status]', 'Valid credential');
+      setText('[data-verify-achievement]', subject?.achievement?.name ?? 'Unknown achievement');
+      setText('[data-verify-issuer]', issuer?.name ?? 'Unknown issuer');
+      setText('[data-verify-issued]', String(parsed.issuanceDate ?? 'Unknown date'));
+      if (details) {
+        details.hidden = false;
+      }
+      if (status) {
+        status.setAttribute('data-valid', 'true');
+      }
+    } catch {
+      setText('[data-verify-status]', 'Verification is currently unavailable.');
+    }
+  })();
+</script>

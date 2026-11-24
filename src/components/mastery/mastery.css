@@ -1,0 +1,45 @@
+.mastery-panel {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.mastery-panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.mastery-panel__grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.mastery-panel__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.6rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mastery-panel__cell:hover {
+  background: #e2e8f0;
+}
+
+.mastery-panel__cell:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.mastery-panel__summary {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+}

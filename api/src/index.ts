@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { createDatabase } from './db/client';
 import type { Env } from './env';
+import { badgeRoutes, type BadgeDeps } from './routes/badge';
+import { masteryRoutes, quizRoutes, type QuizDeps } from './routes/quiz';
 import { createAuth, type AuthPort } from './lib/auth';
 import { learningEventSchema, syncBatchSchema, type LearningEvent } from './lib/events';
 import { createWorkersKv, type KvPort } from './lib/kv';
@@ -69,7 +71,27 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
     return resolved;
   }
 
+  function quizFor(env: Env): QuizDeps {
+    const deps = resolve(env);
+    return {
+      auth: deps.auth,
+      db: deps.db,
+      kv: deps.kv,
+      llm: deps.llm ?? createLlmAdapter(env),
+      secret: env.BETTER_AUTH_SECRET ?? '',
+    };
+  }
+
+  function badgeFor(env: Env): BadgeDeps {
+    const deps = resolve(env);
+    return { auth: deps.auth, db: deps.db, secret: env.BETTER_AUTH_SECRET ?? '' };
+  }
+
   app.get('/health', (c) => c.json({ status: 'ok', service: 'perspectra-api' }));
+
+  app.route('/api/quiz', quizRoutes(quizFor));
+  app.route('/api/mastery', masteryRoutes(quizFor));
+  app.route('/api/badge', badgeRoutes(badgeFor));
 
   app.route(
     '/api/tutor',
