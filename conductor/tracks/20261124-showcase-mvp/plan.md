@@ -36,23 +36,19 @@
 - **Covers:** FR-3, FR-4, FR-13, NFR-2, NFR-5, NFR-6, AC-3, AC-4, AC-5, AC-19
 - **Touches:** `assets/heart/**`, `public/assets/heart/**`, `src/components/scene/**`, `src/lib/hotspot-store.ts`, `src/components/prose/**`, `tests/unit/hotspot-store.test.ts`, `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts`
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 9df6c5b
+- **Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-2.md
 
-- [ ] **P2.T1: Write ASSET_CONTRACT.md and author the Blender recipe (MCP-assisted) producing GLB + poster** — covers: FR-13
-  - [ ] P2.T1.1: Six named meshes matching hotspot IDs, Y-up glTF, semi-realistic low-poly, <1 MB
-  - [ ] P2.T1.2: Bake any interactive MCP edits back into the deterministic script
-- [ ] **P2.T2: Add GLB↔manifest integration check** — covers: AC-4
-- [ ] **P2.T3: Build R3F island with WebGPU→WebGL→poster fallback, heartbeat and flow particles** — covers: FR-3, NFR-2, NFR-6
-- [ ] **P2.T4: Wire shared hotspot store for two-way binding and camera tween** — covers: FR-4
-- [ ] **P2.T5: Implement reduced-motion, keyboard hotspots, and mobile prose behavior** — covers: NFR-5, AC-19
-- [ ] **P2.T6: Add scene E2E and smoke coverage** — covers: AC-3, AC-5
-
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-2.md
--->
+- [x] **P2.T1: Write ASSET_CONTRACT.md and author the Blender recipe (MCP-assisted) producing GLB + poster** — covers: FR-13
+  - [x] P2.T1.1: Six named meshes matching hotspot IDs, Y-up glTF, semi-realistic low-poly, <1 MB
+  - [x] P2.T1.2: Bake any interactive MCP edits back into the deterministic script
+- [x] **P2.T2: Add GLB↔manifest integration check** — covers: AC-4
+- [x] **P2.T3: Build R3F island with WebGPU→WebGL→poster fallback, heartbeat and flow particles** — covers: FR-3, NFR-2, NFR-6
+- [x] **P2.T4: Wire shared hotspot store for two-way binding and camera tween** — covers: FR-4
+- [x] **P2.T5: Implement reduced-motion, keyboard hotspots, and mobile prose behavior** — covers: NFR-5, AC-19
+- [x] **P2.T6: Add scene E2E and smoke coverage** — covers: AC-3, AC-5
 
 ## Phase 3: API, Auth & Offline Progress
 
