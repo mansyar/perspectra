@@ -545,9 +545,13 @@ and OAuth secrets are not.
 - Production Neon contains the heart lesson, six hotspots, and **18 Gemini embeddings**, all with
   **1536 dimensions**.
 - The production schema includes the Better Auth session fields from migration 0002.
-- GitHub OAuth was explicitly deferred by the user during setup. Google OAuth configuration did not
-  complete in the browser session; email/password authentication is proven. AC-5 therefore has a
-  documented social-login limitation rather than a claim that all three providers were verified.
+- Google OAuth client creation was completed in the authenticated Chrome session. The client ID and
+  secret were stored only in the private production environment and uploaded as Cloudflare secrets;
+  neither value is committed. A real browser flow selected the user's Google account, approved the
+  `email profile openid` scopes, returned to `/lessons/heart/`, and `/api/auth/get-session` returned
+  HTTP 200 with an authenticated user. Email/password authentication also passed. GitHub OAuth was
+  explicitly deferred by the user, so AC-5 is satisfied for the two available social/email paths with
+  that recorded exception.
 
 ### Real-service smoke
 

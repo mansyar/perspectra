@@ -72,12 +72,14 @@ Review fixes are appended by `conductor-review` as needed.
 - **Covers:** FR-1, FR-2, FR-7, FR-8, FR-9, AC-2, AC-4, AC-5, AC-6, AC-7, AC-8, AC-10, NFR-2, NFR-4, NFR-6, NFR-8
 - **Touches:** ignored local environment files, `scripts/prepare-deploy.mjs`, `api/src/index.ts`, `api/src/db/schema.ts`, `api/src/db/client.ts`, `api/src/routes/{tutor,quiz,badge}.ts`, `api/src/lib/llm.ts`, `assets/heart/**`, `public/assets/heart/**`, `src/content/lessons/heart.mdx`, `migrations/**`, `tests/unit/prepare-deploy.test.ts`, `tests/integration/worker-assets.test.ts`, `tests/integration/glb-manifest.test.ts`, `tests/unit/auth-schema.test.ts`, `tests/unit/llm.test.ts`, `tests/unit/request-db-scope.test.ts`, `README.md`, `docs/DEPLOYMENT.md`, `docs/ARCHITECTURE.md`, production and browser evidence
 - **Verification:** `pnpm verify:full`, `pnpm test:production`, and primary browser verification
-- **Status:** blocked
-- **Result:** Production deployment, email/password auth, tutor/quiz/mastery/badge, E2E, browser, and Lighthouse are verified. GitHub OAuth was explicitly deferred by the user; Google OAuth client creation requires human completion after a 600-second handoff timed out.
+- **Status:** verified
+- **Result:** Production deployment, Google and email/password auth, tutor/quiz/mastery/badge, E2E, browser, and Lighthouse are verified. GitHub OAuth was explicitly deferred by the user.
+- **Checkpoint:** 6673fae
+- **Evidence:** `conductor/tracks/20261124-public-deployment/verification/phase-4.md`, `conductor/tracks/20261124-public-deployment/verification/browser.md`
 
 - [x] **P4.T1: Guide credential setup and validate production configuration, including config-relative paths and the Cloudflare default Worker export** — covers: FR-1, FR-2, FR-8, AC-1, AC-2, AC-10, NFR-8
 - [x] **P4.T2: Deploy the Worker and initialize the fresh Neon branch, seed, and Gemini embeddings** — covers: FR-7, AC-4
-- [ ] **P4.T3: Verify GitHub, Google, and email/password auth on the public origin** — covers: AC-5
+- [x] **P4.T3: Verify available auth providers on the public origin (Google and email/password verified; GitHub explicitly deferred)** — covers: AC-5
 - [x] **P4.T4: Verify anonymous and authenticated tutor, quiz, mastery, and badge flows** — covers: FR-9, AC-6, AC-7, AC-8
 - [x] **P4.T5: Run production E2E, browser, console, and Lighthouse checks and record evidence** — covers: AC-9, AC-10, NFR-2, NFR-8
 - [x] **P4.T6: Align the Better Auth session schema and migration with the installed adapter version** — covers: FR-2, FR-8, AC-2

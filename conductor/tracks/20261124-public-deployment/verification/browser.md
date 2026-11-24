@@ -29,7 +29,13 @@ Tool: OpenCode in-app Chrome browser (`browse` skill), explicit tab `1990715719`
 - Production E2E: 17/17 tests via `pnpm test:production`.
 - Lighthouse: catalog 1.00 performance; lesson 0.99 performance; accessibility 1.00 on both.
 
+## Google OAuth callback
+
+A second browser tab initiated `POST /api/auth/sign-in/social` on the production origin, followed the
+Google account chooser and consent screen, and returned to `/lessons/heart/`. A same-origin
+`GET /api/auth/get-session` returned HTTP 200 with an authenticated user. Client credentials were
+stored privately and uploaded as Cloudflare secrets.
+
 ## Limitations
 
-- Social OAuth callbacks were not browser-verified. GitHub was explicitly deferred by the user;
-  Google client creation did not complete. Email/password authentication passed the real-service smoke.
+- GitHub OAuth was explicitly deferred by the user and is not claimed as verified.
