@@ -529,3 +529,54 @@ pnpm verify
 - Vision inspection of the 7,228-byte WebP confirmed a complete, recognizable stylized heart with
   visible chambers and vessels; it is neither blank nor cropped.
 - Production redeploy and Lighthouse confirmation remain primary-owned.
+
+## Production deployment and proof — 2026-11-25
+
+Production origin: `https://perspectra-api.m-ansyarafi.workers.dev` (workers.dev; no custom domain).
+The public URL is intentionally recorded; private account ids, KV ids, Neon URLs, cookies, API keys,
+and OAuth secrets are not.
+
+### Deployment
+
+- Production Cloudflare Worker and Static Assets were manually deployed from the generated private
+  Wrangler config after the primary loaded private bindings and ran `pnpm deploy:prepare`.
+- Final poster deployment version: `baf21ea1-1beb-48c0-8727-49157d6c1733`.
+- The deployed asset upload included the new WebP poster and rebuilt lesson HTML.
+- Production Neon contains the heart lesson, six hotspots, and **18 Gemini embeddings**, all with
+  **1536 dimensions**.
+- The production schema includes the Better Auth session fields from migration 0002.
+- GitHub OAuth was explicitly deferred by the user during setup. Google OAuth configuration did not
+  complete in the browser session; email/password authentication is proven. AC-5 therefore has a
+  documented social-login limitation rather than a claim that all three providers were verified.
+
+### Real-service smoke
+
+The private production smoke script exercised the deployed origin against real Neon, Cloudflare, and
+Gemini services. Final run passed all **13 checks**:
+
+`health`, catalog, lesson, grounded tutor with citation, email sign-up/sign-in, progress read, quiz
+generation, quiz grading, progress sync, mastery threshold `1.000`, badge issuance, badge verification,
+and badge tamper rejection.
+
+The tutor uses `gemini-3.5-flash-lite` in production because larger Flash models intermittently returned
+`503` high-demand responses. The adapter remains configurable through `LLM_MODEL`.
+
+### Production E2E and Lighthouse
+
+`pnpm test:production` ran against `E2E_BASE_URL` and passed **17/17 tests** on the deployed origin:
+scene/fallback, tutor UI, learning loop, accessibility, keyboard/reduced motion, and performance.
+
+| Route | Performance | Accessibility | Best practices | SEO |
+| --- | ---: | ---: | ---: | ---: |
+| `/` | 1.00 | 1.00 | 0.96 | 1.00 |
+| `/lessons/heart/` | 0.99 | 1.00 | 0.96 | 1.00 |
+
+The poster optimization moved production lesson performance from **0.79** to **0.99**, above the 0.95
+gate. The catalog remains script-free.
+
+### Browser verification
+
+The in-app browser verified the production WebP poster at 960×960, launched the WebGPU scene, observed
+`data-scene-ready="true"`, a visible canvas, hidden poster after readiness, and active
+`left_ventricle` context. The scene remained fully framed and correctly lit. Console error capture
+returned no entries. Detailed browser evidence is in `verification/browser.md`.
