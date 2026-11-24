@@ -210,3 +210,4 @@ async function allowWrite(kv: KvPort, userId: string): Promise<boolean> {
 
 /** Worker entry point. Bindings are supplied per request, so deps stay lazy. */
 export const app = createApp();
+export default app;

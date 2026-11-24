@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createApp } from '../../api/src/index';
+import worker, { app, createApp } from '../../api/src/index';
 import type { Env } from '../../api/src/env';
 import type { AuthPort } from '../../api/src/lib/auth';
 import { InMemoryKv } from '../../api/src/lib/kv';
@@ -23,6 +23,13 @@ function setup() {
     kv: new InMemoryKv(),
   });
 }
+
+describe('Worker module entry point', () => {
+  it('exports the same Hono app as the named and default entry points', () => {
+    expect(worker).toBe(app);
+    expect(typeof worker.fetch).toBe('function');
+  });
+});
 
 describe('Worker static asset fallback', () => {
   it('serves an injected asset response with the original request', async () => {
