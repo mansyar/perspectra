@@ -27,7 +27,7 @@ Tool: OpenCode in-app Chrome browser (`browse` skill), explicit tab `1990715719`
 
 - Real-service production smoke: 13/13 checks in `phase-4.md`.
 - Production E2E: 17/17 tests via `pnpm test:production`.
-- Lighthouse: catalog 1.00 performance; lesson 0.99 performance; accessibility 1.00 on both.
+- Lighthouse: catalog 1.00 performance; lesson 0.98 performance; accessibility 1.00 on both.
 
 ## Google OAuth callback
 
@@ -35,6 +35,19 @@ A second browser tab initiated `POST /api/auth/sign-in/social` on the production
 Google account chooser and consent screen, and returned to `/lessons/heart/`. A same-origin
 `GET /api/auth/get-session` returned HTTP 200 with an authenticated user. Client credentials were
 stored privately and uploaded as Cloudflare secrets.
+
+## Review-gate recheck — 2026-11-25
+
+**PASS.** Rechecked the public origin in explicit tab `1990715719` after all deployment fixes:
+
+- WebGPU opt-in reached `data-scene-ready="true"`, with canvas present, poster hidden, active
+  `left_ventricle`, and a complete, framed, correctly lit heart.
+- `?rendererErrors=1` stepped down to `webgl`, reached ready state, preserved framing/lighting, and
+  showed the visible recovery notice `webgpu rendering failed. Retrying with webgl.`
+- `?rendererErrors=2` reached the `poster` tier with the complete WebP visible and the status
+  `Interactive 3D is unavailable. The complete lesson text remains below.`
+- Catalog and `/verify/` rendered; console capture returned zero error entries.
+- Verdict: **PASS** — no visual or console regression at the review gate.
 
 ## Limitations
 
