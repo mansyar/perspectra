@@ -1,4 +1,3 @@
-// @ts-expect-error Node's built-in type declarations are intentionally not installed.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 

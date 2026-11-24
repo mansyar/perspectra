@@ -1,3 +1,7 @@
+allowBuilds:
+  esbuild: true
+  workerd: true
+
 minimumReleaseAgeExclude:
   - '@oxfmt/binding-android-arm-eabi@0.80.0'
   - '@oxfmt/binding-android-arm64@0.80.0'
@@ -39,3 +43,14 @@ minimumReleaseAgeExclude:
   - '@oxlint/binding-win32-x64-msvc@1.95.0'
   - oxfmt@0.80.0
   - oxlint@1.95.0
+  - hono@4.13.21
+  - '@cloudflare/workerd-darwin-64@1.20261123.1'
+  - '@cloudflare/workerd-darwin-arm64@1.20261123.1'
+  - '@cloudflare/workerd-linux-64@1.20261123.1'
+  - '@cloudflare/workerd-linux-arm64@1.20261123.1'
+  - '@cloudflare/workerd-windows-64@1.20261123.1'
+  - '@cloudflare/workers-types@5.20261123.1'
+  - '@cloudflare/workers-utils@0.57.0'
+  - miniflare@5.20261123.0-beta
+  - workerd@1.20261123.1
+  - wrangler@4.167.0

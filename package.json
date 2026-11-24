@@ -29,9 +29,14 @@
     "@astrojs/compiler-rs": "0.5.3",
     "@astrojs/mdx": "8.1.6",
     "@astrojs/react": "7.1.9",
+    "@neondatabase/serverless": "1.2.1",
     "@react-three/drei": "10.7.9",
     "@react-three/fiber": "10.0.0-alpha.6",
     "astro": "7.4.13",
+    "better-auth": "1.7.27",
+    "drizzle-orm": "0.45.4",
+    "hono": "4.13.21",
+    "postgres": "4.1.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "three": "0.187.0",
@@ -39,12 +44,15 @@
     "zustand": "5.1.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "5.20261123.1",
     "@playwright/test": "1.65.1",
     "@types/three": "0.187.0",
     "@vitest/coverage-v8": "5.1.1",
+    "drizzle-kit": "0.31.11",
     "oxfmt": "0.80.0",
     "oxlint": "1.95.0",
     "typescript": "6.0.3",
-    "vitest": "5.1.1"
+    "vitest": "5.1.1",
+    "wrangler": "4.167.0"
   }
 }
