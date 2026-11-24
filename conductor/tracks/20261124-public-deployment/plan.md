@@ -31,13 +31,16 @@
 - **Covers:** FR-3, FR-4, FR-5, NFR-4, AC-3, AC-4
 - **Touches:** `api/src/env.ts`, `api/src/lib/llm.ts`, `scripts/embed-lessons.ts`, `README.md`, relevant unit/integration tests
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 7d57ebc
+- **Evidence:** conductor/tracks/20261124-public-deployment/verification/phase-2.md
 
-- [ ] **P2.T1: Extend environment and LLM adapter contracts for Gemini embeddings** — covers: FR-3
-- [ ] **P2.T2: Implement gemini-embedding-2 batch requests, dimension validation, and normalization** — covers: FR-4, NFR-4
-- [ ] **P2.T3: Update lesson ingestion and README commands to use the shared Gemini adapter and reject mixed embedding spaces** — covers: FR-5
-- [ ] **P2.T4: Add Gemini request, response, ordering, dimension, and failure tests** — covers: FR-3, FR-4, AC-3
-- [ ] **P2.T5: Record phase 2 evidence** — covers: FR-5, AC-4
+- [x] **P2.T1: Extend environment and LLM adapter contracts for Gemini embeddings** — covers: FR-3
+- [x] **P2.T2: Implement gemini-embedding-2 batch requests, dimension validation, and normalization** — covers: FR-4, NFR-4
+- [x] **P2.T3: Update lesson ingestion and README commands to use the shared Gemini adapter and reject mixed embedding spaces** — covers: FR-5
+- [x] **P2.T4: Add Gemini request, response, ordering, dimension, and failure tests** — covers: FR-3, FR-4, AC-3
+- [x] **P2.T5: Record phase 2 evidence** — covers: FR-5, AC-4
 
 <!--
 Review fixes are appended by `conductor-review` as needed.
