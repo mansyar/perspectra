@@ -23,7 +23,8 @@
 - [ ] **P1.T2: Add a local CI contract checker** — covers: AC-1
   - [ ] **P1.T2.1: Assert `pull_request` trigger and both job names**
   - [ ] **P1.T2.2: Wire `pnpm check:ci` in package.json**
-- [ ] **P1.T3: Test and record phase 1 evidence** — covers: FR-8, AC-1, AC-2
+- [ ] **P1.T3: Add CI contract tests** — covers: AC-1, AC-2
+- [ ] **P1.T4: Record phase 1 evidence** — covers: FR-8
 
 ## Phase 2: Real Database Scripts
 
