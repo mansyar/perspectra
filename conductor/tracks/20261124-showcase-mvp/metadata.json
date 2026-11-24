@@ -20,7 +20,7 @@
   },
   "last_checkpoint": "f1005664882672e238fad68f4d6faa32fed667f8",
   "review_verdict": "BLOCK",
-  "review_rounds": 1,
+  "review_rounds": 2,
   "doc_sync": "updated",
   "pr_url": null,
   "reverted_at": null,

@@ -9,7 +9,7 @@
 
 ## Summary
 
-The six implementation phases are individually verified and the integrated checks pass, but the independent reviewer found three High-severity conformance gaps that must be fixed before this track can be accepted. The WebGPU→WebGL step-down cannot remount its scene, the runtime tutor/quiz retrieval never uses pgvector embeddings or the cosine threshold and depends on a hardcoded MDX mirror, and the coverage gate measures none of the logic modules NFR-7 names. A further High finding (missing scene lighting) and three lower-severity findings (poster removal timing, one naming inconsistency, and a 3D framing defect) were found during primary browser verification after the initial fixes and are also being addressed in round 1. All findings were checked against the track diff and their cited lines by the primary orchestrator. All seven findings were fixed in round 1; primary browser verification passed on both renderer tiers, and a re-review is pending.
+The six implementation phases are individually verified and the integrated checks pass, but the independent reviewer found three High-severity conformance gaps that must be fixed before this track can be accepted. The WebGPU→WebGL step-down cannot remount its scene, the runtime tutor/quiz retrieval never uses pgvector embeddings or the cosine threshold and depends on a hardcoded MDX mirror, and the coverage gate measures none of the logic modules NFR-7 names. A further High finding (missing scene lighting) and three lower-severity findings (poster removal timing, one naming inconsistency, and a 3D framing defect) were found during primary browser verification after the initial fixes and are also being addressed in round 1. All findings were checked against the track diff and their cited lines by the primary orchestrator. All seven findings were fixed in round 1 and primary browser verification passed on both renderer tiers, but re-review found a new High regression (N1) in the production second-lesson retrieval path plus one Medium residual topic lock (N2). Round 2 is required.
 
 ## Verification
 
@@ -116,6 +116,21 @@ The six implementation phases are individually verified and the integrated check
   - **Test gap:** No DOM-level test can assess material lighting; primary browser verification must confirm the authored colours appear on both renderer tiers.
   - **Status:** fixed in round 1 — ambient, hemisphere, key and fill lights added to the shared Canvas, and active emissive reduced from 0.9 to 0.22. Primary browser re-check on both WebGPU and forced WebGL tiers passed; see `verification/browser.md`.
 
+## Re-review — round 2
+
+- **N1 (High) — production chunk source filters out every non-heart hotspot**
+  - **File:** `api/src/index.ts:67–74`, fed by `api/src/routes/tutor.ts:127`
+  - **What:** `tutor.ts` calls `getChunks(lessonId, DEFAULT_HOTSPOTS)`. The production source applies `chunks.filter((chunk) => hotspots.includes(chunk.hotspotId))` even to DB-backed chunks already scoped by `lessonId`, so a second lesson's embedded chunks are all discarded and its tutor always returns `no_context`. The second-lesson integration test injects a `getChunks` that ignores the allowlist, so it did not exercise the production path.
+  - **Why:** NFR-9/AC-16 require adding a topic with only MDX + GLB + frontmatter. The real Worker path still cannot tutor a second lesson.
+  - **Fix:** Do not filter DB-backed chunks by the heart allowlist; return them unfiltered. Pass an empty/undefined allowlist from the tutor and derive any vocabulary from the returned chunks. Add an integration test that reaches the production `productionChunks` path through `createApp({...})` with a fake chunk repository returning non-heart IDs and asserts a grounded answer instead of `no_context`.
+  - **Requirement:** NFR-9, AC-16, FR-7
+
+- **N2 (Medium) — residual heart-only vocabulary in intent routing and mastery/badge projection**
+  - **File:** `api/src/routes/tutor.ts:57–62,133–140`, `api/src/routes/quiz.ts:140–146`, `api/src/routes/badge.ts:32–43`, `api/src/lib/mastery.ts:143–155`
+  - **What:** `LESSON_TERMS` is built from `heart/cardiac/blood` plus `DEFAULT_HOTSPOTS`; mastery, badge and next-best ordering also use the heart list. A second-lesson question without a generic learning word can be classified off-topic, and its heatmap/credential report heart landmarks.
+  - **Why:** The topic-agnostic claim remains only partially true even though strict review does not block on Medium.
+  - **Fix:** Derive lesson terms from lesson ID plus the returned chunks (hotspot IDs and distinctive tokens); derive mastery/badge hotspot sets from the lesson's chunk source with a `heart` fallback for compatibility, and add a second-lesson case covering intent routing and mastery/badge vocabulary.
+
 ## Overrides
 
 - <none>
@@ -140,4 +155,5 @@ Excluded from review: `conductor/**` prose and track state, generated `dist/**`,
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | BLOCK → pending re-review | 0 | 4 | 2 | 1 | 7 |
+| 1 | BLOCK | 0 | 4 | 2 | 1 | 7 |
+| 2 | BLOCK | 0 | 1 | 1 | 0 | 0 |

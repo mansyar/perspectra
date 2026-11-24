@@ -159,3 +159,17 @@ Review fixes are appended by `conductor-review` as:
 - [x] **R1.T5: Update evidence and re-run integrated verification** — covers: F1, F2, F3, F4, F5
 - [x] **R1.T6: Align hotspot anchors with GLB node centres and reframe the camera** — covers: F6
 - [x] **R1.T7: Light the GLB materials and soften the active highlight** — covers: F7
+
+## Phase R2: Re-review Fixes
+
+- **Goal:** Remove the production second-lesson retrieval filter and the remaining heart-only vocabulary so topic-agnostic delivery holds in the real Worker path.
+- **Depends:** Phase R1
+- **Covers:** N1, N2
+- **Touches:** `api/src/index.ts`, `api/src/lib/retrieval.ts`, `api/src/lib/mastery.ts`, `api/src/routes/{tutor,quiz,badge}.ts`, `tests/**`, `conductor/tracks/20261124-showcase-mvp/verification/**`
+- **Verification:** `pnpm verify:full`
+- **Status:** in_progress
+
+- [ ] **R2.T1: Stop filtering DB-backed chunks by the heart allowlist and pass an unfiltered lesson chunk source from the tutor** — covers: N1
+- [ ] **R2.T2: Add a production-path integration test with non-heart hotspot IDs that asserts a grounded tutor answer** — covers: N1
+- [ ] **R2.T3: Derive intent terms, mastery vocabulary, next-best ordering and badge hotspot sets from lesson chunks, and test a second-lesson question without generic learning words** — covers: N2
+- [ ] **R2.T4: Update evidence and re-run integrated verification** — covers: N1, N2
