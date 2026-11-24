@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-24T18:16:45+11:00",
-  "updated_at": "2026-11-25T00:50:00+11:00",
+  "updated_at": "2026-11-25T01:25:00+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "chore/20261124-public-deployment",
@@ -15,7 +15,7 @@
   "progress": {
     "phases_total": 5,
     "phases_verified": 3,
-    "tasks_total": 25,
+    "tasks_total": 26,
     "tasks_done": 15
   },
   "last_checkpoint": "185c7e9c042b1cc18a7202c7456da8bd51c54e28",
