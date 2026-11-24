@@ -326,3 +326,21 @@ complete cited answer rather than `tutor_unavailable` or `invalid_citation` rema
 The pre-existing `Env.LLM_MODEL` JSDoc in `api/src/env.ts` still names the old default, but that file
 is outside this follow-up's allowed Touches; runtime behavior and the requested documentation are
 aligned.
+
+## Primary verification — Gemini chat follow-up
+
+The primary independently repeated the required local verification after the subagent report:
+
+```text
+git status --porcelain
+git diff --name-only 0e4bd88..HEAD
+pnpm verify
+```
+
+- Working tree was clean before verification.
+- The diff contained only `api/src/lib/llm.ts`, `tests/unit/llm.test.ts`, `README.md`, `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, and this evidence file.
+- Two initial `pnpm verify` attempts hit the known `oxfmt` exit-5-with-all-files-correct flake. A direct `pnpm exec oxfmt --check .` and `pnpm fmt:check` both exited `0`; the next full `pnpm verify` exited `0`.
+- Final verification: seven non-blocking lint warnings, 97 formatted files, clean typecheck, 175 unit tests, coverage 98.61% statements / 92.41% branches / 97.84% functions / 99.12% lines, 46 integration tests, and a 3-page production build.
+- The existing >500 kB chunk warning remained non-blocking.
+
+Production redeployment and complete cited-tutor smoke verification remain primary-owned.
