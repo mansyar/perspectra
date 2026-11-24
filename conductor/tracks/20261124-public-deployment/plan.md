@@ -53,14 +53,17 @@ Review fixes are appended by `conductor-review` as needed.
 - **Covers:** FR-1, FR-2, FR-6, AC-1, AC-2, AC-9, NFR-1, NFR-3, NFR-5
 - **Touches:** `wrangler.toml`, `api/src/env.ts`, `api/src/index.ts`, `scripts/prepare-deploy.mjs`, `playwright.config.ts`, `package.json`, `README.md`, `docs/DEPLOYMENT.md`, `docs/ARCHITECTURE.md`, tests
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** `185c7e9`
+- **Evidence:** `conductor/tracks/20261124-public-deployment/verification/phase-3.md`
 
-- [ ] **P3.T1: Configure Workers Static Assets and the ASSETS binding** — covers: FR-1
-- [ ] **P3.T2: Route API and health requests to Hono with static fallback and real 404s** — covers: FR-2, AC-1, AC-2
-- [ ] **P3.T3: Add E2E_BASE_URL mode and test:production** — covers: FR-6, AC-9
-- [ ] **P3.T4: Add no-secret deployment configuration that injects the private KV namespace id** — covers: NFR-1, NFR-5
-- [ ] **P3.T5: Replace the split-origin deployment runbook** — covers: FR-8, NFR-1, NFR-5
-- [ ] **P3.T6: Add routing and production-mode tests and record evidence** — covers: FR-1, FR-2, FR-6, AC-1, AC-2, AC-9
+- [x] **P3.T1: Configure Workers Static Assets and the ASSETS binding** — covers: FR-1
+- [x] **P3.T2: Route API and health requests to Hono with static fallback and real 404s** — covers: FR-2, AC-1, AC-2
+- [x] **P3.T3: Add E2E_BASE_URL mode and test:production** — covers: FR-6, AC-9
+- [x] **P3.T4: Add no-secret deployment configuration that injects the private KV namespace id** — covers: NFR-1, NFR-5
+- [x] **P3.T5: Replace the split-origin deployment runbook** — covers: FR-8, NFR-1, NFR-5
+- [x] **P3.T6: Add routing and production-mode tests and record evidence** — covers: FR-1, FR-2, FR-6, AC-1, AC-2, AC-9
 
 ## Phase 4: Human-Assisted Production Deployment
 
