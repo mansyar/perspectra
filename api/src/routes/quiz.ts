@@ -19,7 +19,7 @@ export interface QuizDeps {
   secret: string;
 }
 
-export type QuizDepsResolver = (env: Env) => QuizDeps;
+export type QuizDepsResolver = (env: Env, request: Request) => QuizDeps;
 
 export interface MasteryResponse extends MasteryView {
   nextHotspot: string | null;
@@ -176,7 +176,7 @@ export function quizRoutes(deps: QuizDeps | QuizDepsResolver): Hono<{ Bindings: 
   const app = new Hono<{ Bindings: Env }>();
 
   app.post('/generate', async (c) => {
-    const resolved = typeof deps === 'function' ? deps(c.env) : deps;
+    const resolved = typeof deps === 'function' ? deps(c.env, c.req.raw) : deps;
     if (!resolved.secret) {
       return c.json({ error: 'not_configured' }, 503);
     }
@@ -242,7 +242,7 @@ export function quizRoutes(deps: QuizDeps | QuizDepsResolver): Hono<{ Bindings: 
   });
 
   app.post('/grade', async (c) => {
-    const resolved = typeof deps === 'function' ? deps(c.env) : deps;
+    const resolved = typeof deps === 'function' ? deps(c.env, c.req.raw) : deps;
     if (!resolved.secret) {
       return c.json({ error: 'not_configured' }, 503);
     }
@@ -307,7 +307,7 @@ async function masteryHandler(
   c: Context<{ Bindings: Env }>,
   deps: QuizDeps | QuizDepsResolver,
 ): Promise<Response> {
-  const resolved = typeof deps === 'function' ? deps(c.env) : deps;
+  const resolved = typeof deps === 'function' ? deps(c.env, c.req.raw) : deps;
   const identity = await resolved.auth.getSession(c.req.raw);
   if (!identity) {
     return c.json({ error: 'unauthorized' }, 401);

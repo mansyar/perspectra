@@ -94,6 +94,11 @@ non-secret `ASSETS` binding configuration.
    use a separate Gemini key. Without `--write`, the script emits NDJSON and does not write to the
    database.
 
+    At runtime, the Worker creates one Neon WebSocket Pool/Drizzle pair per request and shares it across
+    that request's auth, progress, retrieval, quiz, and badge work. Hono middleware closes the pool via
+    `waitUntil` after the response without delaying it. This request boundary is required by the Workers
+    runtime; `neon-http` is not substituted because Better Auth requires interactive transactions.
+
 ## 5. Build and deploy one Worker
 
 1. [HUMAN ONLY] Confirm the Cloudflare login and target account with `pnpm exec wrangler whoami`.

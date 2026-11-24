@@ -62,6 +62,7 @@ Design constraints worth knowing:
 - **Mastery.** `bktUpdate` produces a per-hotspot posterior; `computeMastery` replays `answer` and `quiz_result` events deterministically. `ts-fsrs` schedules reviews with 0.9 desired retention. The default prior is 0.2; the badge threshold is 0.85.
 - **Credentials.** OB3 credentials carry a `DataIntegrityProof` using `hmac-sha256` over canonical JSON. This is appropriate for a portfolio-scale verifier; it is **not** a decentralized PKI claim.
 - **Local-first.** `src/lib/offline-queue.ts` persists events in IndexedDB, merges by event ID with last-write-wins, and syncs through `/api/progress/sync`.
+- **Request-scoped database.** Each API request owns one Neon WebSocket Pool/Drizzle pair, shared by its auth, progress, retrieval, quiz, and badge work, then closed through `waitUntil` after the response. Neon HTTP is not used because Better Auth requires interactive transactions.
 
 ## Setup
 

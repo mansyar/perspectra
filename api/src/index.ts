@@ -36,33 +36,35 @@ const RATE_LIMIT_WINDOW_SECONDS = 60;
  */
 export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
-  const production = new WeakMap<Env, AppDeps>();
-  const connections = new WeakMap<Env, ReturnType<typeof createDatabase>>();
+  const production = new WeakMap<Request, AppDeps>();
+  const connections = new WeakMap<Request, ReturnType<typeof createDatabase>>();
 
-  function databaseFor(env: Env): ReturnType<typeof createDatabase> {
-    let connection = connections.get(env);
+  function databaseFor(env: Env, request: Request): ReturnType<typeof createDatabase> {
+    let connection = connections.get(request);
     if (!connection) {
       connection = createDatabase(env);
-      connections.set(env, connection);
+      connections.set(request, connection);
     }
     return connection;
   }
 
-  function resolve(env: Env): AppDeps {
+  function resolve(env: Env, request: Request): AppDeps {
     // app.request() in tests may omit bindings; production always passes an object.
     const bindings = env ?? ({} as Env);
-    const cached = production.get(bindings);
+    const cached = production.get(request);
     if (cached) {
       return cached;
     }
-    const db = dependencies?.db ?? createNeonProgressRepository(databaseFor(bindings));
-    const auth = dependencies?.auth ?? createAuth(bindings, databaseFor(bindings));
+    const db = dependencies?.db ?? createNeonProgressRepository(databaseFor(bindings, request).db);
+    const auth = dependencies?.auth ?? createAuth(bindings, databaseFor(bindings, request).db);
     const kv = dependencies?.kv ?? createWorkersKv(bindings.RATE_LIMIT_KV);
     // The repository is already scoped by lessonId; never apply a heart-only
     // allowlist to its results or a second lesson's chunks would all vanish.
     const chunkRepository =
       dependencies?.chunkRepository ??
-      (bindings.DATABASE_URL ? createDrizzleLessonChunkRepository(databaseFor(bindings)) : null);
+      (bindings.DATABASE_URL
+        ? createDrizzleLessonChunkRepository(databaseFor(bindings, request).db)
+        : null);
     const productionChunks: ChunkSource = (lessonId, hotspots) =>
       chunkRepository ? chunkRepository.getChunks(lessonId) : loadLessonChunks(lessonId, hotspots);
     const resolved = {
@@ -72,12 +74,12 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
       kv,
       llm: dependencies?.llm ?? createLlmAdapter(bindings),
     };
-    production.set(bindings, resolved);
+    production.set(request, resolved);
     return resolved;
   }
 
-  function quizFor(env: Env): QuizDeps {
-    const deps = resolve(env);
+  function quizFor(env: Env, request: Request): QuizDeps {
+    const deps = resolve(env, request);
     return {
       auth: deps.auth,
       db: deps.db,
@@ -88,8 +90,8 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
     };
   }
 
-  function badgeFor(env: Env): BadgeDeps {
-    const deps = resolve(env);
+  function badgeFor(env: Env, request: Request): BadgeDeps {
+    const deps = resolve(env, request);
     return {
       auth: deps.auth,
       db: deps.db,
@@ -97,6 +99,17 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
       secret: env.BETTER_AUTH_SECRET ?? '',
     };
   }
+
+  app.use('*', async (c, next) => {
+    try {
+      await next();
+    } finally {
+      const connection = connections.get(c.req.raw);
+      if (connection) {
+        c.executionCtx?.waitUntil(connection.pool.end());
+      }
+    }
+  });
 
   app.get('/health', (c) => c.json({ status: 'ok', service: 'perspectra-api' }));
 
@@ -106,16 +119,16 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
 
   app.route(
     '/api/tutor',
-    tutorRoutes((env) => {
-      const deps = resolve(env);
+    tutorRoutes((env, request) => {
+      const deps = resolve(env, request);
       return { auth: deps.auth, getChunks: deps.getChunks, kv: deps.kv, llm: deps.llm };
     }),
   );
 
-  app.all('/api/auth/*', (c) => resolve(c.env).auth.handler(c.req.raw));
+  app.all('/api/auth/*', (c) => resolve(c.env, c.req.raw).auth.handler(c.req.raw));
 
   app.get('/api/progress', async (c) => {
-    const deps = resolve(c.env);
+    const deps = resolve(c.env, c.req.raw);
     const identity = await deps.auth.getSession(c.req.raw);
     if (!identity) {
       return c.json({ error: 'unauthorized' }, 401);
@@ -124,7 +137,7 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
   });
 
   app.post('/api/progress', async (c) => {
-    const deps = resolve(c.env);
+    const deps = resolve(c.env, c.req.raw);
     const identity = await deps.auth.getSession(c.req.raw);
     if (!identity) {
       return c.json({ error: 'unauthorized' }, 401);
@@ -145,7 +158,7 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
   });
 
   app.post('/api/progress/sync', async (c) => {
-    const deps = resolve(c.env);
+    const deps = resolve(c.env, c.req.raw);
     const identity = await deps.auth.getSession(c.req.raw);
     if (!identity) {
       return c.json({ error: 'unauthorized' }, 401);

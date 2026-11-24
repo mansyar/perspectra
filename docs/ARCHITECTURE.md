@@ -68,6 +68,13 @@ text as SSE. It never accepts browser-supplied context as trusted lesson content
 
 The tutor uses the default query purpose. Lesson ingestion explicitly requests document purpose.
 
+Production dependencies are resolved per `Request`, not cached on the reusable Worker bindings object.
+One Neon serverless WebSocket `Pool` and Drizzle client serve every database operation within that
+request, including Better Auth transactions. Hono middleware registers `pool.end()` with
+`c.executionCtx.waitUntil` after the handler returns, so cleanup cannot block the response and no
+WebSocket crosses request contexts. `neon-http` is not used because Better Auth requires interactive
+transactions.
+
 ## Data and progression
 
 ```text
