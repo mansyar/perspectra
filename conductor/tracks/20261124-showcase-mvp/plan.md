@@ -144,13 +144,18 @@ Review fixes are appended by `conductor-review` as:
 
 - **Goal:** Resolve all review findings and make the evidence truthful.
 - **Depends:** Phase 6
-- **Covers:** F1, F2, F3, F4, F5
-- **Touches:** `src/components/scene/**`, `api/src/**`, `scripts/**`, `src/lib/offline-queue.ts`, `vitest.config.ts`, `tests/**`, `conductor/tracks/20261124-showcase-mvp/verification/**`
+- **Covers:** F1, F2, F3, F4, F5, F6, F7
+- **Touches:** `src/components/scene/**`, `api/src/**`, `scripts/**`, `src/lib/offline-queue.ts`, `src/content/lessons/heart.mdx`, `vitest.config.ts`, `tests/**`, `conductor/tracks/20261124-showcase-mvp/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** `f100566`
+- **Evidence:** `conductor/tracks/20261124-showcase-mvp/verification/review-fix-r1.md`, `conductor/tracks/20261124-showcase-mvp/verification/browser.md`
 
-- [ ] **R1.T1: Make the renderer step-down remount and keep the poster until the GLB loads** — covers: F1, F4
-- [ ] **R1.T2: Wire DB-backed embedded chunks into tutor and quiz retrieval with cosine threshold and topic-agnostic discovery** — covers: F2
-- [ ] **R1.T3: Broaden the coverage gate to the NFR-7 logic modules and add tests to meet 80%** — covers: F3
-- [ ] **R1.T4: Rename `userid` to `userId`** — covers: F5
-- [ ] **R1.T5: Update evidence and re-run integrated verification** — covers: F1, F2, F3, F4, F5
+- [x] **R1.T1: Make the renderer step-down remount and keep the poster until the GLB loads** — covers: F1, F4
+- [x] **R1.T2: Wire DB-backed embedded chunks into tutor and quiz retrieval with cosine threshold and topic-agnostic discovery** — covers: F2
+- [x] **R1.T3: Broaden the coverage gate to the NFR-7 logic modules and add tests to meet 80%** — covers: F3
+- [x] **R1.T4: Rename `userid` to `userId`** — covers: F5
+- [x] **R1.T5: Update evidence and re-run integrated verification** — covers: F1, F2, F3, F4, F5
+- [x] **R1.T6: Align hotspot anchors with GLB node centres and reframe the camera** — covers: F6
+- [x] **R1.T7: Light the GLB materials and soften the active highlight** — covers: F7

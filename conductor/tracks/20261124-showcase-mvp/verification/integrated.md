@@ -3,13 +3,13 @@
 - **Track:** Showcase MVP (`20261124-showcase-mvp`)
 - **Branch:** `feat/20261124-showcase-mvp`
 - **Base:** `79c054e8d6e5ca89d7cc389210b768b8484f9b17`
-- **Final checkpoint:** `0bd954e848a0eb986e424bf01b89e50d5e555854`
+- **Final checkpoint:** `f1005664882672e238fad68f4d6faa32fed667f8`
 - **Date:** 2026-11-24
 - **Result:** PASS
 
 ## Purpose
 
-This is the final integrated gate before review. It confirms that all six phase checkpoints still pass together on the final branch state, not only individually.
+This is the final integrated gate before re-review. It confirms that all six implementation phases and review fix round 1 pass together on the final branch state, not only individually.
 
 ## Commands and results
 
@@ -17,19 +17,28 @@ Primary ran the exact project verification chain on the final branch state:
 
 | Command | Exit | Result |
 | --- | --- | --- |
-| `pnpm verify` (lint → fmt:check → typecheck → unit → coverage → integration → build) | 0 | 6 lint warnings/0 errors; 80 files formatted; typecheck clean; 83 unit tests; 100% coverage on the configured logic-bearing gate; 30 integration tests; 3 static pages |
+| `pnpm verify` (lint → fmt:check → typecheck → unit → coverage → integration → build) | 0 | 6 lint warnings/0 errors; 83 files formatted; typecheck clean; 99 unit tests; per-file ≥80% coverage on 11 logic modules; 34 integration tests; 3 static pages |
 | `pnpm smoke` | 0 | 1 smoke test passed |
-| `pnpm test:e2e` | 0 | 14 tests passed: `@smoke`, `@tutor`, `@learning-loop`, `@a11y`, `@perf` |
+| `pnpm test:e2e` | 0 | 17 tests passed: `@smoke`, `@tutor`, `@learning-loop`, `@a11y`, `@perf`, including renderer step-down, poster fallback and delayed-GLB cases |
 | `pnpm verify:full` | 0 | Whole chain above in one command |
 
 Lighthouse (mobile defaults, via `@perf` E2E):
 
 | Page | Performance | Accessibility | Best practices | SEO |
 | --- | --- | --- | --- | --- |
-| `/` | 1.00 | 1.00 | 0.96 | 1.00 |
-| `/lessons/heart/` | 0.96 | 1.00 | 0.96 | 1.00 |
+| `/` | 0.99 | 1.00 | 0.96 | 1.00 |
+| `/lessons/heart/` | 0.97 | 1.00 | 0.96 | 1.00 |
 
 Both meet the ≥0.95 performance and accessibility gate. The catalog ships zero client JS.
+
+## Browser verification
+
+See `verification/browser.md` for the full log. Primary used the in-app browser skill on the built preview:
+
+- Initial review pass found F6 (cropped model / misaligned anchors) and, after that fix, F7 (unlit cyan/black model).
+- Final pass after all fixes: the heart is framed with margin, shows its authored red/blue/purple/tan materials, and the active hotspot is a subtle accent.
+- Forced `?rendererErrors=1` confirmed the WebGPU → WebGL step-down keeps the same framed and lit rendering, with a visible status message.
+- No unexpected console errors; only static-preview `/api/*` 404s, which are expected without a Worker.
 
 ## Phase evidence roll-up
 
@@ -41,10 +50,11 @@ Both meet the ≥0.95 performance and accessibility gate. The catalog ships zero
 | 4 Grounded Tutor | `b43a62a` | `phase-4.md` | verified |
 | 5 Mastery, Quiz & Credentials | `df16b86` | `phase-5.md` | verified |
 | 6 Polish & Proof | `0bd954e` | `phase-6.md` | verified |
+| R1 Review Fixes | `f100566` | `review-fix-r1.md`, `browser.md` | verified |
 
 ## Coverage gate
 
-The configured gate remains 100% on `src/lib/scene-manifest.ts`, the logic-bearing module included in `vitest.config.ts`. Earlier attempts to broaden the include list without adding tests were reverted; no tests were weakened, skipped, or deleted to pass a gate.
+`vitest.config.ts` now includes 11 logic-bearing modules (`scene-manifest`, `hotspot-store`, `offline-queue`, `api-client`, events, retrieval, prompt, quota, intent, mastery, badge) with per-file 80% thresholds. Final aggregate: 98.59% statements, 91.7% branches, 97.8% functions, 99.11% lines. No test was weakened, skipped, or deleted to pass the gate.
 
 ## Static and security checks
 
@@ -62,12 +72,12 @@ The configured gate remains 100% on `src/lib/scene-manifest.ts`, the logic-beari
 
 ## Retry limit
 
-Verification retries were capped at 2 per phase. The known intermittent oxfmt exit code 5 was resolved by rerun, not by reformatting blindly; the final full run passed.
+Verification retries were capped at 2 per phase. The known intermittent oxfmt exit code 5 was resolved by rerun, not by reformatting blindly; every final full run passed.
 
 ## Human-only exceptions
 
-Real GitHub/Google OAuth handshakes, LLM API credentials, Cloudflare deployment credentials, and WebGPU hardware behavior are not exercised in CI. The corresponding local interfaces are covered with injected fakes, and the acceptance evidence records these exceptions per phase.
+Real GitHub/Google OAuth handshakes, LLM API credentials, Cloudflare deployment credentials, and physical WebGPU hardware are not exercised in CI. Interfaces are covered with injected fakes, and the browser pass exercised WebGPU plus forced WebGL on the available machine.
 
 ## Conclusion
 
-All six phases are verified and the integrated chain passes. The branch is ready for `conductor-review`.
+All six phases and review fix round 1 are verified; the integrated chain and browser pass succeed. The branch is ready for re-review.

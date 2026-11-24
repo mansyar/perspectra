@@ -9,7 +9,7 @@
 
 ## Summary
 
-The six implementation phases are individually verified and the integrated checks pass, but the independent reviewer found three High-severity conformance gaps that must be fixed before this track can be accepted. The WebGPU→WebGL step-down cannot remount its scene, the runtime tutor/quiz retrieval never uses pgvector embeddings or the cosine threshold and depends on a hardcoded MDX mirror, and the coverage gate measures none of the logic modules NFR-7 names. Two lower-severity findings (poster removal timing, one naming inconsistency) will be fixed in the same round. All findings were checked against the track diff and their cited lines by the primary orchestrator.
+The six implementation phases are individually verified and the integrated checks pass, but the independent reviewer found three High-severity conformance gaps that must be fixed before this track can be accepted. The WebGPU→WebGL step-down cannot remount its scene, the runtime tutor/quiz retrieval never uses pgvector embeddings or the cosine threshold and depends on a hardcoded MDX mirror, and the coverage gate measures none of the logic modules NFR-7 names. A further High finding (missing scene lighting) and three lower-severity findings (poster removal timing, one naming inconsistency, and a 3D framing defect) were found during primary browser verification after the initial fixes and are also being addressed in round 1. All findings were checked against the track diff and their cited lines by the primary orchestrator. All seven findings were fixed in round 1; primary browser verification passed on both renderer tiers, and a re-review is pending.
 
 ## Verification
 
@@ -98,6 +98,24 @@ The six implementation phases are individually verified and the integrated check
   - **Requirement:** none (TypeScript style guide)
   - **Test gap:** none
 
+- **F6 (Medium, found during primary browser verification after initial fixes) — interactive 3D heart is cropped and hotspot anchors are misaligned**
+  - **File:** `src/components/scene/HeartScene.tsx:11`, `src/content/lessons/heart.mdx:10–32`
+  - **What:** With the default active hotspot, the WebGPU canvas renders oversized, cropped cyan/black geometry instead of the framed heart shown on the poster. The exported GLB has a world-space Y range of roughly `-1.34…2.07` (height ~3.4 units) while the camera sits at `z=4.2` with `fov=42`, giving a view height of only ~3.2 units. In addition, `POSITION_SCALE = 2.5` maps the MDX anchors to points that do not match the GLB node centres (for example, `left_ventricle` resolves to `[0.55,-0.45,0.95]` while the actual node centre is near `[-0.35,-0.15,0]`).
+  - **Why:** AC-3/AC-4/NFR-2 require a navigable scene whose hotspots correspond to the visible anatomy and whose fallback poster matches the interactive view. The current framing makes the flagship demo unusable even though the DOM-level E2E checks pass.
+  - **Fix:** Widen the camera framing (for example `position: [0,0.35,7]`, `target: [0,0.45,0]`, keeping `fov: 42`) or scale the model group down so the whole heart fits with margin; set `POSITION_SCALE` to 1 and update the MDX hotspot positions to the real GLB node centres; keep the camera tween from cropping when a hotspot is focused. Add a regression check for framing/anchor alignment and verify visually in a browser after the fix.
+  - **Requirement:** AC-3, AC-4, NFR-2
+  - **Test gap:** E2E/geometry assertion that the camera view encompasses the GLB bounds and that each hotspot anchor is within tolerance of its named mesh centre.
+  - **Status:** fixed in round 1 — `POSITION_SCALE=1`, MDX anchors set to measured GLB node centres, camera reframed to `[0,0.35,7]` → `[0,0.45,0]` at fov 42, with integration assertions for anchor alignment and frustum containment. Browser re-check passed; see `verification/browser.md`.
+
+- **F7 (High, found during primary browser re-check after the F6 fix) — interactive model has no lights, so materials render black/cyan**
+  - **File:** `src/components/scene/HeartScene.tsx:249–263`
+  - **What:** After F6, the heart is framed correctly but renders as one cyan chamber and several near-black shapes. The GLB contains PBR materials with correct red/blue/purple `baseColorFactor` values (verified from the GLB JSON), but the R3F `<Canvas>` adds no ambient, hemisphere or directional lights, and no environment map. The only lit-looking surface is the active mesh's cyan emissive highlight.
+  - **Why:** The product is visual-first; a black/cyan model does not match the poster or the semi-realistic low-poly art direction and makes the flagship demo look broken even though the DOM/E2E checks pass.
+  - **Fix:** Add suitable lights to the Canvas (e.g. ambient + hemisphere + key/fill directional lights) so the GLB's authored colours are visible, and reduce/tune the active emissive highlight so it accents rather than replaces the mesh colour. Re-check visually in the browser on both WebGPU and WebGL tiers.
+  - **Requirement:** AC-3, NFR-2
+  - **Test gap:** No DOM-level test can assess material lighting; primary browser verification must confirm the authored colours appear on both renderer tiers.
+  - **Status:** fixed in round 1 — ambient, hemisphere, key and fill lights added to the shared Canvas, and active emissive reduced from 0.9 to 0.22. Primary browser re-check on both WebGPU and forced WebGL tiers passed; see `verification/browser.md`.
+
 ## Overrides
 
 - <none>
@@ -122,4 +140,4 @@ Excluded from review: `conductor/**` prose and track state, generated `dist/**`,
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | BLOCK | 0 | 3 | 1 | 1 | 0 |
+| 1 | BLOCK → pending re-review | 0 | 4 | 2 | 1 | 7 |

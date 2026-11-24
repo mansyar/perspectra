@@ -145,6 +145,7 @@ The subagent does **not** edit `plan.md`. The primary marks tasks complete after
 - **Integration:** module boundaries, Worker/DB, validation, GLB manifest checks — runs every phase.
 - **Smoke:** startup and critical path (catalog → lesson → tutor health) — at milestones.
 - **E2E:** complete browser flows via Playwright — at milestones once the 3D lesson is demoable.
+- **Browser (primary, in-app browser):** visual and console pass that Playwright cannot replace — required for UI-bearing phases, mandatory at the review gate, and mandatory after every review-fix round. The primary runs this; phase subagents do not have browser access.
 
 ### Commands
 
@@ -156,6 +157,7 @@ The subagent does **not** edit `plan.md`. The primary marks tasks complete after
 | integration | `pnpm test:integration` | yes (every phase) |
 | smoke | `pnpm smoke` | no (milestones) |
 | e2e | `pnpm test:e2e` | no (milestones) |
+| browser | in-app browser skill, manual pass (see below) | yes (UI phases, review, and every fix round) |
 
 ### Services and Fixtures
 
@@ -172,6 +174,15 @@ The subagent does **not** edit `plan.md`. The primary marks tasks complete after
 - Coverage gate: **80% line and branch coverage on logic-bearing modules** (mastery, retrieval/scoring, prompt assembly, validation, badge logic). Content, config, and UI glue are excluded from the gate.
 - Every acceptance criterion has a test or a documented evidence artifact.
 - No new Critical or High review findings remain.
+
+### Browser Verification
+
+Use the in-app browser skill (never a phase subagent). Start `pnpm preview --host 127.0.0.1 --port 4321` in the background with a long timeout, then visit the built site with an explicit tab ID.
+
+- **When:** after Phase 2 (scene) and Phase 6 (polish), at every `conductor-review` gate, and after every review-fix round before re-review. Skip for non-UI phases.
+- **What to check:** catalog loads and renders; lesson poster and prose are present; "Start interactive 3D view" produces a framed, correctly lit model; hotspot clicks/anchors change the active section; tutor disclosure and citations render; `/verify/` loads; console has no unexpected errors. A static preview has no Worker, so `/api/*` 404s are expected and must be noted, not counted as failures.
+- **Fallbacks to exercise:** `?rendererErrors=1` (WebGPU → WebGL) and `?rendererErrors=2` (WebGPU → WebGL → poster). Confirm the model stays framed and lit on WebGL as well as WebGPU.
+- **Evidence:** append a dated section to `conductor/tracks/<track-id>/verification/browser.md` with the URLs, actions, observed results, console findings, and verdict. Screenshots may be captured but are not committed; keep large binaries under `.conductor/evidence/browser/` (gitignored).
 
 ### Evidence
 
@@ -216,6 +227,8 @@ Before a phase is accepted:
 - [ ] No secrets, credentials, or PII are introduced
 - [ ] Public behavior is documented when it changed
 - [ ] Evidence is written and linked in `plan.md`
+- [ ] Browser verification is recorded for UI-bearing phases
+- [ ] Browser verification is recorded at review and after every fix round
 
 ## Commit Guidelines
 
@@ -248,9 +261,10 @@ A track is complete when:
 1. Every phase is `verified` with a checkpoint and evidence.
 2. The integrated verification on the track branch passes.
 3. Review is `PASS`, or every finding is fixed, accepted with a reason, or tracked as an issue. No Critical or High finding remains unresolved without an explicit user override recorded in `review.md`.
-4. Post-review documentation sync is complete.
-5. The registry and `metadata.json` show the track as complete.
-6. When a remote exists, the branch is pushed. When `pr.enabled` is true, a PR is open (`pr_url` is set); if PR creation could not run, `pr_url` is null and the failure is reported in the completion message. When `pr.enabled` is false, no PR is expected.
+4. Browser verification evidence is recorded at review and after the final fix round, with no unresolved visual or console defect.
+5. Post-review documentation sync is complete.
+6. The registry and `metadata.json` show the track as complete.
+7. When a remote exists, the branch is pushed. When `pr.enabled` is true, a PR is open (`pr_url` is set); if PR creation could not run, `pr_url` is null and the failure is reported in the completion message. When `pr.enabled` is false, no PR is expected.
 
 ## Emergency Procedures
 
