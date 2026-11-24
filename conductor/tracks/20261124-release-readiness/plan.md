@@ -55,7 +55,7 @@
 - **Covers:** FR-3, FR-4, FR-5, FR-6, FR-8, AC-4, AC-5, AC-6, AC-7, NFR-1, NFR-5, NFR-8
 - **Touches:** `wrangler.toml`, `scripts/check-config.mjs`, `package.json`, `docs/DEPLOYMENT.md`, `conductor/workflow.md`, `conductor/roadmap.md`, `tests/unit/config-check.test.ts`, `.conductor/runs/**`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Add KV placeholder validation** — covers: FR-3, AC-4
   - [ ] **P3.T1.1: Keep `wrangler.toml` id unmistakably fake**
