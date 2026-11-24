@@ -78,7 +78,7 @@ Also covers FR-1, FR-14, NFR-1, NFR-5, NFR-6, NFR-8.
 
 ## Deviations
 
-1. `conductor/tech-stack.md` line 14 still names `fsrs 1.0.0`; the installed and used scheduler is `ts-fsrs 6.0.1`. This file is outside this phase's Touches and was **not** edited.
+1. `conductor/tech-stack.md` named `fsrs 1.0.0`; the installed and used scheduler is `ts-fsrs 6.0.1`. This file was outside this phase's Touches and was not edited during the phase; it was corrected during post-implementation doc sync on 2026-11-24.
 2. `pnpm fmt` / `pnpm fmt:check` intermittently returned exit code 5 while printing “All matched files use the correct format.” Re-running yielded exit 0, and the final `pnpm verify:full` (which includes `fmt:check`) exited 0. No format config was changed.
 3. Mastery cells use `data-mastery-hotspot` rather than the brief's suggested `data-hotspot`, because prose sections already own `data-hotspot` and the collision broke the existing smoke test's strict-mode locator.
 4. Focused E2E runs against a stale `dist` produced false failures; `pnpm build` was run before each focused rerun, and the final full verification rebuilds first.
