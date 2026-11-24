@@ -76,21 +76,17 @@
 - **Covers:** FR-5, FR-7, FR-8, NFR-3, NFR-4, NFR-6, AC-6, AC-8, AC-9, AC-10, AC-17, AC-20, AC-21
 - **Touches:** `api/src/routes/tutor.ts`, `api/src/lib/{retrieval,prompt,llm,quota,intent}.ts`, `scripts/embed-lessons.ts`, `src/components/tutor/**`, `src/lib/tutor-client.ts`, `tests/unit/{retrieval,prompt,quota,intent}.test.ts`, `tests/integration/tutor.test.ts`, `tests/e2e/tutor.spec.ts`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** b43a62a
+- **Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-4.md
 
-- [ ] **P4.T1: Chunk MDX, embed into pgvector, build hybrid BM25+vector retrieval** — covers: FR-7
-- [ ] **P4.T2: Layered prompt assembly, intent router, and cosine threshold** — covers: FR-8
-- [ ] **P4.T3: Env-configurable LLM adapter (Gemini/OpenAI) with streaming** — covers: FR-7, NFR-3
-- [ ] **P4.T4: KV anonymous 2-question quota, user/IP limits, kill switch, citation validation** — covers: FR-5, FR-8
-- [ ] **P4.T5: Right-dock tutor UI: chips + free text, active-hotspot context, clickable citations, disclosure** — covers: FR-7, FR-14
-- [ ] **P4.T6: Unit, integration, and E2E tests for grounded/quota/off-topic flows** — covers: AC-6, AC-8, AC-9, AC-10, AC-20
-
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-4.md
--->
+- [x] **P4.T1: Chunk MDX, embed into pgvector, build hybrid BM25+vector retrieval** — covers: FR-7
+- [x] **P4.T2: Layered prompt assembly, intent router, and cosine threshold** — covers: FR-8
+- [x] **P4.T3: Env-configurable LLM adapter (Gemini/OpenAI) with streaming** — covers: FR-7, NFR-3
+- [x] **P4.T4: KV anonymous 2-question quota, user/IP limits, kill switch, citation validation** — covers: FR-5, FR-8
+- [x] **P4.T5: Right-dock tutor UI: chips + free text, active-hotspot context, clickable citations, disclosure** — covers: FR-7, FR-14
+- [x] **P4.T6: Unit, integration, and E2E tests for grounded/quota/off-topic flows** — covers: AC-6, AC-8, AC-9, AC-10, AC-20
 
 ## Phase 5: Mastery, Quiz & Credentials
 
