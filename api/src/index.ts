@@ -178,6 +178,21 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
     return c.json({ ...state, applied: unique.length, duplicates });
   });
 
+  app.all('*', async (c) => {
+    const path = c.req.path;
+    // API-first routing must never turn an unknown endpoint into static HTML.
+    if (path === '/health' || path === '/api' || path.startsWith('/api/')) {
+      return c.notFound();
+    }
+
+    const assets = c.env.ASSETS;
+    if (!assets) {
+      return c.notFound();
+    }
+    const response = await assets.fetch(c.req.raw);
+    return response.status === 404 ? c.notFound() : response;
+  });
+
   return app;
 }
 

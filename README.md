@@ -40,13 +40,15 @@ Browser
 │   └── QuizPanel             grounded quiz + remediation
 └── /verify                   public OB3 credential verifier
 
-Cloudflare Worker (Hono, api/src/index.ts)
-├── /health                   liveness probe
+Cloudflare Worker — one public origin (api/src/index.ts)
+├── Workers Static Assets     Astro dist/ for catalog, lessons, verifier, and GLB/poster files
+├── /health                   Hono liveness probe
 ├── /api/auth/*               Better Auth handler
 ├── /api/progress, /sync      session-scoped events, KV rate limit
-├── /api/tutor                intent → quota → retrieval → prompt → LLM → validate → SSE
+├── /api/tutor                intent → quota → retrieval → prompt → Gemini → validate → SSE
 ├── /api/quiz/*, /api/mastery grounded generation, grading, BKT/FSRS view
-└── /api/badge/*              OB3 issue + public verify (HMAC-SHA-256 proof)
+├── /api/badge/*              OB3 issue + public verify (HMAC-SHA-256 proof)
+└── non-API fallback          ASSETS binding; missing assets and unknown routes stay real 404s
 
 Data
 ├── Neon Postgres             Better Auth tables, events, progress, pgvector chunks
@@ -85,9 +87,10 @@ All secrets are **Worker bindings**. `wrangler.toml` declares only non-secret bi
 | Variable | Purpose | Used by |
 | --- | --- | --- |
 | `DATABASE_URL` | Neon Postgres connection string | Worker (Drizzle) |
-| `RATE_LIMIT_KV` | Workers KV binding id for quotas/rate limits | Worker |
+| `RATE_LIMIT_KV` | Workers KV binding for quotas/rate limits; private id injected into ignored deploy config | Worker |
+| `RATE_LIMIT_KV_ID` | Private KV namespace id consumed by `pnpm deploy:prepare`; never commit it | Deployment only |
 | `BETTER_AUTH_SECRET` | Session signing and OB3 HMAC key | Worker |
-| `BETTER_AUTH_URL` | Public auth base URL | Worker |
+| `BETTER_AUTH_URL` | Public auth base URL; use the final workers.dev origin | Worker |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth app | Worker |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth app | Worker |
 | `LLM_PROVIDER` | `gemini` only; omit for the default | Worker |
@@ -95,9 +98,10 @@ All secrets are **Worker bindings**. `wrangler.toml` declares only non-secret bi
 | `LLM_MODEL` | Optional chat model override; defaults to `gemini-2.5-flash` | Worker |
 | `EMBEDDING_API_KEY` | Optional Gemini embedding key; falls back to `LLM_API_KEY` | Worker |
 | `EMBEDDING_MODEL` | Optional; only `gemini-embedding-2` (or `models/gemini-embedding-2`) | Worker |
-| `PUBLIC_API_URL` | Optional public Worker URL for client fetches | Static client |
 
 Chat and embeddings both use Gemini. Embeddings call `gemini-embedding-2:batchEmbedContents` with `outputDimensionality: 1536`; the adapter validates each vector and normalizes it to unit L2 norm before it reaches the fixed `vector(1536)` column. Queries and documents use Gemini's task-specific prefixes, and the model is pinned so incompatible embedding spaces cannot be configured.
+
+The browser uses same-origin relative API URLs. `pnpm deploy:prepare` requires `RATE_LIMIT_KV_ID` and writes the private KV id to gitignored `.conductor/deploy/wrangler.toml`; the committed template keeps its 32-zero placeholder. Build with `pnpm build`, then deploy the Worker and static assets together with `pnpm exec wrangler deploy --config .conductor/deploy/wrangler.toml`. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for secrets, Neon setup, production E2E, and rollback.
 
 ## Content authoring
 

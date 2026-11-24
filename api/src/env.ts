@@ -9,6 +9,8 @@ export interface KvBinding {
  * never declared in wrangler.toml or read by client code.
  */
 export interface Env {
+  /** Workers Static Assets binding used by the non-API fallback. */
+  ASSETS?: { fetch(request: Request): Promise<Response> };
   RATE_LIMIT_KV?: KvBinding;
   DATABASE_URL?: string;
   BETTER_AUTH_SECRET?: string;
