@@ -14,17 +14,20 @@
 - **Covers:** FR-1, FR-8, AC-1, AC-2, NFR-2, NFR-3
 - **Touches:** `.github/workflows/**`, `scripts/check-ci.mjs`, `tests/unit/ci-contract.test.ts`, `package.json`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** a072545
+- **Evidence:** conductor/tracks/20261124-release-readiness/verification/phase-1.md
 
-- [ ] **P1.T1: Add pull-request CI workflow** — covers: FR-1, AC-2
-  - [ ] **P1.T1.1: Install pnpm/Node and cache the pnpm store**
-  - [ ] **P1.T1.2: Install Playwright Chromium in the e2e job**
-  - [ ] **P1.T1.3: Allow one retry for known oxfmt/Lighthouse flakes**
-- [ ] **P1.T2: Add a local CI contract checker** — covers: AC-1
-  - [ ] **P1.T2.1: Assert `pull_request` trigger and both job names**
-  - [ ] **P1.T2.2: Wire `pnpm check:ci` in package.json**
-- [ ] **P1.T3: Add CI contract tests** — covers: AC-1, AC-2
-- [ ] **P1.T4: Record phase 1 evidence** — covers: FR-8
+- [x] **P1.T1: Add pull-request CI workflow** — covers: FR-1, AC-2
+  - [x] **P1.T1.1: Install pnpm/Node and cache the pnpm store**
+  - [x] **P1.T1.2: Install Playwright Chromium in the e2e job**
+  - [x] **P1.T1.3: Allow one retry for known oxfmt/Lighthouse flakes**
+- [x] **P1.T2: Add a local CI contract checker** — covers: AC-1
+  - [x] **P1.T2.1: Assert `pull_request` trigger and both job names**
+  - [x] **P1.T2.2: Wire `pnpm check:ci` in package.json**
+- [x] **P1.T3: Add CI contract tests** — covers: AC-1, AC-2
+- [x] **P1.T4: Record phase 1 evidence** — covers: FR-8
 
 ## Phase 2: Real Database Scripts
 
