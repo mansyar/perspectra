@@ -112,6 +112,12 @@ permissions:
     resource: "pnpm fmt:check *"
     effect: allow
   - action: shell
+    resource: "pnpm fmt"
+    effect: allow
+  - action: shell
+    resource: "pnpm fmt *"
+    effect: allow
+  - action: shell
     resource: "pnpm typecheck *"
     effect: allow
   - action: shell
