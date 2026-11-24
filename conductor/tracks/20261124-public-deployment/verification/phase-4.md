@@ -238,3 +238,20 @@ Commit: `1d584b679bbb89c2186ecd2f8f4e6842433e1673` — `fix(db): align Better Au
 No database/deployment command was run, `.conductor/deploy/production.env` was not read, and no
 credential or production connection value was recorded. Applying the migration and verifying the
 public authenticated API remain primary-owned.
+
+## Primary verification — Better Auth schema follow-up
+
+The primary independently ran:
+
+```text
+git status --short
+git diff --name-only 2068c92..HEAD
+pnpm verify
+```
+
+- Working tree was clean before verification.
+- The diff contained only `api/src/db/schema.ts`, `migrations/0002_session_auth_fields.sql`, `tests/unit/auth-schema.test.ts`, and this evidence file.
+- `pnpm verify` exited `0`: seven non-blocking lint warnings (six pre-existing plus the existing Worker identity-test shadow warning), 97 formatted files, clean typecheck, 174 unit tests, coverage 98.61% statements / 92.41% branches / 97.84% functions / 99.12% lines, 46 integration tests, and a 3-page production build.
+- The existing >500 kB chunk warning remained non-blocking.
+
+Production migration application and authenticated-origin smoke verification remain primary-owned.
