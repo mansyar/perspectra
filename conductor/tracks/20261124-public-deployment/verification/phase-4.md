@@ -151,3 +151,20 @@ None.
 - GitHub OAuth remains explicitly deferred by the user; Google OAuth and email/password remain in
   scope for the primary's production verification.
 - P4.T2 through P4.T5 remain outside this subagent's preparation-only brief.
+
+## Primary verification — 2026-11-25
+
+The primary independently repeated the required local verification after the subagent report:
+
+```text
+git status --short
+git diff --name-only f7ec177..HEAD
+pnpm verify
+```
+
+- Working tree was clean before verification.
+- The follow-up diff contained only `api/src/index.ts`, `tests/integration/worker-assets.test.ts`, and this evidence file.
+- `pnpm verify` exited `0`: six non-blocking lint warnings, 96 formatted files, clean typecheck, 173 unit tests, coverage 98.61% statements / 92.41% branches / 97.84% functions / 99.12% lines, 46 integration tests, and a 3-page production build.
+- The build retained the existing >500 kB chunk warning; it did not fail verification.
+
+Local entry-point verification is complete. Production redeploy and origin smoke checks remain primary-owned and will be appended after the fixed Worker is uploaded.
