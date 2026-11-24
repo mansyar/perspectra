@@ -96,8 +96,10 @@ seed data, and a Gemini embedding ingest that preserves NDJSON dry-runs and data
 
 ## Authentication, quotas, and safety
 
-- Better Auth uses GitHub, Google, and email/password in both development and production. Browser
-  requests remain same-origin; `BETTER_AUTH_URL` is the final workers.dev origin.
+- Better Auth's required release path uses Google OAuth and email/password in both development and
+  production. GitHub OAuth remains in the provider code but is explicitly deferred by the user and is
+  not required for this release. Browser requests remain same-origin; `BETTER_AUTH_URL` is the final
+  workers.dev origin.
 - `RATE_LIMIT_KV` is a Worker KV binding for per-IP rate limits and session-scoped quotas. The real
   namespace id is injected into an ignored deployment config by `pnpm deploy:prepare`; only the
   32-zero placeholder is committed.

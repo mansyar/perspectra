@@ -22,7 +22,7 @@ export interface Env {
   /** Only `gemini` is supported; omit for the default. */
   LLM_PROVIDER?: string;
   LLM_API_KEY?: string;
-  /** Chat model override; defaults to `gemini-2.5-flash`. */
+  /** Chat model override; adapter default is `gemini-3.5-flash`; production may use `gemini-3.5-flash-lite`. */
   LLM_MODEL?: string;
   /** Optional Gemini embedding key; falls back to `LLM_API_KEY`. */
   EMBEDDING_API_KEY?: string;

@@ -14,8 +14,10 @@ repository.
 - [ ] [HUMAN ONLY] Neon project with a fresh production Postgres branch, pgvector available, and a
   connection string held outside git.
 - [ ] [HUMAN ONLY] Gemini API key with the intended budget and the application kill switch enabled.
-- [ ] [HUMAN ONLY] GitHub and Google OAuth applications for Better Auth. Their callback URLs must
-  use the final `https://perspectra-api.<subdomain>.workers.dev` origin.
+- [ ] [HUMAN ONLY] Google OAuth application for Better Auth. Its callback URL must use the final
+  `https://perspectra-api.<subdomain>.workers.dev` origin.
+- [ ] GitHub OAuth is explicitly deferred by the user for this release. Its provider code remains
+  available, but no GitHub OAuth application, credentials, or callback verification is required.
 - [ ] Repository checked out on the release commit; run `pnpm install --frozen-lockfile`.
 - [ ] `pnpm verify:full` passes locally before deployment.
 
@@ -31,7 +33,6 @@ private config, or enter the same values in the Cloudflare dashboard.
 | `DATABASE_URL` | yes | Neon branch connection string for Drizzle, seed, and embedding ingest |
 | `BETTER_AUTH_SECRET` | yes | Session signing and OB3 HMAC key |
 | `BETTER_AUTH_URL` | yes | Exactly the public Worker origin, `https://perspectra-api.<subdomain>.workers.dev` |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | yes | GitHub OAuth application |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | yes | Google OAuth application |
 | `LLM_PROVIDER` | no | Omit for the default or set to `gemini`; no other provider is supported |
 | `LLM_API_KEY` | yes | Gemini chat key and default embedding key |
@@ -39,6 +40,10 @@ private config, or enter the same values in the Cloudflare dashboard.
 | `EMBEDDING_API_KEY` | no | Optional Gemini embedding key; falls back to `LLM_API_KEY` |
 | `EMBEDDING_MODEL` | no | Omit or set to `gemini-embedding-2`; other models are rejected |
 | `RATE_LIMIT_KV_ID` | deploy only | Private 32-hex KV namespace id used by `pnpm deploy:prepare`; never commit it |
+
+Google OAuth and email/password are required authentication paths for this release; email/password
+needs no provider application credentials. GitHub OAuth is explicitly deferred by the user, so its
+credentials are not listed as required.
 
 Chat uses `gemini-3.5-flash` by default and sends the API key in the `x-goog-api-key` header rather
 than the URL. The adapter uses temperature `1` and minimal thinking while retaining
@@ -146,7 +151,8 @@ Manual browser proof **[HUMAN ONLY]** (use the evidence checklist in `conductor/
 3. `/health` returns the Hono health payload on the same origin. A known `/api/*` route responds as
    an API route, while `/api/not-a-route` and `/not-a-route` return real 404s rather than an HTML
    index fallback.
-4. GitHub, Google, and email/password callbacks use the workers.dev origin. Anonymous and
+4. Google OAuth and email/password callbacks use the workers.dev origin. GitHub OAuth is explicitly
+   deferred by the user and is not part of required production verification. Anonymous and
    authenticated tutor flows retain disclosure, quota, and static-excerpt behavior.
 5. A grounded Gemini answer includes a clickable citation. Quiz, mastery, FSRS due cards, badge
    issuance, and `/verify/` work for valid and tampered credentials.

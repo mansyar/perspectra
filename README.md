@@ -92,7 +92,7 @@ All secrets are **Worker bindings**. `wrangler.toml` declares only non-secret bi
 | `RATE_LIMIT_KV_ID` | Private KV namespace id consumed by `pnpm deploy:prepare`; never commit it | Deployment only |
 | `BETTER_AUTH_SECRET` | Session signing and OB3 HMAC key | Worker |
 | `BETTER_AUTH_URL` | Public auth base URL; use the final workers.dev origin | Worker |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth app | Worker |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | Optional GitHub OAuth app; explicitly deferred by the user | Worker (provider code retained) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth app | Worker |
 | `LLM_PROVIDER` | `gemini` only; omit for the default | Worker |
 | `LLM_API_KEY` | Gemini chat key and default embedding key | Worker |

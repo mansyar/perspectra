@@ -139,7 +139,7 @@ Production and local browser tests exercise poster fallback, WebGL recovery, key
 | AC-9 | PASS | Production E2E 17/17 and Lighthouse budgets |
 | AC-10 | PASS | Deployment documentation, manual proof, rollback guidance, and this audit |
 | AC-12 | PASS | Exact `pnpm verify:full` chain exited 0 |
-| NFR-1 | PASS | Same-origin Worker deployment and production route proof |
+| NFR-1 | PASS | Section 5 secret/placeholder audit; `tests/unit/config-check.test.ts`; `tests/unit/prepare-deploy.test.ts` |
 | NFR-2 | PASS | Catalog/lesson Lighthouse scores meet budgets |
 | NFR-7 | PASS | Playwright production suite passed |
 | NFR-8 | PASS | Human-only exceptions and final checkpoint are explicit |
