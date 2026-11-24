@@ -95,20 +95,17 @@
 - **Covers:** FR-9, FR-10, FR-12, AC-11, AC-12, AC-14, AC-15
 - **Touches:** `api/src/lib/mastery.ts`, `api/src/routes/{quiz,badge}.ts`, `api/src/lib/badge.ts`, `src/pages/verify.astro`, `src/components/mastery/**`, `src/components/quiz/**`, `tests/unit/{mastery,badge,quiz}.test.ts`, `tests/integration/badge.test.ts`, `tests/e2e/learning-loop.spec.ts`
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P5.T1: BKT + FSRS mastery engine and heatmap state** — covers: FR-10
-- [ ] **P5.T2: Quiz generation + rubric grading + remediation links** — covers: FR-9
-- [ ] **P5.T3: Next-best-hotspot recommendation and FSRS due cards** — covers: FR-10
-- [ ] **P5.T4: OB3 issuance at mastery threshold + public verifier + tamper test** — covers: FR-12
-- [ ] **P5.T5: E2E full demo flow** — covers: AC-11, AC-12, AC-14, AC-15
+- [x] **P5.T1: BKT + FSRS mastery engine and heatmap state** — covers: FR-10
+- [x] **P5.T2: Quiz generation + rubric grading + remediation links** — covers: FR-9
+- [x] **P5.T3: Next-best-hotspot recommendation and FSRS due cards** — covers: FR-10
+- [x] **P5.T4: OB3 issuance at mastery threshold + public verifier + tamper test** — covers: FR-12
+- [x] **P5.T5: E2E full demo flow** — covers: AC-11, AC-12, AC-14, AC-15
 
-<!--
-The primary appends after acceptance:
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** df16b86
 **Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-5.md
--->
 
 ## Phase 6: Polish & Proof
 
