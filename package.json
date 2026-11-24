@@ -20,6 +20,7 @@
     "fmt:check": "oxfmt --check .",
     "typecheck": "astro sync && tsc --noEmit",
     "verify": "pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build",
+    "check:ci": "node scripts/check-ci.mjs",
     "verify:full": "pnpm verify && pnpm smoke && pnpm test:e2e",
     "smoke": "playwright test --grep @smoke",
     "test:a11y": "playwright test --grep @a11y",
