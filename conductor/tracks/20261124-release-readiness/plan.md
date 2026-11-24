@@ -55,17 +55,20 @@
 - **Covers:** FR-3, FR-4, FR-5, FR-6, FR-8, AC-4, AC-5, AC-6, AC-7, NFR-1, NFR-5, NFR-8
 - **Touches:** `wrangler.toml`, `scripts/check-config.mjs`, `package.json`, `docs/DEPLOYMENT.md`, `conductor/workflow.md`, `conductor/roadmap.md`, `tests/unit/config-check.test.ts`, `.conductor/runs/**`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** `481eedc`
+- **Evidence:** `conductor/tracks/20261124-release-readiness/verification/phase-3.md`
 
-- [ ] **P3.T1: Add KV placeholder validation** — covers: FR-3, AC-4
-  - [ ] **P3.T1.1: Keep `wrangler.toml` id unmistakably fake**
-  - [ ] **P3.T1.2: Wire `pnpm check:config` and test pass/fail paths**
-- [ ] **P3.T2: Write `docs/DEPLOYMENT.md`** — covers: FR-4, AC-5, NFR-1
-  - [ ] **P3.T2.1: Document env vars, KV, migration, seed and embedding ingest**
-  - [ ] **P3.T2.2: Document Worker deploy, smoke and rollback**
-- [ ] **P3.T3: Correct Workflow Config and link RM-5** — covers: FR-5, AC-6, NFR-5
-- [ ] **P3.T4: Delete stale `.conductor/runs/20261124-showcase-mvp*` files** — covers: FR-6, AC-7, NFR-8
-- [ ] **P3.T5: Add config tests and record phase 3 evidence** — covers: FR-8, AC-4, AC-5
+- [x] **P3.T1: Add KV placeholder validation** — covers: FR-3, AC-4
+  - [x] **P3.T1.1: Keep `wrangler.toml` id unmistakably fake**
+  - [x] **P3.T1.2: Wire `pnpm check:config` and test pass/fail paths**
+- [x] **P3.T2: Write `docs/DEPLOYMENT.md`** — covers: FR-4, AC-5, NFR-1
+  - [x] **P3.T2.1: Document env vars, KV, migration, seed and embedding ingest**
+  - [x] **P3.T2.2: Document Worker deploy, smoke and rollback**
+- [x] **P3.T3: Correct Workflow Config and link RM-5** — covers: FR-5, AC-6, NFR-5
+- [x] **P3.T4: Delete stale `.conductor/runs/20261124-showcase-mvp*` files** — covers: FR-6, AC-7, NFR-8
+- [x] **P3.T5: Add config tests and record phase 3 evidence** — covers: FR-8, AC-4, AC-5
 
 ## Phase 4: Generic Badge Narrative
 
