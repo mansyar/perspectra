@@ -3,13 +3,13 @@
 - **Track:** Showcase MVP (`20261124-showcase-mvp`)
 - **Branch:** `feat/20261124-showcase-mvp`
 - **Base:** `79c054e8d6e5ca89d7cc389210b768b8484f9b17`
-- **Final checkpoint:** `f1005664882672e238fad68f4d6faa32fed667f8`
+- **Final checkpoint:** `1d84826748e3ddca4df57a4d97e00c38b418e614`
 - **Date:** 2026-11-24
 - **Result:** PASS
 
 ## Purpose
 
-This is the final integrated gate before re-review. It confirms that all six implementation phases and review fix round 1 pass together on the final branch state, not only individually.
+This is the final integrated gate before re-review. It confirms that all six implementation phases and both review fix rounds pass together on the final branch state, not only individually.
 
 ## Commands and results
 
@@ -17,7 +17,7 @@ Primary ran the exact project verification chain on the final branch state:
 
 | Command | Exit | Result |
 | --- | --- | --- |
-| `pnpm verify` (lint → fmt:check → typecheck → unit → coverage → integration → build) | 0 | 6 lint warnings/0 errors; 83 files formatted; typecheck clean; 99 unit tests; per-file ≥80% coverage on 11 logic modules; 34 integration tests; 3 static pages |
+| `pnpm verify` (lint → fmt:check → typecheck → unit → coverage → integration → build) | 0 | 6 lint warnings/0 errors; 83 files formatted; typecheck clean; 103 unit tests; per-file ≥80% coverage on 11 logic modules; 37 integration tests; 3 static pages |
 | `pnpm smoke` | 0 | 1 smoke test passed |
 | `pnpm test:e2e` | 0 | 17 tests passed: `@smoke`, `@tutor`, `@learning-loop`, `@a11y`, `@perf`, including renderer step-down, poster fallback and delayed-GLB cases |
 | `pnpm verify:full` | 0 | Whole chain above in one command |
@@ -26,18 +26,19 @@ Lighthouse (mobile defaults, via `@perf` E2E):
 
 | Page | Performance | Accessibility | Best practices | SEO |
 | --- | --- | --- | --- | --- |
-| `/` | 0.99 | 1.00 | 0.96 | 1.00 |
-| `/lessons/heart/` | 0.97 | 1.00 | 0.96 | 1.00 |
+| `/` | 1.00 | 1.00 | 0.96 | 1.00 |
+| `/lessons/heart/` | 0.95 | 1.00 | 0.96 | 1.00 |
 
-Both meet the ≥0.95 performance and accessibility gate. The catalog ships zero client JS.
+Both meet the ≥0.95 performance and accessibility gate. The catalog ships zero client JS. The lesson score is exactly at the performance gate and was measured on the final passing rerun.
 
 ## Browser verification
 
 See `verification/browser.md` for the full log. Primary used the in-app browser skill on the built preview:
 
 - Initial review pass found F6 (cropped model / misaligned anchors) and, after that fix, F7 (unlit cyan/black model).
-- Final pass after all fixes: the heart is framed with margin, shows its authored red/blue/purple/tan materials, and the active hotspot is a subtle accent.
+- Final pass after round-1 fixes: the heart is framed with margin, shows its authored red/blue/purple/tan materials, and the active hotspot is a subtle accent.
 - Forced `?rendererErrors=1` confirmed the WebGPU → WebGL step-down keeps the same framed and lit rendering, with a visible status message.
+- Round-2 browser pass (backend-only fixes) confirmed no visual or console regression: catalog still has one card and zero scripts; lesson Start still yields `data-renderer="webgpu"` and `data-scene-ready="true"`, with the whole heart correctly framed and lit.
 - No unexpected console errors; only static-preview `/api/*` 404s, which are expected without a Worker.
 
 ## Phase evidence roll-up
@@ -51,10 +52,11 @@ See `verification/browser.md` for the full log. Primary used the in-app browser 
 | 5 Mastery, Quiz & Credentials | `df16b86` | `phase-5.md` | verified |
 | 6 Polish & Proof | `0bd954e` | `phase-6.md` | verified |
 | R1 Review Fixes | `f100566` | `review-fix-r1.md`, `browser.md` | verified |
+| R2 Re-review Fixes | `1d84826` | `review-fix-r2.md`, `browser.md` | verified |
 
 ## Coverage gate
 
-`vitest.config.ts` now includes 11 logic-bearing modules (`scene-manifest`, `hotspot-store`, `offline-queue`, `api-client`, events, retrieval, prompt, quota, intent, mastery, badge) with per-file 80% thresholds. Final aggregate: 98.59% statements, 91.7% branches, 97.8% functions, 99.11% lines. No test was weakened, skipped, or deleted to pass the gate.
+`vitest.config.ts` includes 11 logic-bearing modules (`scene-manifest`, `hotspot-store`, `offline-queue`, `api-client`, events, retrieval, prompt, quota, intent, mastery, badge) with per-file 80% thresholds. Final aggregate: 98.6% statements, 91.7% branches, 97.84% functions, 99.11% lines. No test was weakened, skipped, or deleted to pass the gate.
 
 ## Static and security checks
 
@@ -76,8 +78,8 @@ Verification retries were capped at 2 per phase. The known intermittent oxfmt ex
 
 ## Human-only exceptions
 
-Real GitHub/Google OAuth handshakes, LLM API credentials, Cloudflare deployment credentials, and physical WebGPU hardware are not exercised in CI. Interfaces are covered with injected fakes, and the browser pass exercised WebGPU plus forced WebGL on the available machine.
+Real GitHub/Google OAuth handshakes, LLM API credentials, Cloudflare deployment credentials, physical WebGPU hardware, and real Neon/embedding ingest are not exercised in CI. Interfaces are covered with injected fakes, and the browser pass exercised WebGPU plus forced WebGL on the available machine.
 
 ## Conclusion
 
-All six phases and review fix round 1 are verified; the integrated chain and browser pass succeed. The branch is ready for re-review.
+All six phases and both review fix rounds are verified; the integrated chain and browser pass succeed. The branch is ready for final re-review.

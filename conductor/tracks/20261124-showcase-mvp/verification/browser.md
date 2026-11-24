@@ -26,3 +26,12 @@ A static `astro preview` has no Worker behind `/api/*`; 404s for `/api/mastery`,
 - `/verify/` — public verifier page loads.
 - Console: only the expected static-preview `/api/*` 404s; no uncaught exceptions or rendering errors.
 - Verdict: **PASS**. F6 and F7 are resolved on both WebGPU and WebGL tiers.
+
+## Review-fix round 2 — after N1/N2
+
+This round was backend-only (retrieval, mastery and badge vocabulary); no scene or visual code changed. The workflow still requires a browser pass after every fix round, so primary re-checked the built preview.
+
+- `/` — catalog rendered with one lesson card and zero `<script>` tags; no unexpected console errors.
+- `/lessons/heart/` — poster, prose, tutor dock, quiz and mastery surfaces rendered. After clicking **Start interactive 3D view**, `data-renderer="webgpu"` and `data-scene-ready="true"`, the canvas showed the whole heart framed with margin, and the red/blue/purple/tan materials remained correctly lit. `data-active-hotspot="left_ventricle"` and prose binding remained intact. Screenshot inspected; not committed.
+- Console: only the expected static-preview `/api/*` 404; no uncaught exceptions or rendering regressions.
+- Verdict: **PASS**. N1/N2 did not introduce a visual or console regression.
