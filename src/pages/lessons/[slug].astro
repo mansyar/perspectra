@@ -2,6 +2,7 @@
 import { getCollection, getEntry, render } from 'astro:content';
 import { ProseHotspotBinder } from '../../components/prose/ProseHotspotBinder';
 import { SceneIsland } from '../../components/scene/SceneIsland';
+import { TutorDock } from '../../components/tutor/TutorDock';
 import { sceneManifestSchema, validateHotspotReferences } from '../../lib/scene-manifest';
 import '../../styles/global.css';
 import '../../styles/lesson.css';
@@ -75,6 +76,11 @@ const modelSrc = modelAssets[modelKey] ?? manifest.model.src;
           <Content />
         </article>
       </div>
+      <TutorDock
+        client:load
+        lessonId={entry.id}
+        hotspots={manifest.hotspots.map((hotspot) => hotspot.id)}
+      />
       <ProseHotspotBinder client:load />
     </main>
     <footer class="site-footer">

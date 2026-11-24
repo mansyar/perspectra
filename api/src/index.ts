@@ -4,13 +4,18 @@ import type { Env } from './env';
 import { createAuth, type AuthPort } from './lib/auth';
 import { learningEventSchema, syncBatchSchema, type LearningEvent } from './lib/events';
 import { createWorkersKv, type KvPort } from './lib/kv';
+import { createLlmAdapter, type LlmPort } from './lib/llm';
 import { createNeonProgressRepository, type ProgressRepository } from './lib/progress-repository';
+import { loadLessonChunks } from './lib/retrieval';
+import { tutorRoutes, type ChunkSource } from './routes/tutor';
 
-/** Everything the routes need; tests inject fakes for all three external services. */
+/** Everything the routes need; tests inject fakes for all external services. */
 export interface AppDeps {
   db: ProgressRepository;
   auth: AuthPort;
   kv: KvPort;
+  llm?: LlmPort;
+  getChunks?: ChunkSource;
 }
 
 type AppEnv = { Bindings: Env };
@@ -38,7 +43,13 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
 
   function resolve(env: Env): AppDeps {
     if (dependencies?.db && dependencies.auth && dependencies.kv) {
-      return { db: dependencies.db, auth: dependencies.auth, kv: dependencies.kv };
+      return {
+        auth: dependencies.auth,
+        db: dependencies.db,
+        getChunks: dependencies.getChunks,
+        kv: dependencies.kv,
+        llm: dependencies.llm,
+      };
     }
     const cached = production.get(env);
     if (cached) {
@@ -47,12 +58,26 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
     const db = dependencies?.db ?? createNeonProgressRepository(databaseFor(env));
     const auth = dependencies?.auth ?? createAuth(env, databaseFor(env));
     const kv = dependencies?.kv ?? createWorkersKv(env.RATE_LIMIT_KV);
-    const resolved = { db, auth, kv };
+    const resolved = {
+      auth,
+      db,
+      getChunks: dependencies?.getChunks ?? loadLessonChunks,
+      kv,
+      llm: dependencies?.llm ?? createLlmAdapter(env),
+    };
     production.set(env, resolved);
     return resolved;
   }
 
   app.get('/health', (c) => c.json({ status: 'ok', service: 'perspectra-api' }));
+
+  app.route(
+    '/api/tutor',
+    tutorRoutes((env) => {
+      const deps = resolve(env);
+      return { auth: deps.auth, getChunks: deps.getChunks, kv: deps.kv, llm: deps.llm };
+    }),
+  );
 
   app.all('/api/auth/*', (c) => resolve(c.env).auth.handler(c.req.raw));
 

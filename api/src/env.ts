@@ -17,4 +17,9 @@ export interface Env {
   GITHUB_CLIENT_SECRET?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  LLM_PROVIDER?: string;
+  LLM_API_KEY?: string;
+  LLM_MODEL?: string;
+  EMBEDDING_API_KEY?: string;
+  EMBEDDING_MODEL?: string;
 }
