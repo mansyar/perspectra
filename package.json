@@ -22,6 +22,8 @@
     "verify": "pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build",
     "verify:full": "pnpm verify && pnpm smoke && pnpm test:e2e",
     "smoke": "playwright test --grep @smoke",
+    "test:a11y": "playwright test --grep @a11y",
+    "perf:lighthouse": "playwright test --grep @perf",
     "db:push": "echo \"db:push reserved for phase 3\"",
     "db:seed": "echo \"db:seed reserved for phase 3\""
   },
@@ -45,11 +47,14 @@
     "zustand": "5.1.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@cloudflare/workers-types": "5.20261123.1",
     "@playwright/test": "1.65.1",
     "@types/three": "0.187.0",
     "@vitest/coverage-v8": "5.1.1",
+    "chrome-launcher": "1.2.0",
     "drizzle-kit": "0.31.11",
+    "lighthouse": "13.6.0",
     "oxfmt": "0.80.0",
     "oxlint": "1.95.0",
     "typescript": "6.0.3",
