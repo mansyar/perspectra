@@ -36,7 +36,7 @@
 - **Covers:** FR-2, FR-8, AC-3, NFR-4
 - **Touches:** `package.json`, `pnpm-lock.yaml`, `api/src/db/seed.ts`, `tests/unit/db-scripts.test.ts`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Add tsx and replace placeholder scripts** — covers: FR-2, NFR-4
 - [ ] **P2.T2: Add a CLI entry to the seed module** — covers: FR-2, AC-3
