@@ -7,7 +7,8 @@
 - Branch: `chore/20261124-public-deployment`
 - Preparation base/head: `35ffadd4a059020c5850f5a0e747c105f222afe1` / `792e9f31a60980a25917ac0dedd24326c3e10bd2`
 - Follow-up base/head: `f7ec177cf710d1bf544b678325070d2e79810901` / `8c96f365583fc55d6cfbedfa04bac2f57f777316`
-- Result: **preparation and Worker entry-point fix verified locally; production redeploy evidence pending primary**
+- Auth-schema base/head: `2068c9203c48777c8ae83b28d7d1df0615402a1e` / `1d584b679bbb89c2186ecd2f8f4e6842433e1673`
+- Result: **preparation, Worker entry point, and Better Auth session schema verified locally; production migration/redeploy evidence pending primary**
 
 ## Preparation
 
@@ -116,10 +117,12 @@ was reverted. The final committed source/test tree is identical to the tree that
   `fix(deploy): resolve generated Wrangler project paths`.
 - Follow-up commit: `8c96f365583fc55d6cfbedfa04bac2f57f777316` —
   `fix(api): export Hono app as Worker default`.
-- The follow-up changed only `api/src/index.ts` and `tests/integration/worker-assets.test.ts` before
-  this evidence update.
-- No package, lockfile, workspace, committed Wrangler template, unrelated source, schema,
-  migration, or coverage configuration was changed.
+- The Worker entry-point follow-up changed only `api/src/index.ts` and
+  `tests/integration/worker-assets.test.ts` before its evidence update. The later auth-schema
+  follow-up changed only `api/src/db/schema.ts`, `migrations/0002_session_auth_fields.sql`, and
+  `tests/unit/auth-schema.test.ts` before its evidence update.
+- No package, lockfile, workspace, committed Wrangler template, unrelated source, coverage
+  configuration, or original migration was changed by either follow-up.
 - No deployment command was run, no Cloudflare/Neon resource was changed, and
   `.conductor/deploy/production.env` was not read.
 - No secret, credential, account id, private KV id, Neon URL, or real domain was recorded.
@@ -130,6 +133,7 @@ was reverted. The final committed source/test tree is identical to the tree that
 | --- | --- |
 | P4.T1 preparation portion | Met locally: generated config now resolves project entry/assets paths and regression tests prove the result. |
 | Worker entry-point follow-up | Met locally: the module now exposes the same Hono app as both named and default exports, with identity/fetch regression coverage. |
+| Better Auth session-schema follow-up | Met locally: nullable `ipAddress`/`userAgent` Drizzle fields, idempotent SQL migration, and schema regression coverage are present. |
 | FR-1 | Supported: the Worker module now has the default entry point required to execute behind Workers Static Assets. |
 | FR-2 | Supported: API-first Hono routing can now be invoked by Cloudflare instead of failing with error 1042; public-origin proof remains primary-owned. |
 | AC-1 / AC-2 | Supported locally by entry-point and existing asset-fallback tests; production `/health`, `/api/*`, and 404 smoke checks remain primary-owned. |
@@ -146,6 +150,9 @@ None.
 
 - The primary will append redeployment and production-origin evidence to this file, including proof
   that `/health` and `/api/*` no longer return Cloudflare error 1042.
+- The primary must apply `migrations/0002_session_auth_fields.sql` to the production Neon branch,
+  then redeploy and smoke-test authenticated API initialization. This subagent ran no database or
+  deployment command and did not reset or rewrite the original migration.
 - Production redeployment, production E2E/Lighthouse, browser/console checks, and OAuth/email auth
   verification were not performed by this preparation subagent.
 - GitHub OAuth remains explicitly deferred by the user; Google OAuth and email/password remain in
@@ -168,3 +175,66 @@ pnpm verify
 - The build retained the existing >500 kB chunk warning; it did not fail verification.
 
 Local entry-point verification is complete. Production redeploy and origin smoke checks remain primary-owned and will be appended after the fixed Worker is uploaded.
+
+## Follow-up: Better Auth session schema — 2026-11-25
+
+### Production symptom
+
+After the default-export fix was deployed, `/health` returned `200` and `/` served the application,
+but authenticated API initialization returned `500`. `wrangler tail` reported:
+
+```text
+BetterAuthError: Drizzle schema mismatch
+Missing columns
+  session.ipAddress
+  session.userAgent
+```
+
+### Root cause
+
+The Drizzle `session` table omitted Better Auth's default `ipAddress` and `userAgent` fields. The
+production database also lacked the corresponding nullable columns, so Better Auth rejected the
+schema before authenticated API initialization could complete.
+
+### Fix and migration
+
+- Added nullable text columns `ipAddress: text('ip_address')` and
+  `userAgent: text('user_agent')` to the `session` Drizzle table.
+- Added repeatable `migrations/0002_session_auth_fields.sql` with separate
+  `ALTER TABLE "session" ADD COLUMN IF NOT EXISTS` statements for both columns.
+- Left `migrations/0001_init.sql` unchanged. No data reset, table rewrite, or destructive migration
+  was introduced.
+
+### Regression coverage
+
+`tests/unit/auth-schema.test.ts` uses Drizzle's table metadata without a database or network. It
+asserts that both fields expose the expected SQL names (`ip_address`, `user_agent`), have SQL type
+`text`, and are nullable (`notNull: false`). The test failed against the old schema with
+`session.ipAddress` undefined, then passed after the fix.
+
+### Verification
+
+Exact required command:
+
+```text
+pnpm verify
+```
+
+The run exited `0`:
+
+- Lint passed with six non-blocking pre-existing warnings (four `prefer-add-event-listener` and two
+  `no-array-sort`) plus the existing Worker identity-test `no-shadow` warning.
+- Format check passed across 97 files.
+- TypeScript/Astro typecheck passed.
+- Unit tests: **20 files, 174 tests passed**.
+- Coverage: **98.61% statements, 92.41% branches, 97.84% functions, 99.12% lines**.
+- Integration tests: **7 files, 46 tests passed**.
+- Astro production build passed with **3 pages**; the existing large-chunk warning remained
+  non-blocking.
+- `git diff --check` passed with no output.
+
+Commit: `1d584b679bbb89c2186ecd2f8f4e6842433e1673` — `fix(db): align Better Auth session schema`.
+
+No database/deployment command was run, `.conductor/deploy/production.env` was not read, and no
+credential or production connection value was recorded. Applying the migration and verifying the
+public authenticated API remain primary-owned.
