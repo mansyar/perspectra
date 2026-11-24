@@ -102,3 +102,16 @@ Review fixes are appended by `conductor-review` as needed.
 - [x] **P5.T1: Run final local and production verification** — covers: AC-9, AC-12, NFR-2, NFR-7
 - [x] **P5.T2: Audit repository and configuration for secrets and placeholder regressions** — covers: AC-10, NFR-1
 - [x] **P5.T3: Write integrated evidence with live URL, phase roll-up, and known exceptions** — covers: FR-9, FR-10, NFR-8
+
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve the three non-blocking documentation and evidence findings from review round 1.
+- **Depends on:** Phase 5 and review round 1
+- **Covers:** F1, F2, F3, FR-3, FR-8, NFR-1, NFR-5, AC-10
+- **Touches:** `docs/DEPLOYMENT.md`, `README.md`, `docs/ARCHITECTURE.md`, `api/src/env.ts`, `verification/integrated.md`, `verification/review-fix-r1.md`
+- **Verification:** `pnpm verify`
+- **Status:** in_progress
+
+- [ ] **R1.T1: Mark GitHub OAuth as deferred in the deployment runbook and align related README/architecture wording** — covers: F1, FR-8, NFR-5, AC-10
+- [ ] **R1.T2: Correct the LLM_MODEL environment comment to the current default and production override** — covers: F2, FR-3
+- [ ] **R1.T3: Map NFR-1 to the secret audit/config tests and record review-fix verification evidence** — covers: F3, NFR-1, FR-8
