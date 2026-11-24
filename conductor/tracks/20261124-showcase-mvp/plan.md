@@ -114,7 +114,7 @@
 - **Covers:** FR-1, FR-14, NFR-1, NFR-5, NFR-6, NFR-8, AC-1, AC-18, AC-19, AC-20, AC-22
 - **Touches:** `README.md`, `src/styles/global.css`, `src/pages/index.astro`, `src/components/**`, `tests/e2e/**`, `lighthouse.config.*`, `docs/**`, `conductor/tracks/20261124-showcase-mvp/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P6.T1: Design tokens, responsive polish, light reading surface** — covers: FR-1
 - [ ] **P6.T2: Accessibility audit, reduced-motion, keyboard pass** — covers: FR-14, NFR-5

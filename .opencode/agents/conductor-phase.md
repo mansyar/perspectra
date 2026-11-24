@@ -141,6 +141,12 @@ permissions:
   - action: shell
     resource: "pnpm test:e2e"
     effect: allow
+  - action: shell
+    resource: "pnpm test:a11y"
+    effect: allow
+  - action: shell
+    resource: "pnpm perf:lighthouse"
+    effect: allow
 ---
 
 <!-- Conductor agent template: v2.3 -->
