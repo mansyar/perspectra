@@ -76,7 +76,7 @@
 - **Covers:** FR-5, FR-7, FR-8, NFR-3, NFR-4, NFR-6, AC-6, AC-8, AC-9, AC-10, AC-17, AC-20, AC-21
 - **Touches:** `api/src/routes/tutor.ts`, `api/src/lib/{retrieval,prompt,llm,quota,intent}.ts`, `scripts/embed-lessons.ts`, `src/components/tutor/**`, `src/lib/tutor-client.ts`, `tests/unit/{retrieval,prompt,quota,intent}.test.ts`, `tests/integration/tutor.test.ts`, `tests/e2e/tutor.spec.ts`
 - **Verification:** `pnpm verify`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P4.T1: Chunk MDX, embed into pgvector, build hybrid BM25+vector retrieval** — covers: FR-7
 - [ ] **P4.T2: Layered prompt assembly, intent router, and cosine threshold** — covers: FR-8
