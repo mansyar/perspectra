@@ -12,7 +12,7 @@
 - **Goal:** every pull request runs static/unit/integration/build plus smoke/E2E/Lighthouse checks with no secrets required.
 - **Depends on:** none
 - **Covers:** FR-1, FR-8, AC-1, AC-2, NFR-2, NFR-3
-- **Touches:** `.github/workflows/**`, `scripts/check-ci.mjs`, `package.json`, `conductor/tracks/20261124-release-readiness/verification/**`
+- **Touches:** `.github/workflows/**`, `scripts/check-ci.mjs`, `tests/unit/ci-contract.test.ts`, `package.json`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify`
 - **Status:** in_progress
 
