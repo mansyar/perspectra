@@ -13,19 +13,16 @@
 - **Covers:** FR-10, AC-11
 - **Touches:** `conductor/roadmap.md`, `README.md`, `.conductor/runs/20261124-release-readiness*`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Retire RM-5 and add RM-6 Public deployment** — covers: FR-10, AC-11
-- [ ] **P1.T2: Remove stale release-readiness run artifacts** — covers: FR-10, AC-11
-- [ ] **P1.T3: Correct README topic-onboarding and archived evidence links** — covers: FR-10, AC-11
-- [ ] **P1.T4: Record phase 1 evidence** — covers: FR-10, AC-11
+- [x] **P1.T1: Retire RM-5 and add RM-6 Public deployment** — covers: FR-10, AC-11
+- [x] **P1.T2: Remove stale release-readiness run artifacts** — covers: FR-10, AC-11
+- [x] **P1.T3: Correct README topic-onboarding and archived evidence links** — covers: FR-10, AC-11
+- [x] **P1.T4: Record phase 1 evidence** — covers: FR-10, AC-11
 
-<!--
-The primary appends after acceptance:
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 76dac01
 **Evidence:** conductor/tracks/20261124-public-deployment/verification/phase-1.md
--->
 
 ## Phase 2: Gemini-Native Embeddings
 
