@@ -110,8 +110,11 @@ Review fixes are appended by `conductor-review` as needed.
 - **Covers:** F1, F2, F3, FR-3, FR-8, NFR-1, NFR-5, AC-10
 - **Touches:** `docs/DEPLOYMENT.md`, `README.md`, `docs/ARCHITECTURE.md`, `api/src/env.ts`, `verification/integrated.md`, `verification/review-fix-r1.md`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** F1-F3 are fixed; documentation and evidence are aligned with the explicit GitHub OAuth deferral, current Gemini model, and secret audit.
+- **Checkpoint:** 40b66d8
+- **Evidence:** `conductor/tracks/20261124-public-deployment/verification/review-fix-r1.md`
 
-- [ ] **R1.T1: Mark GitHub OAuth as deferred in the deployment runbook and align related README/architecture wording** — covers: F1, FR-8, NFR-5, AC-10
-- [ ] **R1.T2: Correct the LLM_MODEL environment comment to the current default and production override** — covers: F2, FR-3
-- [ ] **R1.T3: Map NFR-1 to the secret audit/config tests and record review-fix verification evidence** — covers: F3, NFR-1, FR-8
+- [x] **R1.T1: Mark GitHub OAuth as deferred in the deployment runbook and align related README/architecture wording** — covers: F1, FR-8, NFR-5, AC-10
+- [x] **R1.T2: Correct the LLM_MODEL environment comment to the current default and production override** — covers: F2, FR-3
+- [x] **R1.T3: Map NFR-1 to the secret audit/config tests and record review-fix verification evidence** — covers: F3, NFR-1, FR-8
