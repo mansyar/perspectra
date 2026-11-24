@@ -5,7 +5,7 @@
 - Base: `99630bd70a075e30199efffdbdd99cda825644f9`
 - Public origin: <https://perspectra-api.m-ansyarafi.workers.dev>
 - Integrated result: **PASS**
-- Final checkpoint: `PENDING_PRIMARY`
+- Final checkpoint: `627b01f4558a9de2eb99ce7cde5dc1db4d80b217`
 
 This file consolidates the final local gates, authoritative primary-owned production checks, the read-only secret/placeholder audit, and the fallback behavior relied on by the public release. It does not replace the primary's final checkpoint, review, or PR steps.
 
@@ -35,7 +35,7 @@ Local Lighthouse scores are ordered performance / accessibility / best-practices
 | Route | Performance | Accessibility | Best practices | SEO |
 | --- | ---: | ---: | ---: | ---: |
 | `/` | 1.00 | 1.00 | 0.96 | 1.00 |
-| `/lessons/heart/` | 0.97 | 1.00 | 0.96 | 1.00 |
+| `/lessons/heart/` | 0.96 | 1.00 | 0.96 | 1.00 |
 
 ## 2. Authoritative production verification
 
@@ -63,8 +63,8 @@ Production deployment remains manual. The deployed Worker and static assets shar
 | P1 — roadmap and release state | `76dac01` | Verified | [phase-1.md](phase-1.md) |
 | P2 — Gemini-native embeddings | `7d57ebc` | Verified | [phase-2.md](phase-2.md) |
 | P3 — same-origin Worker and production E2E mode | `185c7e9` | Verified | [phase-3.md](phase-3.md) |
-| P4 — production preparation and follow-up fixes | `6673fae` | Verified locally; production proof supplied by primary | [phase-4.md](phase-4.md) |
-| P5 — integrated verification and proof | `PENDING_PRIMARY` | Integrated evidence complete; final checkpoint owned by primary | This file |
+| P4 — production preparation and follow-up fixes | `6673fae` | Verified locally and in production | [phase-4.md](phase-4.md) |
+| P5 — integrated verification and proof | `627b01f` | Verified | This file |
 
 ## 4. Coverage totals and per-file gate
 
@@ -148,4 +148,10 @@ Production and local browser tests exercise poster fallback, WebGL recovery, key
 
 **PASS** — local gates, production E2E, production Lighthouse, real-service smoke, authentication proof, coverage gates, secret audit, and fallback evidence are complete.
 
-`PENDING_PRIMARY`
+`627b01f4558a9de2eb99ce7cde5dc1db4d80b217`
+
+## 10. Primary verification
+
+The primary independently repeated `pnpm verify:full`. The first attempt hit the documented oxfmt exit-5-after-clean-output flake; the immediate permitted rerun exited 0 with 177 unit tests, 46 integration tests, 1 smoke test, 17 local E2E tests, the per-file coverage gate, and a 3-page build. Final local Lighthouse was catalog `1.00/1.00/0.96/1.00` and lesson `0.96/1.00/0.96/1.00`.
+
+The primary also independently reran `pnpm test:production` (17/17) and the real-service production smoke (13/13) after Google OAuth credentials were installed. Production Lighthouse was catalog `1.00/1.00/0.96/1.00` and lesson `0.98/1.00/0.96/1.00`. Result: **PASS**.

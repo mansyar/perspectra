@@ -94,8 +94,11 @@ Review fixes are appended by `conductor-review` as needed.
 - **Covers:** FR-9, FR-10, AC-9, AC-10, AC-12, NFR-1, NFR-2, NFR-7, NFR-8
 - **Touches:** `verification/integrated.md` and related evidence
 - **Verification:** `pnpm verify:full` and `pnpm test:production`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** Final local and production verification, secret/placeholder audit, and integrated evidence are complete.
+- **Checkpoint:** 627b01f
+- **Evidence:** `conductor/tracks/20261124-public-deployment/verification/integrated.md`
 
-- [ ] **P5.T1: Run final local and production verification** — covers: AC-9, AC-12, NFR-2, NFR-7
-- [ ] **P5.T2: Audit repository and configuration for secrets and placeholder regressions** — covers: AC-10, NFR-1
-- [ ] **P5.T3: Write integrated evidence with live URL, phase roll-up, and known exceptions** — covers: FR-9, FR-10, NFR-8
+- [x] **P5.T1: Run final local and production verification** — covers: AC-9, AC-12, NFR-2, NFR-7
+- [x] **P5.T2: Audit repository and configuration for secrets and placeholder regressions** — covers: AC-10, NFR-1
+- [x] **P5.T3: Write integrated evidence with live URL, phase roll-up, and known exceptions** — covers: FR-9, FR-10, NFR-8
