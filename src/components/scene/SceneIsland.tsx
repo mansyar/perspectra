@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
 import type { SceneManifest } from '../../lib/scene-manifest';
-import { HeartScene } from './HeartScene';
 import { RendererErrorBoundary } from './RendererErrorBoundary';
 import { detectRendererTier, nextTier, type RendererTier } from './renderer-support';
 import './scene.css';
+
+/** Heavy 3D code is loaded only when the learner opts into the interactive view. */
+const HeartScene = lazy(async () => {
+  const module = await import('./HeartScene');
+  return { default: module.HeartScene };
+});
 
 interface SceneIslandProps {
   manifest: SceneManifest;
@@ -16,6 +21,7 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
   const [tier, setTier] = useState<RendererTier | 'detecting'>('detecting');
   const [ready, setReady] = useState(false);
+  const [interactive, setInteractive] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -34,10 +40,17 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
         try {
           const response = await fetch(modelSrc, { method: 'GET' });
           if (!response.ok) {
+            if (!cancelled) {
+              setTier('poster');
+            }
             return;
           }
         } catch {
           // A missing GLB is exactly the case the poster covers.
+          if (!cancelled) {
+            setTier('poster');
+          }
+          return;
         }
       }
       if (!cancelled) {
@@ -72,16 +85,27 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
           hidden={!showPoster}
           src={manifest.model.poster}
         />
-        {(tier === 'webgpu' || tier === 'webgl') && (
-          <RendererErrorBoundary onError={stepDown}>
-            <HeartScene
-              manifest={manifest}
-              modelSrc={modelSrc}
-              onReady={() => setReady(true)}
-              reducedMotion={reducedMotion}
-              tier={tier}
-            />
-          </RendererErrorBoundary>
+        {(tier === 'webgpu' || tier === 'webgl') && !interactive && (
+          <button
+            className="scene-island__start"
+            onClick={() => setInteractive(true)}
+            type="button"
+          >
+            Start interactive 3D view
+          </button>
+        )}
+        {interactive && (tier === 'webgpu' || tier === 'webgl') && (
+          <Suspense fallback={null}>
+            <RendererErrorBoundary onError={stepDown}>
+              <HeartScene
+                manifest={manifest}
+                modelSrc={modelSrc}
+                onReady={() => setReady(true)}
+                reducedMotion={reducedMotion}
+                tier={tier}
+              />
+            </RendererErrorBoundary>
+          </Suspense>
         )}
         {tier === 'detecting' && (
           <p className="scene-island__status">Preparing interactive scene…</p>

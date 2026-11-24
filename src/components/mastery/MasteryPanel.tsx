@@ -81,7 +81,6 @@ export function MasteryPanel({ lessonId, hotspots }: MasteryPanelProps) {
       <div className="mastery-panel__grid">
         {cells.map((cell) => (
           <button
-            aria-label={`${label(cell.hotspotId)}: ${Math.round(cell.mastery * 100)} percent mastery`}
             className="mastery-panel__cell"
             data-mastery={cell.mastery}
             data-mastery-hotspot={cell.hotspotId}

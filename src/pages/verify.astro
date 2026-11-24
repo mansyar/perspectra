@@ -18,6 +18,18 @@ import '../styles/global.css';
     </header>
     <main class="page">
       <h1>Credential verification</h1>
+      <form class="verify-form" data-verify-form>
+        <label for="verify-credential">Encoded credential</label>
+        <input
+          autocomplete="off"
+          data-verify-input
+          id="verify-credential"
+          name="credential"
+          placeholder="Paste a credential to check its signature"
+          type="text"
+        />
+        <button type="submit">Verify credential</button>
+      </form>
       <p data-verify-status role="status">
         Checking credential…
       </p>
@@ -41,12 +53,14 @@ import '../styles/global.css';
     }
   }
 
-  void (async () => {
+  async function verifyCredential(credential: string): Promise<void> {
     const status = document.querySelector<HTMLElement>('[data-verify-status]');
     const details = document.querySelector<HTMLElement>('[data-verify-details]');
-    const credential = new URLSearchParams(location.search).get('credential');
     if (!credential) {
       setText('[data-verify-status]', 'No credential was supplied.');
+      if (details) {
+        details.hidden = true;
+      }
       return;
     }
     try {
@@ -64,6 +78,9 @@ import '../styles/global.css';
       };
       if (!response.ok || !result.valid) {
         setText('[data-verify-status]', `Invalid credential: ${result.reason ?? 'unavailable'}`);
+        if (details) {
+          details.hidden = true;
+        }
         return;
       }
       const parsed = result.credential ?? {};
@@ -81,6 +98,21 @@ import '../styles/global.css';
       }
     } catch {
       setText('[data-verify-status]', 'Verification is currently unavailable.');
+      if (details) {
+        details.hidden = true;
+      }
     }
-  })();
+  }
+
+  const form = document.querySelector<HTMLFormElement>('[data-verify-form]');
+  const input = document.querySelector<HTMLInputElement>('[data-verify-input]');
+  const supplied = new URLSearchParams(location.search).get('credential');
+  if (input && supplied) {
+    input.value = supplied;
+  }
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void verifyCredential(input?.value.trim() ?? '');
+  });
+  void verifyCredential(supplied ?? '');
 </script>
