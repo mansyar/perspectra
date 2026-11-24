@@ -8,7 +8,8 @@
 - Preparation base/head: `35ffadd4a059020c5850f5a0e747c105f222afe1` / `792e9f31a60980a25917ac0dedd24326c3e10bd2`
 - Follow-up base/head: `f7ec177cf710d1bf544b678325070d2e79810901` / `8c96f365583fc55d6cfbedfa04bac2f57f777316`
 - Auth-schema base/head: `2068c9203c48777c8ae83b28d7d1df0615402a1e` / `1d584b679bbb89c2186ecd2f8f4e6842433e1673`
-- Result: **preparation, Worker entry point, and Better Auth session schema verified locally; production migration/redeploy evidence pending primary**
+- Gemini-chat base/head: `0e4bd88e3d3ef84f9ae7236c65e4bce6cc582b4a` / `c6b2f14ef05d83251cb197f3e08ed0589e2b68f9`
+- Result: **preparation, Worker entry point, Better Auth session schema, and Gemini chat settings verified locally; production migration/redeploy evidence pending primary**
 
 ## Preparation
 
@@ -255,3 +256,73 @@ pnpm verify
 - The existing >500 kB chunk warning remained non-blocking.
 
 Production migration application and authenticated-origin smoke verification remain primary-owned.
+
+## Follow-up: Gemini chat model and token budget — 2026-11-25
+
+### Production symptom
+
+After production credentials were configured, the tutor returned SSE `tutor_unavailable`. Direct
+Gemini checks showed `gemini-2.5-flash` was no longer available to new users and
+`gemini-3.8-flash` was temporarily unavailable, while the authenticated key successfully listed
+current models and `gemini-3.5-flash` returned `200`. After selecting `gemini-3.5-flash`, the tutor
+returned `invalid_citation`: the 400-token output cap was consumed by Gemini 3 thinking tokens,
+leaving a truncated answer without a `[[chunk-id]]` marker.
+
+### Root cause
+
+The adapter still defaulted to the unavailable `gemini-2.5-flash`, sent its API key in the URL query
+string, used temperature `0`, and supplied no Gemini 3 thinking budget. Gemini counts thinking
+tokens against `maxOutputTokens`, so the small cap could be exhausted before the visible answer
+received enough capacity for a valid citation.
+
+### Fix
+
+- Changed the default chat model to `gemini-3.5-flash`; `LLM_MODEL` remains configurable.
+- Moved chat authentication to the `x-goog-api-key` header, matching the embedding request
+  convention and removing the key from the URL.
+- Set `temperature: 1` and `thinkingConfig: { thinkingLevel: 'minimal' }` while retaining
+  `maxOutputTokens: 400`, preserving more of the shared output budget for the visible response.
+- Updated `README.md`, `docs/ARCHITECTURE.md`, and `docs/DEPLOYMENT.md` with the current default,
+  header authentication, Gemini 3 settings, and thinking-token budget explanation.
+
+### Regression coverage
+
+`tests/unit/llm.test.ts` updates the existing chat test to assert the exact default model URL,
+header-based API key, absence of the key in the URL, temperature `1`, minimal thinking, and the
+retained 400-token cap. It also keeps text-part joining and OpenAI-path exclusion coverage. A new
+test proves `LLM_MODEL` controls the chat model while preserving header authentication.
+
+The updated suite first ran against the old implementation as a red baseline: **2 failed, 17
+passed**, with failures showing the old model/query-string URL and missing thinking configuration.
+After the fix, all **19 adapter tests passed**.
+
+### Verification
+
+Exact required command:
+
+```text
+pnpm verify
+```
+
+The run exited `0`:
+
+- Lint passed with seven non-blocking pre-existing warnings (four `prefer-add-event-listener`, two
+  `no-array-sort`, and the existing Worker identity-test `no-shadow`).
+- Format check passed across 97 files.
+- TypeScript/Astro typecheck passed.
+- Unit tests: **20 files, 175 tests passed**.
+- Coverage: **98.61% statements, 92.41% branches, 97.84% functions, 99.12% lines**.
+- Integration tests: **7 files, 46 tests passed**.
+- Astro production build passed with **3 pages**; the existing large-chunk warning remained
+  non-blocking.
+- `git diff --check` passed with no output.
+
+Commit: `c6b2f14ef05d83251cb197f3e08ed0589e2b68f9` —
+`fix(api): align Gemini 3 chat settings`.
+
+No deployment command was run, `.conductor/deploy/production.env` was not read, and no credential
+or production connection value was recorded. Redeployment and a production tutor smoke proving a
+complete cited answer rather than `tutor_unavailable` or `invalid_citation` remain primary-owned.
+The pre-existing `Env.LLM_MODEL` JSDoc in `api/src/env.ts` still names the old default, but that file
+is outside this follow-up's allowed Touches; runtime behavior and the requested documentation are
+aligned.
