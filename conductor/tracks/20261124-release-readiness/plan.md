@@ -94,7 +94,7 @@
 - **Covers:** FR-8, AC-10, NFR-1, NFR-7
 - **Touches:** `conductor/tracks/20261124-release-readiness/verification/integrated.md`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P5.T1: Run the full verification chain and Lighthouse budgets** — covers: AC-10, NFR-7
 - [ ] **P5.T2: Audit for committed secrets and placeholder values** — covers: NFR-1, AC-5
