@@ -36,14 +36,17 @@
 - **Covers:** FR-2, FR-8, AC-3, NFR-4
 - **Touches:** `package.json`, `pnpm-lock.yaml`, `api/src/db/seed.ts`, `tests/unit/db-scripts.test.ts`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** `b45ef3f`
+- **Evidence:** `conductor/tracks/20261124-release-readiness/verification/phase-2.md`
 
-- [ ] **P2.T1: Add tsx and replace placeholder scripts** — covers: FR-2, NFR-4
-- [ ] **P2.T2: Add a CLI entry to the seed module** — covers: FR-2, AC-3
-  - [ ] **P2.T2.1: Keep `seedHeart` idempotent via upsert**
-  - [ ] **P2.T2.2: Read `DATABASE_URL` only at CLI runtime**
-- [ ] **P2.T3: Add script-contract and seed-idempotence tests** — covers: AC-3
-- [ ] **P2.T4: Record phase 2 evidence** — covers: FR-8
+- [x] **P2.T1: Add tsx and replace placeholder scripts** — covers: FR-2, NFR-4
+- [x] **P2.T2: Add a CLI entry to the seed module** — covers: FR-2, AC-3
+  - [x] **P2.T2.1: Keep `seedHeart` idempotent via upsert**
+  - [x] **P2.T2.2: Read `DATABASE_URL` only at CLI runtime**
+- [x] **P2.T3: Add script-contract and seed-idempotence tests** — covers: AC-3
+- [x] **P2.T4: Record phase 2 evidence** — covers: FR-8
 
 ## Phase 3: Deploy Configuration, Docs and Workspace Cleanup
 

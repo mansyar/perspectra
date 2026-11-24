@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-24T15:53:35+11:00",
-  "updated_at": "2026-11-24T16:22:00+11:00",
+  "updated_at": "2026-11-24T16:30:00+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "chore/20261124-release-readiness",
@@ -14,11 +14,11 @@
   "base_sha": "496f53c5805d42f983f6aba0104249d7ebfd8b28",
   "progress": {
     "phases_total": 5,
-    "phases_verified": 1,
+    "phases_verified": 2,
     "tasks_total": 20,
-    "tasks_done": 4
+    "tasks_done": 8
   },
-  "last_checkpoint": "a0725459711aff3ba6390e4d14a6cdee5ca61eeb",
+  "last_checkpoint": "b45ef3f64a6562a7173bc6b222fede5bf4577e35",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",
