@@ -6,7 +6,8 @@ The renderer depends only on this contract, not on Blender.
 
 - `assets/heart/build_heart.py` — deterministic Blender recipe (Blender 5.2 LTS).
 - `assets/heart/heart.glb` — exported glTF 2.0 binary, committed.
-- `public/assets/heart/heart-poster.png` — fallback poster, committed.
+- `public/assets/heart/heart-poster.png` — reproducible WebP source poster, committed.
+- `public/assets/heart/heart-poster.webp` — delivered fallback poster, committed.
 
 Regenerate from the project root with:
 
@@ -36,7 +37,9 @@ authoritative source.
 - No cameras, lights, animations, external textures, Draco, or KTX2 required.
 - Style: semi-realistic low-poly; pink/red myocardium, purple right ventricle,
   red aorta, blue pulmonary artery, warm valve tissue.
-- Poster: 960×960 PNG, dark cinematic background, same camera framing as the scene.
+- Poster: 960×960 WebP, dark cinematic background, same camera framing as the scene.
+- The PNG is retained as the deterministic source for Blender's native WebP export.
+- The delivered `heart-poster.webp` must be < 120,000 bytes so it remains eligible for the LCP image.
 
 ## Portability
 

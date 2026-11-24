@@ -9,6 +9,8 @@ export interface KvBinding {
  * never declared in wrangler.toml or read by client code.
  */
 export interface Env {
+  /** Workers Static Assets binding used by the non-API fallback. */
+  ASSETS?: { fetch(request: Request): Promise<Response> };
   RATE_LIMIT_KV?: KvBinding;
   DATABASE_URL?: string;
   BETTER_AUTH_SECRET?: string;
@@ -17,9 +19,13 @@ export interface Env {
   GITHUB_CLIENT_SECRET?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  /** Only `gemini` is supported; omit for the default. */
   LLM_PROVIDER?: string;
   LLM_API_KEY?: string;
+  /** Chat model override; adapter default is `gemini-3.5-flash`; production may use `gemini-3.5-flash-lite`. */
   LLM_MODEL?: string;
+  /** Optional Gemini embedding key; falls back to `LLM_API_KEY`. */
   EMBEDDING_API_KEY?: string;
+  /** Only `gemini-embedding-2` (optionally prefixed with `models/`) is supported. */
   EMBEDDING_MODEL?: string;
 }

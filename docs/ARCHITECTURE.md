@@ -1,157 +1,134 @@
-# Perspectra architecture
+# Architecture
+
+Perspectra is a static-first learning application with a same-origin Cloudflare Worker API. The
+catalog and lesson prose render as static HTML with no client JavaScript. A progressive scene layer,
+tutor, quiz, and Badge 2.0 verifier add behavior without making core learning depend on a live model.
 
 ## System shape
 
 ```mermaid
 flowchart LR
-  subgraph Browser
-    CAT["/ catalog\nstatic HTML, 0 KB JS"]
-    L["/lessons/heart/\nAstro prose + React islands"]
-    V["/verify\npublic OB3 verifier"]
-    IDB[("IndexedDB\noffline event queue")]
-  end
-
-  subgraph Cloudflare
-    W["Hono Worker\napi/src/index.ts"]
-    KV[("Workers KV\nquotas, rate limits,\nquiz keys, cost")]
-  end
-
-  subgraph Data
-    PG[("Neon Postgres\npgvector + auth + events")]
-    LLM["LLM provider\nGemini or OpenAI"]
-  end
-
-  CAT --> L
-  L -->|"SSE /api/tutor"| W
-  L -->|"/api/progress, /api/quiz, /api/mastery"| W
-  L -->|"/api/badge/issue"| W
-  IDB -->|"/api/progress/sync"| W
-  V -->|"/api/badge/verify"| W
-  W --> KV
-  W --> PG
-  W --> LLM
+    Browser -->|"one HTTPS origin"| Worker["Cloudflare Worker + Hono"]
+    Worker -->|"Workers Static Assets: ./dist"| Static["Catalog, lessons, verifier, GLB/poster files"]
+    Worker -->|"API and same-origin auth"| Auth["Better Auth"]
+    Worker --> RateLimit["Workers KV: RATE_LIMIT_KV"]
+    Worker -->|"SQL + pgvector"| Neon["Neon Postgres branch"]
+    Worker -->|"Gemini chat + batch embeddings"| Gemini["Gemini API"]
 ```
 
-The static shell is built by Astro; only the lesson and verifier pages hydrate React/Astro islands. The Worker is the single place that reads secrets. Nothing in `src/**` or `dist/**` contains an API key.
+There is no separate Pages origin. Workers Static Assets serves `dist/`, `/health` and `/api/*`
+run the Hono Worker first, and the final non-API fallback calls the `ASSETS` binding. Missing
+assets and unknown routes return a real 404 rather than an SPA index response.
 
-## Request flow: grounded tutor
+## Public shell and static learning path
 
-1. `POST /api/tutor` validates `{lessonId, question, sessionId?, activeHotspot?, history?}` with Zod (question ≤ 1000 chars, history ≤ 16 turns).
-2. `classifyIntent` rejects off-topic questions **before any generation** and returns a static MDX excerpt.
-3. `checkQuota` applies anonymous (2/day), authenticated (60 requests, 150k tokens), 16-turn, and $10/month kill-switch gates in Workers KV.
-4. `retrieveChunks` scores embedded MDX chunks with `0.7 × cosine + 0.3 × normalized lexical`, enforcing a cosine floor.
-5. `assemblePrompt` emits four named layers — `GLOBAL CONTEXT`, `INSTRUCTIONAL RULES`, `ADAPTIVE VARIABLES`, `POST-INTERACTION CONTRACT` — plus source chunks and the question.
-6. `llm.complete` returns the full answer. The Worker validates `[[chunk-id]]` markers against the retrieved IDs; an invalid citation produces an `error` event and **no** answer deltas.
-7. The Worker paces validated text as SSE `data:` lines:
+- `src/pages/index.astro` renders the six-landmark catalog as static HTML. The catalog entry point
+  contains no client JavaScript.
+- `src/pages/lessons/[id].astro` renders title, preamble, scene, ground, extra-context toggles,
+  provenance citations, and the manifest-referenced WebP poster fallback at build time.
+- `src/components/lesson/{TutorPanel,Citation,QuizCard}.astro` deliver the tutorial, retrieval
+  explanation, and self-check without changing the static source of truth.
+- `src/pages/verify/index.astro` verifies OB3 credentials entirely in the browser.
+- Content sync reads `src/content/lessons/*.md` and normalized GLB manifests. New lesson
+  directories use the same slug as their content entry. Topic content, assets, scene/GLB assets,
+  catalog copy, and static maps are data; there is no per-topic Worker code branch.
 
-   ```text
-   data: {"type":"delta","text":"The aorta carries oxygenated blood. "}
+Static embeds may be reused across lessons. Their metadata remains explicit, and the verifier
+cannot be used as an arbitrary embedding host.
 
-   data: {"type":"delta","text":"[[heart:aorta:overview]]"}
+## API and request flow
 
-   data: {"type":"done","citations":["heart:aorta:overview"]}
+The Hono application in `api/src/index.ts` keeps routing and dependency injection explicit:
 
-   ```
-
-   Errors use `{"type":"error","code":"...","message":"...","staticExcerpt":"..."}` and keep the response at HTTP 200 where practical so the prose lesson is never blocked (NFR-6).
-
-## Contracts
-
-### Scene manifest (Zod)
-
-`src/lib/scene-manifest.ts` validates frontmatter for the `lessons` collection:
-
-```ts
-sceneManifestSchema = z.object({
-  title: z.string(),
-  topic: z.string(),
-  description: z.string(),
-  status: z.enum(['live', 'draft']),
-  order: z.number(),
-  model: z.object({ src: z.string(), poster: z.string(), scale: z.number().optional() }),
-  camera: z.object({ position: vec3Schema, target: vec3Schema }),
-  hotspots: z.array(z.object({
-    id: z.string().regex(/^[a-z][a-z0-9_]*$/),
-    label: z.string(),
-    position: vec3Schema,
-    focus: vec3Schema.optional(),
-  })),
-});
+```text
+/health
+/api/auth/*                  Better Auth
+/api/progress, /api/progress/sync
+/api/tutor                   intent → quota → retrieval → Gemini → validate → SSE
+/api/quiz/*, /api/mastery     grounded generation, grading, BKT/FSRS views
+/api/badge/*                 OB3 issue + public verification
+*                            ASSETS fallback for non-API routes
 ```
 
-`validateHotspotReferences(mdxSource, manifest, { requireAll: true })` runs at build time: every `data-hotspot="..."` in the MDX must exist in the manifest and every manifest hotspot must appear in the prose. The canonical heart IDs are `left_ventricle`, `right_ventricle`, `aorta`, `pulmonary_artery`, `mitral_valve`, `aortic_valve`.
+`api/src/routes/tutor.ts` resolves intent before model generation, computes a session-scoped
+quota, retrieves only static lesson evidence, calls Gemini with temperature `1`, minimal thinking,
+and a `maxOutputTokens` cap, rejects empty output or invalid lesson citations, and streams validated
+text as SSE. It never accepts browser-supplied context as trusted lesson content.
 
-### Hotspot ↔ prose binding
+`api/src/lib/llm.ts` is the Gemini-only boundary:
 
-`src/lib/hotspot-store.ts` is a small zustand store. `focusHotspot(id)` sets the active hotspot, holds a 1200 ms focus lock for camera tween stability, and scrolls `[data-hotspot="<id>"]` into view with reduced-motion-aware behavior. `ProseHotspotBinder` observes prose sections and sets the store on scroll; `SceneIsland` reflects the store in `data-active-hotspot` and drives the camera target. Keyboard users get equivalent `<button data-hotspot-button>` controls.
+- Chat uses `generateContent` with the `x-goog-api-key` header; `LLM_MODEL` defaults to `gemini-3.5-flash`.
+- Chat sends temperature `1` and `thinkingConfig.thinkingLevel: 'minimal'`. Because Gemini 3 includes thinking tokens in `maxOutputTokens`, minimal thinking reserves more of the retained 400-token cap for the response.
+- `EMBEDDING_API_KEY` is optional and falls back to `LLM_API_KEY`.
+- Embeddings use `gemini-embedding-2:batchEmbedContents`, `outputDimensionality: 1536`, and the
+  `task: question answering | query:` / `title: none | text:` prefixes for asymmetric retrieval.
+- The adapter requires one row per input, exactly 1536 finite numbers per row, and nonzero norm. It
+  normalizes every row to unit L2 norm before returning it. Unsupported providers or embedding
+  models fail fast, preventing incompatible embedding spaces.
 
-### Event and progress API
+The tutor uses the default query purpose. Lesson ingestion explicitly requests document purpose.
 
-Events are append-only and Zod-validated:
+Production dependencies are resolved per `Request`, not cached on the reusable Worker bindings object.
+One Neon serverless WebSocket `Pool` and Drizzle client serve every database operation within that
+request, including Better Auth transactions. Hono middleware registers `pool.end()` with
+`c.executionCtx.waitUntil` after the handler returns, so cleanup cannot block the response and no
+WebSocket crosses request contexts. `neon-http` is not used because Better Auth requires interactive
+transactions.
 
-```ts
-learningEventSchema = z.object({
-  id: z.string(),
-  lessonId: z.string(),
-  hotspotId: z.string(),
-  type: z.enum(['view', 'answer', 'quiz_result', 'reflection']),
-  payload: z.record(z.string(), z.unknown()).default({}),
-  timestamp: z.number().int().nonnegative(),
-});
+## Data and progression
+
+```text
+lesson 1 ──< lessonEmbedding vector(1536)       canonical text + normalized Gemini vectors
+hotspot * ──1 lesson                            static landmarks and evidence anchors
+event * ──1 user                                append-only behavioral facts
+user 1 ──< progress                             question stats, knowledge, and FSRS due dates
+quizAttempt * ──1 user                          grounded answers and teacher-model grading
+badgeCredential 1 ──1 user                      OB3 proof and state
 ```
 
-- `GET /api/progress` → `{userId, lessons, eventCount}` built by last-write-wins per hotspot.
-- `POST /api/progress` → append one event (120 writes/min/user via KV).
-- `POST /api/progress/sync` → dedupe by event ID, then LWW by `(timestamp, id)`.
-- `src/lib/offline-queue.ts` mirrors the merge in IndexedDB with `mergeEvents(local, remote)` and `toSyncBatch(events)`.
+`progress` is a materialized view with a deterministic projector from events. Knowledge state uses
+BKT mastery and FSRS scheduling; a learning event can be derived from more than one source. Hotspot
+revisits are idempotent, and sync accepts only a bounded idempotency-key batch under the request
+size limit.
 
-### Mastery model
+Drizzle migrations live in `api/drizzle/`. The production branch receives `pnpm db:push`, canonical
+seed data, and a Gemini embedding ingest that preserves NDJSON dry-runs and database upserts.
 
-`api/src/lib/mastery.ts` is pure and deterministic:
+## Authentication, quotas, and safety
 
-- `bktUpdate(prior, correct, {learn = 0.25, slip = 0.1, guess = 0.2})`:
-  `posterior = correct ? pKnown / (pKnown + guess·(1−pKnown)) : (1−pKnown) / ((1−pKnown) + slip·pKnown)`,
-  then `next = posterior + (1 − posterior) × learn`, clamped to `[0, 1]`.
-- `computeMastery(events, hotspots)` replays `answer`/`quiz_result` events ordered by `(timestamp, id)`, starting from a 0.2 prior. It also advances `ts-fsrs` cards (`FSRS`, `createEmptyCard`, `Rating`; retention 0.9, fuzz off, max interval 36 500 days).
-- View shape: `{hotspots:[{hotspotId, mastery, attempts, correct, dueAt}], updatedAt, overall}` with a 0.85 threshold and `recommendNext(view)` choosing the weakest unmastered hotspot.
+- Better Auth's required release path uses Google OAuth and email/password in both development and
+  production. GitHub OAuth remains in the provider code but is explicitly deferred by the user and is
+  not required for this release. Browser requests remain same-origin; `BETTER_AUTH_URL` is the final
+  workers.dev origin.
+- `RATE_LIMIT_KV` is a Worker KV binding for per-IP rate limits and session-scoped quotas. The real
+  namespace id is injected into an ignored deployment config by `pnpm deploy:prepare`; only the
+  32-zero placeholder is committed.
+- Tutor requests create a server-side Gemini usage session before generation. A typed quorum
+  summarizer reports when evidence is insufficient.
+- Badge proofs embed the issuer, criteria, evidence, and custody values. The browser verifier
+  recomputes OB3 `proofValue` using the server-side HMAC-SHA-256 secret and derives the public key
+  from the same secret without receiving it.
+- Disclosure and privacy notices remain visible before first tutor use. Anonymous and authenticated
+  telemetry do not place secrets or raw prompts in browser logs.
 
-### Quiz protocol
+## Rendering, assets, and the runtime budget
 
-- `POST /api/quiz/generate` (authenticated) asks the LLM for JSON restricted to the target hotspot's MDX section. The Worker validates `{id, hotspotId, question, options[4], answerIndex, explanation, remediationId}` and stores `{userid, question}` in KV under `quiz:<userId>:<id>` for 3600 s. The response omits `answerIndex` and `explanation`.
-- `POST /api/quiz/grade` reads that KV record (404 on miss or wrong user), appends exactly one stable-id `quiz_result` event `quiz:<questionId>:<userId>`, and returns `{correct, explanation, remediationId, mastery, nextHotspot, dueCards}`.
-- `GET /api/mastery` returns the mastery view plus `nextHotspot` and `dueCards`.
+`src/lib/scene/` owns the WebGL/WebGPU lifecycle. A remote model is lazy-loaded only when its turn
+arrives; local landmarks are keyboard reachable and support click, focus, and reduced-motion
+interaction. Scene failures step down to WebGL and then to the manifest-referenced WebP poster
+with retry. The three.js vendor bundle is split from application code and served from the same
+Worker origin.
 
-### Badge proof model
+The heart lesson's 960×960 WebP poster is checked into `public/assets/heart/` and its PNG remains
+the deterministic source for the Blender export. The integration contract requires the referenced
+WebP to be under 120,000 bytes so it stays eligible for LCP. The runtime budget and Lighthouse
+gates are defined in `tests/e2e/performance.spec.ts`. The catalog must carry zero JavaScript, the
+static entry must remain below the enforced gzip budget, and public pages must meet configured
+accessibility, best-practice, performance, and SEO budgets.
 
-`api/src/lib/badge.ts` issues an Open Badge 3.0 credential:
+## Operational boundaries
 
-```json
-{
-  "@context": [
-    "https://www.w3.org/2018/credentials/v1",
-    "https://purl.imsglobal.org/spec/ob/v3p0/context.json"
-  ],
-  "type": ["VerifiableCredential", "OpenBadgeCredential"],
-  "issuer": { "id": "https://perspectra.example", "name": "Perspectra" },
-  "credentialSubject": { "achievement": { "name": "Human Heart Mastery", "criteria": { "narrative": "..." } } },
-  "proof": {
-    "type": "DataIntegrityProof",
-    "cryptosuite": "hmac-sha256",
-    "proofPurpose": "assertionMethod",
-    "created": "...",
-    "proofValue": "..."
-  }
-}
-```
-
-The signature is `base64url(HMAC-SHA-256(canonicalJsonWithoutProof, BETTER_AUTH_SECRET))`; the encoded credential is `base64url(json) + "." + signature`. `verify` strips `proof`, canonicalizes, recomputes the HMAC with timing-safe comparison, and never throws. This is a portfolio-scale integrity check, not Ed25519/Decentralized Identifiers.
-
-Issue requires all six hotspots ≥ 0.85 (otherwise 403 with the failing IDs). `POST /api/badge/verify` is public and powers `/verify`.
-
-## Failure posture
-
-WebGPU failure → WebGL → poster. LLM outage, quota denial, off-topic question, or malformed citation → SSE error event plus a static MDX excerpt. Auth failure → sign-in prompt. Database failure on progress sync → queued events stay in IndexedDB and retry. In every case the prose lesson remains readable and navigable.
-
-## License notes
-
-Runtime code is MIT. Shipped heart assets are CC0/OFL. Z-Anatomy and BodyParts3D were consulted as reference only and are not distributed. `ts-fsrs`, `three`, React, Astro, Hono, Drizzle, Better Auth, and the tooling stack keep their respective open-source licenses; no dependency contributes client-side secrets.
+Deployment, real Cloudflare/Neon resources, production credentials, manual OAuth setup, and
+production E2E are human-only operations described in `docs/DEPLOYMENT.md`. Local verification
+uses injected ports, in-memory repositories, fetch stubs, and a Playwright preview or explicitly
+configured external origin; it never substitutes a model response for grounded evidence.

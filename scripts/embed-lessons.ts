@@ -1,7 +1,10 @@
 /**
- * Usage:
- *   LLM_API_KEY=... pnpm exec node --experimental-strip-types scripts/embed-lessons.ts
- *   DATABASE_URL=... LLM_API_KEY=... pnpm exec node --experimental-strip-types scripts/embed-lessons.ts --write
+ * Usage (Gemini only):
+ *   LLM_PROVIDER=gemini EMBEDDING_MODEL=gemini-embedding-2 LLM_API_KEY=... \
+ *     pnpm exec node --experimental-strip-types scripts/embed-lessons.ts
+ *   DATABASE_URL=... LLM_PROVIDER=gemini EMBEDDING_MODEL=gemini-embedding-2 LLM_API_KEY=... \
+ *     pnpm exec node --experimental-strip-types scripts/embed-lessons.ts --write
+ * EMBEDDING_API_KEY may override LLM_API_KEY for embeddings.
  *
  * Discovers every MDX lesson, chunks it with the same splitter the Worker uses,
  * and writes one NDJSON record per chunk to stdout:
@@ -42,7 +45,10 @@ async function main(): Promise<void> {
     if (chunks.length === 0) {
       continue;
     }
-    const embeddings = await adapter.embed(chunks.map((chunk) => chunk.text));
+    const embeddings = await adapter.embed(
+      chunks.map((chunk) => chunk.text),
+      'document',
+    );
     const hotspots = [...new Set(chunks.map((chunk) => chunk.hotspotId))];
     const title = /^title:\s*["']?([^"'\r\n]+)/m.exec(mdx)?.[1]?.trim() ?? lessonId;
 

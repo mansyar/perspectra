@@ -35,8 +35,8 @@ export interface TutorDeps {
   getChunks?: ChunkSource;
 }
 
-/** Resolver form lets the Worker supply bindings at request time. */
-export type TutorDepsResolver = (env: Env) => TutorDeps;
+/** Resolver form lets the Worker supply bindings and request identity at request time. */
+export type TutorDepsResolver = (env: Env, request: Request) => TutorDeps;
 
 const tutorRequestSchema = z.object({
   activeHotspot: z.string().nullable().optional(),
@@ -127,7 +127,7 @@ export function tutorRoutes(deps: TutorDeps | TutorDepsResolver): Hono<{ Binding
   const app = new Hono<{ Bindings: Env }>();
 
   app.post('/', async (c) => {
-    const resolved = typeof deps === 'function' ? deps(c.env) : deps;
+    const resolved = typeof deps === 'function' ? deps(c.env, c.req.raw) : deps;
     let staticExcerpt = GENERIC_EXCERPT;
 
     try {

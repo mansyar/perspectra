@@ -1,0 +1,120 @@
+# Public deployment — Implementation Plan
+
+> **Branch:** `chore/20261124-public-deployment`
+> **Base:** `master` @ `02ae838f92fbdb0bd11df2dcea84a3cb5ff29bdd`
+>
+> Phase states are `pending`, `in_progress`, `verified`, `failed`, or `blocked`.
+> Only the primary agent writes this file. Phase subagents report results and the primary records them.
+
+## Phase 1: Documentation & State Hygiene
+
+- **Goal:** Roadmap, README, and runtime state accurately reflect completed release-readiness work and the new deployment milestone.
+- **Depends on:** none
+- **Covers:** FR-10, AC-11
+- **Touches:** `conductor/roadmap.md`, `README.md`, `.conductor/runs/20261124-release-readiness*`
+- **Verification:** `pnpm verify`
+- **Status:** verified
+
+- [x] **P1.T1: Retire RM-5 and add RM-6 Public deployment** — covers: FR-10, AC-11
+- [x] **P1.T2: Remove stale release-readiness run artifacts** — covers: FR-10, AC-11
+- [x] **P1.T3: Correct README topic-onboarding and archived evidence links** — covers: FR-10, AC-11
+- [x] **P1.T4: Record phase 1 evidence** — covers: FR-10, AC-11
+
+**Result:** verified
+**Checkpoint:** 76dac01
+**Evidence:** conductor/tracks/20261124-public-deployment/verification/phase-1.md
+
+## Phase 2: Gemini-Native Embeddings
+
+- **Goal:** Chat and embeddings both use Gemini, with deterministic 1536-dimensional vectors compatible with the existing schema.
+- **Depends on:** Phase 1
+- **Covers:** FR-3, FR-4, FR-5, NFR-4, AC-3, AC-4
+- **Touches:** `api/src/env.ts`, `api/src/lib/llm.ts`, `scripts/embed-lessons.ts`, `README.md`, relevant unit/integration tests
+- **Verification:** `pnpm verify:full`
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 7d57ebc
+- **Evidence:** conductor/tracks/20261124-public-deployment/verification/phase-2.md
+
+- [x] **P2.T1: Extend environment and LLM adapter contracts for Gemini embeddings** — covers: FR-3
+- [x] **P2.T2: Implement gemini-embedding-2 batch requests, dimension validation, and normalization** — covers: FR-4, NFR-4
+- [x] **P2.T3: Update lesson ingestion and README commands to use the shared Gemini adapter and reject mixed embedding spaces** — covers: FR-5
+- [x] **P2.T4: Add Gemini request, response, ordering, dimension, and failure tests** — covers: FR-3, FR-4, AC-3
+- [x] **P2.T5: Record phase 2 evidence** — covers: FR-5, AC-4
+
+<!--
+Review fixes are appended by `conductor-review` as needed.
+-->
+
+## Phase 3: Same-Origin Worker & Production E2E Mode
+
+- **Goal:** One Worker serves the static site and API, and the test harness can target an external URL.
+- **Depends on:** Phase 2
+- **Covers:** FR-1, FR-2, FR-6, AC-1, AC-2, AC-9, NFR-1, NFR-3, NFR-5
+- **Touches:** `wrangler.toml`, `api/src/env.ts`, `api/src/index.ts`, `scripts/prepare-deploy.mjs`, `playwright.config.ts`, `package.json`, `README.md`, `docs/DEPLOYMENT.md`, `docs/ARCHITECTURE.md`, tests
+- **Verification:** `pnpm verify:full`
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** `185c7e9`
+- **Evidence:** `conductor/tracks/20261124-public-deployment/verification/phase-3.md`
+
+- [x] **P3.T1: Configure Workers Static Assets and the ASSETS binding** — covers: FR-1
+- [x] **P3.T2: Route API and health requests to Hono with static fallback and real 404s** — covers: FR-2, AC-1, AC-2
+- [x] **P3.T3: Add E2E_BASE_URL mode and test:production** — covers: FR-6, AC-9
+- [x] **P3.T4: Add no-secret deployment configuration that injects the private KV namespace id** — covers: NFR-1, NFR-5
+- [x] **P3.T5: Replace the split-origin deployment runbook** — covers: FR-8, NFR-1, NFR-5
+- [x] **P3.T6: Add routing and production-mode tests and record evidence** — covers: FR-1, FR-2, FR-6, AC-1, AC-2, AC-9
+
+## Phase 4: Human-Assisted Production Deployment
+
+- **Goal:** The public workers.dev URL runs the full vertical slice against real Cloudflare, Neon, OAuth, and Gemini services.
+- **Depends on:** Phase 3
+- **Covers:** FR-1, FR-2, FR-7, FR-8, FR-9, AC-2, AC-4, AC-5, AC-6, AC-7, AC-8, AC-10, NFR-2, NFR-4, NFR-6, NFR-8
+- **Touches:** ignored local environment files, `scripts/prepare-deploy.mjs`, `api/src/index.ts`, `api/src/db/schema.ts`, `api/src/db/client.ts`, `api/src/routes/{tutor,quiz,badge}.ts`, `api/src/lib/llm.ts`, `assets/heart/**`, `public/assets/heart/**`, `src/content/lessons/heart.mdx`, `migrations/**`, `tests/unit/prepare-deploy.test.ts`, `tests/integration/worker-assets.test.ts`, `tests/integration/glb-manifest.test.ts`, `tests/unit/auth-schema.test.ts`, `tests/unit/llm.test.ts`, `tests/unit/request-db-scope.test.ts`, `README.md`, `docs/DEPLOYMENT.md`, `docs/ARCHITECTURE.md`, production and browser evidence
+- **Verification:** `pnpm verify:full`, `pnpm test:production`, and primary browser verification
+- **Status:** verified
+- **Result:** Production deployment, Google and email/password auth, tutor/quiz/mastery/badge, E2E, browser, and Lighthouse are verified. GitHub OAuth was explicitly deferred by the user.
+- **Checkpoint:** 6673fae
+- **Evidence:** `conductor/tracks/20261124-public-deployment/verification/phase-4.md`, `conductor/tracks/20261124-public-deployment/verification/browser.md`
+
+- [x] **P4.T1: Guide credential setup and validate production configuration, including config-relative paths and the Cloudflare default Worker export** — covers: FR-1, FR-2, FR-8, AC-1, AC-2, AC-10, NFR-8
+- [x] **P4.T2: Deploy the Worker and initialize the fresh Neon branch, seed, and Gemini embeddings** — covers: FR-7, AC-4
+- [x] **P4.T3: Verify available auth providers on the public origin (Google and email/password verified; GitHub explicitly deferred)** — covers: AC-5
+- [x] **P4.T4: Verify anonymous and authenticated tutor, quiz, mastery, and badge flows** — covers: FR-9, AC-6, AC-7, AC-8
+- [x] **P4.T5: Run production E2E, browser, console, and Lighthouse checks and record evidence** — covers: AC-9, AC-10, NFR-2, NFR-8
+- [x] **P4.T6: Align the Better Auth session schema and migration with the installed adapter version** — covers: FR-2, FR-8, AC-2
+- [x] **P4.T7: Update Gemini chat defaults for a currently available model and reserve enough output budget for thinking plus cited prose** — covers: FR-3, AC-2, AC-10
+- [x] **P4.T8: Scope Neon WebSocket pools to one request and close them after the response** — covers: FR-1, FR-2, AC-2, AC-5, NFR-6
+- [x] **P4.T9: Optimize the committed heart poster for production Lighthouse budgets** — covers: AC-2, AC-10, NFR-2
+
+## Phase 5: Integrated Verification & Proof
+
+- **Goal:** All local and production evidence is consolidated and the track is ready for review.
+- **Depends on:** Phase 4
+- **Covers:** FR-9, FR-10, AC-9, AC-10, AC-12, NFR-1, NFR-2, NFR-7, NFR-8
+- **Touches:** `verification/integrated.md` and related evidence
+- **Verification:** `pnpm verify:full` and `pnpm test:production`
+- **Status:** verified
+- **Result:** Final local and production verification, secret/placeholder audit, and integrated evidence are complete.
+- **Checkpoint:** 627b01f
+- **Evidence:** `conductor/tracks/20261124-public-deployment/verification/integrated.md`
+
+- [x] **P5.T1: Run final local and production verification** — covers: AC-9, AC-12, NFR-2, NFR-7
+- [x] **P5.T2: Audit repository and configuration for secrets and placeholder regressions** — covers: AC-10, NFR-1
+- [x] **P5.T3: Write integrated evidence with live URL, phase roll-up, and known exceptions** — covers: FR-9, FR-10, NFR-8
+
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve the three non-blocking documentation and evidence findings from review round 1.
+- **Depends on:** Phase 5 and review round 1
+- **Covers:** F1, F2, F3, FR-3, FR-8, NFR-1, NFR-5, AC-10
+- **Touches:** `docs/DEPLOYMENT.md`, `README.md`, `docs/ARCHITECTURE.md`, `api/src/env.ts`, `verification/integrated.md`, `verification/review-fix-r1.md`
+- **Verification:** `pnpm verify`
+- **Status:** verified
+- **Result:** F1-F3 are fixed; documentation and evidence are aligned with the explicit GitHub OAuth deferral, current Gemini model, and secret audit.
+- **Checkpoint:** 40b66d8
+- **Evidence:** `conductor/tracks/20261124-public-deployment/verification/review-fix-r1.md`
+
+- [x] **R1.T1: Mark GitHub OAuth as deferred in the deployment runbook and align related README/architecture wording** — covers: F1, FR-8, NFR-5, AC-10
+- [x] **R1.T2: Correct the LLM_MODEL environment comment to the current default and production override** — covers: F2, FR-3
+- [x] **R1.T3: Map NFR-1 to the secret audit/config tests and record review-fix verification evidence** — covers: F3, NFR-1, FR-8

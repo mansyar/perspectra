@@ -1,118 +1,174 @@
 # Deployment runbook
 
-This runbook covers the portfolio deployment of Perspectra: a static Astro site plus a Hono Worker
-on Cloudflare and a Neon Postgres branch. Every step that needs an account, credential, or approval
-is marked **[HUMAN ONLY]**. No secret value, real account id, or real domain belongs in this repo.
+Perspectra deploys as one Cloudflare Worker origin: Workers Static Assets serves the Astro `dist/`
+build, and the same Worker handles Hono API routes. Neon provides Postgres/pgvector, and Gemini
+provides chat and embeddings. Every step needing an account, credential, or approval is marked
+**[HUMAN ONLY]**. No secret, account id, KV namespace id, Neon URL, or real domain belongs in this
+repository.
 
 ## 1. Prerequisites and accounts
 
-- [ ] `pnpm` (see `package.json` engines), Node.js 24, and `gh` CLI installed.
-- [ ] [HUMAN ONLY] Cloudflare account with Workers, Pages, and KV access. Log in with
-      `pnpm exec wrangler login` (do not commit tokens).
-- [ ] [HUMAN ONLY] Neon project with a real Postgres branch, pgvector available, and a
-      connection string. Use a non-production branch for the first run.
-- [ ] [HUMAN ONLY] GitHub OAuth app and Google OAuth app credentials for Better Auth.
-- [ ] [HUMAN ONLY] LLM provider key (Gemini or OpenAI) with a monthly budget and kill switch.
-- [ ] Repository checked out on the release commit with `pnpm install --frozen-lockfile` done.
-- [ ] `pnpm verify` and `pnpm check:ci` pass locally before any deploy step.
+- [ ] Node.js 24 and `pnpm` (see `package.json`), plus the GitHub CLI if release automation is used.
+- [ ] [HUMAN ONLY] Cloudflare account with Workers and KV access. Log in with
+  `pnpm exec wrangler login`; never commit the resulting token.
+- [ ] [HUMAN ONLY] Neon project with a fresh production Postgres branch, pgvector available, and a
+  connection string held outside git.
+- [ ] [HUMAN ONLY] Gemini API key with the intended budget and the application kill switch enabled.
+- [ ] [HUMAN ONLY] Google OAuth application for Better Auth. Its callback URL must use the final
+  `https://perspectra-api.<subdomain>.workers.dev` origin.
+- [ ] GitHub OAuth is explicitly deferred by the user for this release. Its provider code remains
+  available, but no GitHub OAuth application, credentials, or callback verification is required.
+- [ ] Repository checked out on the release commit; run `pnpm install --frozen-lockfile`.
+- [ ] `pnpm verify:full` passes locally before deployment.
 
-## 2. Environment variables
+## 2. Gemini-only environment and secrets
 
-All secrets are Worker bindings or environment variables injected at deploy time. Never place values
-in `wrangler.toml`, `.env`, `.dev.vars`, `dist/`, git, or evidence. Use
-`pnpm exec wrangler secret put <NAME>` for Worker secrets, or a gitignored `.dev.vars` for local dev.
+Supply secrets through Worker bindings at deploy time. Never place values in `wrangler.toml`,
+`.env`, `.dev.vars`, `dist/`, git, or evidence. Use
+`pnpm exec wrangler secret put <NAME> --config .conductor/deploy/wrangler.toml` after preparing the
+private config, or enter the same values in the Cloudflare dashboard.
 
-| Variable | Required | Purpose | Where it is used |
-| --- | --- | --- | --- |
-| `DATABASE_URL` | yes | Neon Postgres connection string | Worker (Drizzle), `db:push`, `db:seed`, embed script |
-| `BETTER_AUTH_SECRET` | yes | Session signing and OB3 HMAC key | Worker secret |
-| `BETTER_AUTH_URL` | yes | Public auth base URL (your Worker origin) | Worker |
-| `GITHUB_CLIENT_ID` | yes | GitHub OAuth app client id | Worker |
-| `GITHUB_CLIENT_SECRET` | yes | GitHub OAuth app client secret | Worker secret |
-| `GOOGLE_CLIENT_ID` | yes | Google OAuth app client id | Worker |
-| `GOOGLE_CLIENT_SECRET` | yes | Google OAuth app client secret | Worker secret |
-| `LLM_PROVIDER` | yes | `gemini` (default) or `openai` | Worker |
-| `LLM_API_KEY` | yes | Chat model API key | Worker secret |
-| `EMBEDDING_MODEL` | optional | Embedding model override (1536 dimensions required) | Worker, embed script |
-| `RATE_LIMIT_KV` | yes | Workers KV binding for quotas, rate limits, quiz keys and cost counter | Worker (`wrangler.toml`) |
-| `LLM_MODEL` | optional | Chat model override | Worker |
-| `EMBEDDING_API_KEY` | optional | Embedding key (OpenAI falls back to `LLM_API_KEY`) | Worker secret, embed script |
-| `PUBLIC_API_URL` | optional | Public Worker origin used by static client fetches | Astro build |
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | yes | Neon branch connection string for Drizzle, seed, and embedding ingest |
+| `BETTER_AUTH_SECRET` | yes | Session signing and OB3 HMAC key |
+| `BETTER_AUTH_URL` | yes | Exactly the public Worker origin, `https://perspectra-api.<subdomain>.workers.dev` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | yes | Google OAuth application |
+| `LLM_PROVIDER` | no | Omit for the default or set to `gemini`; no other provider is supported |
+| `LLM_API_KEY` | yes | Gemini chat key and default embedding key |
+| `LLM_MODEL` | no | Optional chat override; defaults to `gemini-3.5-flash` |
+| `EMBEDDING_API_KEY` | no | Optional Gemini embedding key; falls back to `LLM_API_KEY` |
+| `EMBEDDING_MODEL` | no | Omit or set to `gemini-embedding-2`; other models are rejected |
+| `RATE_LIMIT_KV_ID` | deploy only | Private 32-hex KV namespace id used by `pnpm deploy:prepare`; never commit it |
 
-The committed `wrangler.toml` declares only the non-secret `RATE_LIMIT_KV` binding and keeps an
-obvious placeholder id. Run `pnpm check:config` before deploying to confirm it was not replaced
-with a real id.
+Google OAuth and email/password are required authentication paths for this release; email/password
+needs no provider application credentials. GitHub OAuth is explicitly deferred by the user, so its
+credentials are not listed as required.
 
-## 3. Cloudflare KV namespace
+Chat uses `gemini-3.5-flash` by default and sends the API key in the `x-goog-api-key` header rather
+than the URL. The adapter uses temperature `1` and minimal thinking while retaining
+`maxOutputTokens: 400`. Gemini 3 counts thinking tokens against that cap, so minimal thinking
+preserves response capacity for the validated answer.
 
-1. [HUMAN ONLY] Create a namespace in the Cloudflare dashboard or with
-   `pnpm exec wrangler kv namespace create RATE_LIMIT_KV`. Record the returned id outside git.
-2. [HUMAN ONLY] Supply that id at deploy time through the binding configuration (for example a
-   Wrangler environment override or dashboard binding), or set `RATE_LIMIT_KV_ID` in the shell when
-   validating locally. `pnpm check:config` accepts a real 32-hex id from `RATE_LIMIT_KV_ID`
-   without rewriting `wrangler.toml` and rejects the committed placeholder.
-3. Never commit the namespace id, and keep the placeholder in `wrangler.toml` to make accidental
-   commits obvious in review.
+Embeddings use `gemini-embedding-2:batchEmbedContents` with `outputDimensionality: 1536`. The
+adapter validates every row and normalizes vectors to unit L2 norm before writing the existing
+`vector(1536)` column. The browser uses same-origin relative API URLs; no split-origin API setting
+is needed.
 
-## 4. Database: migrate, seed, embed
+## 3. Private KV deployment config
 
-All three commands require a real Neon branch via `DATABASE_URL`; none of them work against the
-static preview alone.
+The committed `wrangler.toml` contains only the obvious 32-zero `RATE_LIMIT_KV` placeholder and the
+non-secret `ASSETS` binding configuration.
 
-1. Export `DATABASE_URL` for the chosen branch in the shell (do not persist it in a tracked file).
-2. Apply the schema with `pnpm db:push` (`drizzle-kit push --config=drizzle.config.ts`). Review the
-   proposed changes before accepting; push is not automatically reversible.
-3. Seed the canonical lesson with `pnpm db:seed`. It upserts one `heart` row with six hotspots and
-   is safe to rerun.
-4. Ingest embeddings with
-   `LLM_API_KEY=<your-key> pnpm exec node --experimental-strip-types scripts/embed-lessons.ts --write`
-   using a real API key from a secret store. Without `--write` the script only prints NDJSON to
-   stdout and does not touch the database. Embeddings must have 1536 dimensions to match
-   `vector(1536)`.
+1. [HUMAN ONLY] Create the namespace in the Cloudflare dashboard or with
+   `pnpm exec wrangler kv namespace create RATE_LIMIT_KV`. Keep the returned id outside git.
+2. Supply the id only to the preparation command:
 
-## 5. Deploy
+   ```bash
+   RATE_LIMIT_KV_ID=<private-namespace-id> pnpm deploy:prepare
+   ```
 
-1. [HUMAN ONLY] Confirm Cloudflare login and the target account/project with
-   `pnpm exec wrangler whoami`.
-2. Build the static site with `pnpm build` (output: `dist/`).
-3. [HUMAN ONLY] Deploy the Worker with `pnpm exec wrangler deploy` using `wrangler.toml`, and set
-   every secret listed in section 2 with `pnpm exec wrangler secret put <NAME>` (or the dashboard).
-4. [HUMAN ONLY] Publish the static output to Cloudflare Pages with
-   `pnpm exec wrangler pages deploy dist --project-name <your-pages-project>`. Point the custom
-   domain at that Pages project in the dashboard if a domain is used; no domain is recorded here.
-5. [HUMAN ONLY] Set `BETTER_AUTH_URL` (and `PUBLIC_API_URL` if the client needs an explicit Worker
-   origin) to the deployed origins, then redeploy the Worker and the static site if those values
-   changed at build time.
+   PowerShell equivalent:
 
-## 6. Post-deploy checks
+   ```powershell
+   $env:RATE_LIMIT_KV_ID = '<private-namespace-id>'
+   pnpm deploy:prepare
+   ```
 
-Automated, against the deployed origin where applicable:
+3. The command validates the id, replaces only the committed placeholder, and writes
+   `.conductor/deploy/wrangler.toml`. Because that generated config lives in a subdirectory, the
+   command also resolves `main` and `[assets].directory` to absolute normalized project paths;
+   the committed template remains root-relative. `.conductor/` is gitignored, and the command never
+   prints the id.
+4. Keep the real id out of tracked files and command evidence. Wrangler does not substitute
+   environment variables inside `wrangler.toml`; deploy with the generated private config instead.
 
-- `pnpm smoke` — critical scene/hotspot path.
-- `pnpm verify:full` — all local checks plus smoke and every Playwright spec.
-- `pnpm perf:lighthouse` — budgets: performance ≥ 0.95, accessibility ≥ 0.95,
-  best-practices ≥ 0.90, SEO ≥ 0.90, and 0 bytes of JavaScript on the catalog.
+## 4. Neon branch: schema, seed, and embeddings
 
-Manual pass **[HUMAN ONLY]** (use the browser evidence checklist in `conductor/workflow.md`):
+1. [HUMAN ONLY] Export the chosen branch's `DATABASE_URL` in the shell without persisting it in a
+   tracked file.
+2. Review and apply the schema with `pnpm db:push`.
+3. Seed the canonical heart lesson and six hotspots with `pnpm db:seed`. The seed is safe to rerun.
+4. Generate and upsert Gemini document embeddings:
 
-1. Catalog `/` loads with no script tag and shows the live lesson card.
-2. `/lessons/heart/` renders prose, poster/model, and six linked landmarks.
-3. Clicking a hotspot updates the active prose section; `?rendererErrors=1` exercises WebGPU → WebGL
-   and `?rendererErrors=2` exercises the poster fallback.
-4. The tutor panel shows the AI disclosure and privacy note before the first question, and a
-   grounded answer includes a clickable citation.
-5. `/verify/` loads and verifies both a valid and a tampered credential without console errors.
-6. Check Worker logs and KV quota counters for unexpected errors or spend.
+   ```bash
+   LLM_PROVIDER=gemini EMBEDDING_MODEL=gemini-embedding-2 LLM_API_KEY=<your-key> pnpm exec node --experimental-strip-types scripts/embed-lessons.ts --write
+   ```
+
+   `DATABASE_URL` must already be exported. Set `EMBEDDING_API_KEY` instead only when embeddings
+   use a separate Gemini key. Without `--write`, the script emits NDJSON and does not write to the
+   database.
+
+    At runtime, the Worker creates one Neon WebSocket Pool/Drizzle pair per request and shares it across
+    that request's auth, progress, retrieval, quiz, and badge work. Hono middleware closes the pool via
+    `waitUntil` after the response without delaying it. This request boundary is required by the Workers
+    runtime; `neon-http` is not substituted because Better Auth requires interactive transactions.
+
+## 5. Build and deploy one Worker
+
+1. [HUMAN ONLY] Confirm the Cloudflare login and target account with `pnpm exec wrangler whoami`.
+2. Build the static site with `pnpm build` (output: `dist/`). The heart lesson ships its
+   manifest-referenced 960×960 WebP poster; regenerate it with `assets/heart/build_heart.py` and
+   keep it below 120,000 bytes as enforced by `assets/heart/ASSET_CONTRACT.md` and the integration
+   suite. The retained PNG is the reproducible WebP source, not the delivered LCP image.
+3. Prepare the private config with section 3's `pnpm deploy:prepare` command.
+4. [HUMAN ONLY] Set every secret in section 2 against the generated config.
+5. [HUMAN ONLY] Set `BETTER_AUTH_URL` to the workers.dev origin before the final deployment.
+6. [HUMAN ONLY] Deploy the Worker and its static assets together:
+
+   ```bash
+   pnpm exec wrangler deploy --config .conductor/deploy/wrangler.toml
+   ```
+
+There is no separate static-site deployment. Wrangler serves `./dist` through the `ASSETS` binding,
+runs the Worker first for `/api/*` and `/health`, and Hono preserves real 404 responses for unknown
+routes.
+
+## 6. Post-deploy verification
+
+Run the local release gate before deployment:
+
+- `pnpm verify:full` — lint, format, types, unit, coverage, integration, build, smoke, and Playwright.
+
+Run production E2E and Lighthouse against the public origin without starting a local preview server:
+
+```bash
+E2E_BASE_URL=https://perspectra-api.<subdomain>.workers.dev pnpm test:production
+```
+
+PowerShell equivalent:
+
+```powershell
+$env:E2E_BASE_URL = 'https://perspectra-api.<subdomain>.workers.dev'
+pnpm test:production
+```
+
+Manual browser proof **[HUMAN ONLY]** (use the evidence checklist in `conductor/workflow.md`):
+
+1. `/` loads the zero-JavaScript catalog and `/lessons/heart/` renders prose plus six landmarks.
+2. Hotspot clicks, keyboard focus, and reduced-motion behavior work; the poster remains a usable
+   fallback.
+3. `/health` returns the Hono health payload on the same origin. A known `/api/*` route responds as
+   an API route, while `/api/not-a-route` and `/not-a-route` return real 404s rather than an HTML
+   index fallback.
+4. Google OAuth and email/password callbacks use the workers.dev origin. GitHub OAuth is explicitly
+   deferred by the user and is not part of required production verification. Anonymous and
+   authenticated tutor flows retain disclosure, quota, and static-excerpt behavior.
+5. A grounded Gemini answer includes a clickable citation. Quiz, mastery, FSRS due cards, badge
+   issuance, and `/verify/` work for valid and tampered credentials.
+6. Browser console, Worker logs, KV counters, accessibility, and Lighthouse budgets are clean.
 
 ## 7. Rollback
 
-1. [HUMAN ONLY] Stop writes if data is wrong: pause the Worker/route in the Cloudflare dashboard.
-2. [HUMAN ONLY] Roll the Worker back to the previous deployment (`pnpm exec wrangler deployments list`
-   and `pnpm exec wrangler rollback <deployment-id>`) or redeploy the last known-good commit.
-3. [HUMAN ONLY] Roll the static site back to the previous Pages deployment in the dashboard (or
-   redeploy the last known-good commit with `pnpm exec wrangler pages deploy dist`).
-4. [HUMAN ONLY] For schema problems, restore the Neon branch from its latest verified snapshot or
+1. [HUMAN ONLY] Stop writes if data is wrong: pause the Worker in the Cloudflare dashboard.
+2. [HUMAN ONLY] Roll back the single Worker deployment with
+   `pnpm exec wrangler deployments list --config .conductor/deploy/wrangler.toml` and
+   `pnpm exec wrangler rollback <deployment-id> --config .conductor/deploy/wrangler.toml`, or
+   redeploy the last known-good commit after preparing its private config again.
+3. [HUMAN ONLY] For schema problems, restore the Neon branch from a verified snapshot or use
    point-in-time recovery. `drizzle-kit push` has no automatic down migration; do not attempt an
-   ad-hoc destructive revert. Re-run `pnpm db:seed` after a clean restore.
-5. [HUMAN ONLY] Rotate any exposed secret with `pnpm exec wrangler secret put <NAME>` and revoke the
-   old value at the provider. Record the incident and follow-ups outside this runbook.
+   ad-hoc destructive revert. Re-run `pnpm db:seed` and Gemini embedding ingest after a clean
+   restore.
+4. [HUMAN ONLY] Rotate any exposed secret at the provider and with
+   `pnpm exec wrangler secret put <NAME> --config .conductor/deploy/wrangler.toml`. Record the
+   incident and follow-ups outside this runbook.

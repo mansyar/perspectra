@@ -17,21 +17,22 @@
 ## Data Stores & Schemas
 - **Neon Postgres** (free tier, scale-to-zero) with **pgvector + HNSW** for MDX chunk embeddings; **@neondatabase/serverless 1.2.1** and **postgres 4.1.1** drivers.
 - **Workers KV** for anonymous sessions (2 free tutor questions) and rate-limit counters.
-- 3D assets (GLB, poster) and MDX live **in the repo**, per your decision; **R2 is deferred** as a future CDN option, not part of the MVP.
+- 3D assets (GLB, deterministic Blender recipe, ~7.2 KB WebP poster, retained PNG source) and MDX live **in the repo**, per your decision; **R2 is deferred** as a future CDN option, not part of the MVP.
 - Schema: `users`, `lessons`, `hotspots`, `learning_events` (append-only), `mastery`, `fsrs_cards`, `badges`; all Zod-validated at boundaries.
 
 ## External Services & APIs
-- LLM adapter configurable via env: **Gemini 2.5 Flash** or **GPT-4.1 mini**; streaming responses; ~5–6k input tokens/request, 16-turn cap, $10/mo kill switch.
-- GitHub + Google OAuth; Neon; Cloudflare Workers/KV; GitHub Actions.
-- Embeddings via the same provider's embedding model (text-embedding-3-small or Gemini embedding).
+- **Gemini-only LLM adapter** via env: production chat uses **gemini-3.5-flash-lite** (configurable through `LLM_MODEL`), `x-goog-api-key`, temperature 1, minimal thinking, and a 400-token output cap; streaming tutor responses, ~5–6k input tokens/request, 16-turn cap, $10/mo kill switch.
+- **gemini-embedding-2** at exactly 1536 dimensions, with Gemini query/document prefixes, strict dimension checks, unit normalization, and batch ingestion. Gemini and OpenAI embedding spaces are never mixed.
+- Google OAuth and email/password are verified in production; GitHub OAuth remains deferred by explicit user choice. Neon; Cloudflare Workers/KV; GitHub Actions.
 
 ## Hosting & Deployment
-- Static Astro output served by Cloudflare; Hono API on **Cloudflare Workers** via **Wrangler 4.167.0**; **@cloudflare/workers-types 5.20261123.1**.
-- **workers.dev** subdomain first; custom domain deferred.
+- **Single-origin Cloudflare Workers deployment**: Workers Static Assets serve `dist/`; the Worker handles `/api/*` and `/health`, then falls back to the `ASSETS` binding. **Wrangler 4.167.0**; **@cloudflare/workers-types 5.20261123.1**.
+- Public production origin: `https://perspectra-api.m-ansyarafi.workers.dev`; manual deploy; custom domain and automatic deployment remain deferred.
+- Neon WebSocket `Pool`/Drizzle clients are request-scoped and closed through Hono `executionCtx.waitUntil`; bindings or pools are never reused across Cloudflare requests. Better Auth session schema includes nullable `ipAddress` and `userAgent`.
 - **GitHub Actions** CI on pull requests only: a `verify` job (lint, format, typecheck, Vitest + coverage gate, Astro build) and an `e2e` job (Playwright smoke, E2E, axe and Lighthouse budgets with a build step for `astro preview`).
 
 ## Tooling
-- **Vitest 5.1.1 + @vitest/coverage-v8 5.1.1** for unit tests; **@playwright/test 1.65.1** for smoke, E2E, axe accessibility and Lighthouse performance specs; **Lighthouse 13.6.0**, **chrome-launcher 1.2.0**, **@axe-core/playwright 4.14.0** for audited evidence.
+- **Vitest 5.1.1 + @vitest/coverage-v8 5.1.1** for unit tests; **@playwright/test 1.65.1** for smoke, E2E, axe accessibility and Lighthouse performance specs; **Lighthouse 13.6.0**, **chrome-launcher 1.2.0**, **@axe-core/playwright 4.14.0** for audited evidence. `E2E_BASE_URL` enables the same suite against the deployed workers.dev origin.
 - Coverage gate applies to new/changed code.
 
 ## Local Development
@@ -57,8 +58,9 @@
 
 - **2026-11-24 (Showcase MVP):** corrected the scheduler to `ts-fsrs 6.0.1`; recorded Playwright/Lighthouse/axe as active verification tooling; confirmed the OB3 credential uses an HMAC-SHA-256 `DataIntegrityProof` at portfolio scale (no external trust framework). Product definition and product guidelines required no change.
 - **2026-11-24 (Release readiness):** recorded the two-job PR-only GitHub Actions workflow, real `db:push`/`db:seed` scripts via drizzle-kit and `tsx 4.23.15`, the documented `RATE_LIMIT_KV` placeholder with `RATE_LIMIT_KV_ID` validation, `docs/DEPLOYMENT.md`, the primary-run browser verification gate, and lesson-correct badge narratives for any topic. Product definition and product guidelines required no change.
+- **2026-11-25 (Public deployment):** recorded the live single-origin Workers Static Assets deployment, Gemini-only chat/embeddings (`gemini-3.5-flash-lite`, `gemini-embedding-2` at 1536 dimensions), request-scoped Neon pools, Better Auth session fields, Google/email auth with GitHub deferred, external `E2E_BASE_URL` production tests, and the optimized WebP poster. Product definition and product guidelines required no change.
 
 ## Open Questions & Assumptions
-- Custom domain deferred; exact embedding model picked at implementation time.
+- Custom domain and automatic deployment remain deferred; production currently uses workers.dev with manual deploy.
 - R2 and multi-topic authoring tooling are post-MVP; Playwright and Lighthouse are in the MVP verification suite.
 - oxlint does not lint `.astro` templates — only script blocks (accepted limitation).

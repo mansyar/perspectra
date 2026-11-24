@@ -3,9 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { focusPose, viewHeight, type Vec3 } from '../../src/components/scene/framing';
 
 const glbBytes: Uint8Array = readFileSync(new URL('../../assets/heart/heart.glb', import.meta.url));
-const posterBytes: Uint8Array = readFileSync(
-  new URL('../../public/assets/heart/heart-poster.png', import.meta.url),
-);
 
 const mdxFiles = import.meta.glob('../../src/content/lessons/*.mdx', {
   query: '?raw',
@@ -66,6 +63,9 @@ function requiredMatch(pattern: RegExp, text: string): RegExpExecArray {
   }
   return match;
 }
+
+const posterPath = requiredMatch(/^\s+poster:\s*(\S+)\s*$/m, frontmatter)[1];
+const posterBytes: Uint8Array = readFileSync(new URL(`../../public${posterPath}`, import.meta.url));
 
 function parseVec3(value: string): Vec3 {
   const numbers = value.split(',').map((part) => Number(part.trim()));
@@ -170,9 +170,12 @@ describe('heart GLB ↔ manifest contract', () => {
     expect(meshCount).toBeLessThan(100);
   });
 
-  it('ships the fallback poster as a PNG', () => {
+  it('ships the referenced poster as a WebP under 120 KB', () => {
+    expect(posterPath).toBe('/assets/heart/heart-poster.webp');
     expect(posterBytes.byteLength).toBeGreaterThan(0);
-    expect(Array.from(posterBytes.slice(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+    expect(posterBytes.byteLength).toBeLessThan(120_000);
+    expect(new TextDecoder().decode(posterBytes.slice(0, 4))).toBe('RIFF');
+    expect(new TextDecoder().decode(posterBytes.slice(8, 12))).toBe('WEBP');
   });
 
   it('anchors every MDX hotspot at its named GLB mesh centre', () => {

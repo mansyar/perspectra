@@ -1,11 +1,21 @@
 import type { Env } from '../env';
 
+export type EmbeddingPurpose = 'document' | 'query';
+
 export interface LlmPort {
-  embed(texts: readonly string[]): Promise<number[][]>;
+  embed(texts: readonly string[], purpose?: EmbeddingPurpose): Promise<number[][]>;
   complete(prompt: string): Promise<string>;
 }
 
-type ChatProvider = 'gemini' | 'openai';
+const DEFAULT_CHAT_MODEL = 'gemini-3.5-flash';
+const EMBEDDING_MODEL = 'gemini-embedding-2';
+const EMBEDDING_DIMENSIONS = 1536;
+const EMBEDDING_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:batchEmbedContents';
+
+interface ChatPayload {
+  candidates?: { content?: { parts?: { text?: string }[] } }[];
+}
 
 function required(value: string | undefined, name: string): string {
   if (!value) {
@@ -14,89 +24,146 @@ function required(value: string | undefined, name: string): string {
   return value;
 }
 
-interface EmbeddingPayload {
-  data?: { index: number; embedding: number[] }[];
+function validateEmbeddingModel(model: string | undefined): void {
+  if (model === undefined) {
+    return;
+  }
+  const normalized = model.replace(/^models\//, '');
+  if (normalized !== EMBEDDING_MODEL) {
+    throw new Error(`Unsupported EMBEDDING_MODEL: ${model}. Only ${EMBEDDING_MODEL} is supported.`);
+  }
 }
 
-interface ChatPayload {
-  choices?: { message?: { content?: string } }[];
-  candidates?: { content?: { parts?: { text?: string }[] } }[];
+function formatEmbeddingText(text: string, purpose: EmbeddingPurpose): string {
+  return purpose === 'document'
+    ? `title: none | text: ${text}`
+    : `task: question answering | query: ${text}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeEmbedding(value: unknown, index: number): number[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`Malformed embedding response: row ${index} is not a numeric vector`);
+  }
+  if (value.length !== EMBEDDING_DIMENSIONS) {
+    throw new Error(
+      `Malformed embedding response: row ${index} expected ${EMBEDDING_DIMENSIONS} dimensions, received ${value.length}`,
+    );
+  }
+
+  const vector: number[] = [];
+  let scale = 0;
+  for (const component of value) {
+    if (typeof component !== 'number' || !Number.isFinite(component)) {
+      throw new Error(
+        `Malformed embedding response: row ${index} must contain only finite numbers`,
+      );
+    }
+    vector.push(component);
+    scale = Math.max(scale, Math.abs(component));
+  }
+  if (scale === 0) {
+    throw new Error(`Malformed embedding response: row ${index} has zero norm`);
+  }
+
+  let scaledSquaredNorm = 0;
+  for (const component of vector) {
+    scaledSquaredNorm += (component / scale) ** 2;
+  }
+  const scaledNorm = Math.sqrt(scaledSquaredNorm);
+  return vector.map((component) => component / scale / scaledNorm);
 }
 
 /**
- * Chat generation is provider-configurable (Gemini by default, OpenAI optional).
- * Embeddings are deliberately OpenAI-compatible for BOTH providers: the fixed
- * pgvector column is vector(1536), so the embedding endpoint and dimensions do
- * not vary with the chat provider.
+ * Chat and embeddings both use Gemini. Embeddings are task-formatted, requested
+ * at 1536 dimensions, validated, and normalized before they reach the fixed
+ * pgvector column, so incompatible embedding spaces cannot be configured.
  *
  * complete() returns the full upstream answer. The Worker validates citations
  * on that complete text ("validate before stream") and only then emits paced
  * SSE deltas, so an invalid or ungrounded answer is never partially streamed.
  */
 export function createLlmAdapter(env: Env): LlmPort {
-  const provider: ChatProvider = env.LLM_PROVIDER === 'openai' ? 'openai' : 'gemini';
+  const provider = env.LLM_PROVIDER ?? 'gemini';
+  if (provider !== 'gemini') {
+    throw new Error(`Unsupported LLM_PROVIDER: ${provider}. Only gemini is supported.`);
+  }
+  validateEmbeddingModel(env.EMBEDDING_MODEL);
 
   return {
-    async embed(texts: readonly string[]): Promise<number[][]> {
+    async embed(
+      texts: readonly string[],
+      purpose: EmbeddingPurpose = 'query',
+    ): Promise<number[][]> {
       if (texts.length === 0) {
         return [];
       }
       const key = required(
-        env.EMBEDDING_API_KEY ?? (provider === 'openai' ? env.LLM_API_KEY : undefined),
-        'EMBEDDING_API_KEY',
+        env.EMBEDDING_API_KEY ?? env.LLM_API_KEY,
+        'EMBEDDING_API_KEY or LLM_API_KEY',
       );
-      const model = env.EMBEDDING_MODEL ?? 'text-embedding-3-small';
-      const response = await fetch('https://api.openai.com/v1/embeddings', {
+      const response = await fetch(EMBEDDING_URL, {
         method: 'POST',
         headers: {
-          authorization: `Bearer ${key}`,
           'content-type': 'application/json',
+          'x-goog-api-key': key,
         },
-        body: JSON.stringify({ dimensions: 1536, input: [...texts], model }),
+        body: JSON.stringify({
+          requests: texts.map((text) => ({
+            model: `models/${EMBEDDING_MODEL}`,
+            content: { parts: [{ text: formatEmbeddingText(text, purpose) }] },
+            outputDimensionality: EMBEDDING_DIMENSIONS,
+          })),
+        }),
       });
       if (!response.ok) {
         throw new Error(`Embedding request failed with status ${response.status}`);
       }
-      const payload = (await response.json()) as EmbeddingPayload;
-      return (payload.data ?? [])
-        .toSorted((left, right) => left.index - right.index)
-        .map((row) => row.embedding);
+
+      let payload: unknown;
+      try {
+        payload = await response.json();
+      } catch {
+        throw new Error('Malformed embedding response: invalid JSON');
+      }
+      if (!isRecord(payload) || !Array.isArray(payload.embeddings)) {
+        throw new Error('Malformed embedding response: expected an embeddings array');
+      }
+      const rows = payload.embeddings;
+      if (rows.length !== texts.length) {
+        throw new Error(
+          `Embedding response row count mismatch: expected ${texts.length}, received ${rows.length}`,
+        );
+      }
+      return rows.map((row, index) => {
+        if (!isRecord(row)) {
+          throw new Error(`Malformed embedding response: row ${index} is not an object`);
+        }
+        return normalizeEmbedding(row.values, index);
+      });
     },
 
     async complete(prompt: string): Promise<string> {
       const key = required(env.LLM_API_KEY, 'LLM_API_KEY');
-
-      if (provider === 'openai') {
-        const model = env.LLM_MODEL ?? 'gpt-4.1-mini';
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            authorization: `Bearer ${key}`,
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            max_tokens: 400,
-            messages: [{ content: prompt, role: 'user' }],
-            model,
-            temperature: 0,
-          }),
-        });
-        if (!response.ok) {
-          throw new Error(`Chat request failed with status ${response.status}`);
-        }
-        const payload = (await response.json()) as ChatPayload;
-        return payload.choices?.[0]?.message?.content ?? '';
-      }
-
-      const model = env.LLM_MODEL ?? 'gemini-2.5-flash';
+      const model = env.LLM_MODEL ?? DEFAULT_CHAT_MODEL;
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            'x-goog-api-key': key,
+          },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }], role: 'user' }],
-            generationConfig: { maxOutputTokens: 400, temperature: 0 },
+            generationConfig: {
+              maxOutputTokens: 400,
+              temperature: 1,
+              thinkingConfig: { thinkingLevel: 'minimal' },
+            },
           }),
         },
       );
@@ -104,9 +171,8 @@ export function createLlmAdapter(env: Env): LlmPort {
         throw new Error(`Chat request failed with status ${response.status}`);
       }
       const payload = (await response.json()) as ChatPayload;
-      return (payload.candidates?.[0]?.content?.parts ?? [])
-        .map((part) => part.text ?? '')
-        .join('');
+      const parts = payload.candidates?.[0]?.content?.parts ?? [];
+      return parts.map((part) => part.text ?? '').join('');
     },
   };
 }

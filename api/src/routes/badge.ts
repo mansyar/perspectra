@@ -15,7 +15,7 @@ export interface BadgeDeps {
   secret: string;
 }
 
-export type BadgeDepsResolver = (env: Env) => BadgeDeps;
+export type BadgeDepsResolver = (env: Env, request: Request) => BadgeDeps;
 
 const verifySchema = z.object({ credential: z.string().min(1) });
 const issueSchema = z.object({ lessonId: z.string().min(1) });
@@ -37,7 +37,7 @@ async function issueHandler(
   c: Context<{ Bindings: Env }>,
   deps: BadgeDeps | BadgeDepsResolver,
 ): Promise<Response> {
-  const resolved = typeof deps === 'function' ? deps(c.env) : deps;
+  const resolved = typeof deps === 'function' ? deps(c.env, c.req.raw) : deps;
   if (!resolved.secret) {
     return c.json({ error: 'not_configured' }, 503);
   }
@@ -74,7 +74,7 @@ async function verifyHandler(
   c: Context<{ Bindings: Env }>,
   deps: BadgeDeps | BadgeDepsResolver,
 ): Promise<Response> {
-  const resolved = typeof deps === 'function' ? deps(c.env) : deps;
+  const resolved = typeof deps === 'function' ? deps(c.env, c.req.raw) : deps;
   if (!resolved.secret) {
     return c.json({ error: 'not_configured' }, 503);
   }

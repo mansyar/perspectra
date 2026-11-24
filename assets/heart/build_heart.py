@@ -6,7 +6,8 @@ Run headlessly (from the project root):
 
 Outputs:
     assets/heart/heart.glb
-    public/assets/heart/heart-poster.png
+    public/assets/heart/heart-poster.png (reproducible WebP source)
+    public/assets/heart/heart-poster.webp (delivered fallback)
 
 The six exported mesh object names are the canonical hotspot IDs. Geometry is
 synthetic and authored here, so the shipped asset is unencumbered by the
@@ -22,6 +23,7 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[2]
 GLB_PATH = ROOT / "assets" / "heart" / "heart.glb"
 POSTER_PATH = ROOT / "public" / "assets" / "heart" / "heart-poster.png"
+WEBP_PATH = ROOT / "public" / "assets" / "heart" / "heart-poster.webp"
 
 HOTSPOTS = (
     "left_ventricle",
@@ -179,7 +181,7 @@ def build():
 
     render_poster(objects)
 
-    return GLB_PATH, POSTER_PATH
+    return GLB_PATH, POSTER_PATH, WEBP_PATH
 
 
 def render_poster(objects):
@@ -206,6 +208,15 @@ def render_poster(objects):
     POSTER_PATH.parent.mkdir(parents=True, exist_ok=True)
     scene.render.filepath = str(POSTER_PATH)
     bpy.ops.render.render(write_still=True)
+
+    # Derive the delivered poster natively so regeneration needs no image tool.
+    poster = bpy.data.images.load(str(POSTER_PATH), check_existing=False)
+    try:
+        scene.render.image_settings.file_format = "WEBP"
+        scene.render.image_settings.quality = 85
+        poster.save_render(str(WEBP_PATH), scene=scene)
+    finally:
+        bpy.data.images.remove(poster)
 
     bpy.data.objects.remove(camera, do_unlink=True)
 
