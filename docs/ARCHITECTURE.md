@@ -25,7 +25,7 @@ assets and unknown routes return a real 404 rather than an SPA index response.
 - `src/pages/index.astro` renders the six-landmark catalog as static HTML. The catalog entry point
   contains no client JavaScript.
 - `src/pages/lessons/[id].astro` renders title, preamble, scene, ground, extra-context toggles,
-  provenance citations, and generated SVG poster fallback at build time.
+  provenance citations, and the manifest-referenced WebP poster fallback at build time.
 - `src/components/lesson/{TutorPanel,Citation,QuizCard}.astro` deliver the tutorial, retrieval
   explanation, and self-check without changing the static source of truth.
 - `src/pages/verify/index.astro` verifies OB3 credentials entirely in the browser.
@@ -113,12 +113,16 @@ seed data, and a Gemini embedding ingest that preserves NDJSON dry-runs and data
 
 `src/lib/scene/` owns the WebGL/WebGPU lifecycle. A remote model is lazy-loaded only when its turn
 arrives; local landmarks are keyboard reachable and support click, focus, and reduced-motion
-interaction. Scene failures step down to WebGL and then to the generated poster with retry. The
-three.js vendor bundle is split from application code and served from the same Worker origin.
+interaction. Scene failures step down to WebGL and then to the manifest-referenced WebP poster
+with retry. The three.js vendor bundle is split from application code and served from the same
+Worker origin.
 
-The runtime budget and Lighthouse gates are defined in `tests/e2e/performance.spec.ts`. The
-catalog must carry zero JavaScript, the static entry must remain below the enforced gzip budget,
-and public pages must meet configured accessibility, best-practice, performance, and SEO budgets.
+The heart lesson's 960×960 WebP poster is checked into `public/assets/heart/` and its PNG remains
+the deterministic source for the Blender export. The integration contract requires the referenced
+WebP to be under 120,000 bytes so it stays eligible for LCP. The runtime budget and Lighthouse
+gates are defined in `tests/e2e/performance.spec.ts`. The catalog must carry zero JavaScript, the
+static entry must remain below the enforced gzip budget, and public pages must meet configured
+accessibility, best-practice, performance, and SEO budgets.
 
 ## Operational boundaries
 

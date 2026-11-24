@@ -108,7 +108,7 @@ The browser uses same-origin relative API URLs. `pnpm deploy:prepare` requires `
 
 1. Write or update `src/content/lessons/<topic>.mdx`. Frontmatter carries the generic scene manifest (model, camera, hotspots). Each hotspot must have a `<div id="..." data-hotspot="...">` section with `data-layer="overview|detail|clinical"` paragraphs.
 2. Keep every `data-hotspot` ID in sync with the manifest's `hotspots[].id`. `pnpm build` fails on a mismatch (`AC-2`).
-3. Export a GLB whose **named meshes match the hotspot IDs exactly**, plus a poster image. The heart recipe is `assets/heart/build_heart.py`; its contract is `assets/heart/ASSET_CONTRACT.md`.
+3. Export a GLB whose **named meshes match the hotspot IDs exactly**, plus a manifest-referenced WebP poster under 120 KB. The heart recipe deterministically retains the PNG as its WebP source; its contract is `assets/heart/ASSET_CONTRACT.md`.
 4. Generate pgvector rows for retrieval with:
 
    ```bash

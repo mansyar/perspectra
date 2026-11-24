@@ -102,7 +102,10 @@ non-secret `ASSETS` binding configuration.
 ## 5. Build and deploy one Worker
 
 1. [HUMAN ONLY] Confirm the Cloudflare login and target account with `pnpm exec wrangler whoami`.
-2. Build the static site with `pnpm build` (output: `dist/`).
+2. Build the static site with `pnpm build` (output: `dist/`). The heart lesson ships its
+   manifest-referenced 960×960 WebP poster; regenerate it with `assets/heart/build_heart.py` and
+   keep it below 120,000 bytes as enforced by `assets/heart/ASSET_CONTRACT.md` and the integration
+   suite. The retained PNG is the reproducible WebP source, not the delivered LCP image.
 3. Prepare the private config with section 3's `pnpm deploy:prepare` command.
 4. [HUMAN ONLY] Set every secret in section 2 against the generated config.
 5. [HUMAN ONLY] Set `BETTER_AUTH_URL` to the workers.dev origin before the final deployment.
