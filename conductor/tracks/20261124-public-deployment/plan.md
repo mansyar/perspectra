@@ -70,11 +70,11 @@ Review fixes are appended by `conductor-review` as needed.
 - **Goal:** The public workers.dev URL runs the full vertical slice against real Cloudflare, Neon, OAuth, and Gemini services.
 - **Depends on:** Phase 3
 - **Covers:** FR-7, FR-8, FR-9, AC-4, AC-5, AC-6, AC-7, AC-8, AC-10, NFR-2, NFR-4, NFR-6, NFR-8
-- **Touches:** ignored local environment files, `scripts/prepare-deploy.mjs`, `tests/unit/prepare-deploy.test.ts`, `docs/DEPLOYMENT.md`, production and browser evidence
+- **Touches:** ignored local environment files, `scripts/prepare-deploy.mjs`, `api/src/index.ts`, `tests/unit/prepare-deploy.test.ts`, `tests/integration/worker-assets.test.ts`, `docs/DEPLOYMENT.md`, production and browser evidence
 - **Verification:** `pnpm verify:full`, `pnpm test:production`, and primary browser verification
 - **Status:** in_progress
 
-- [ ] **P4.T1: Guide credential setup and validate production configuration, including config-relative entry/assets paths** — covers: FR-8, AC-10, NFR-8
+- [ ] **P4.T1: Guide credential setup and validate production configuration, including config-relative paths and the Cloudflare default Worker export** — covers: FR-1, FR-2, FR-8, AC-1, AC-2, AC-10, NFR-8
 - [ ] **P4.T2: Deploy the Worker and initialize the fresh Neon branch, seed, and Gemini embeddings** — covers: FR-7, AC-4
 - [ ] **P4.T3: Verify GitHub, Google, and email/password auth on the public origin** — covers: AC-5
 - [ ] **P4.T4: Verify anonymous and authenticated tutor, quiz, mastery, and badge flows** — covers: FR-9, AC-6, AC-7, AC-8
