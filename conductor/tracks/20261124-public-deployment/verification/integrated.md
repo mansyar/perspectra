@@ -5,7 +5,7 @@
 - Base: `99630bd70a075e30199efffdbdd99cda825644f9`
 - Public origin: <https://perspectra-api.m-ansyarafi.workers.dev>
 - Integrated result: **PASS**
-- Final checkpoint: `627b01f4558a9de2eb99ce7cde5dc1db4d80b217`
+- Final checkpoint: `40b66d81df5af51c51f84a55286da202f9d7064f`
 
 This file consolidates the final local gates, authoritative primary-owned production checks, the read-only secret/placeholder audit, and the fallback behavior relied on by the public release. It does not replace the primary's final checkpoint, review, or PR steps.
 
@@ -65,6 +65,7 @@ Production deployment remains manual. The deployed Worker and static assets shar
 | P3 — same-origin Worker and production E2E mode | `185c7e9` | Verified | [phase-3.md](phase-3.md) |
 | P4 — production preparation and follow-up fixes | `6673fae` | Verified locally and in production | [phase-4.md](phase-4.md) |
 | P5 — integrated verification and proof | `627b01f` | Verified | This file |
+| R1 — review documentation/evidence fixes | `40b66d8` | Verified; re-review PASS | [review-fix-r1.md](review-fix-r1.md) |
 
 ## 4. Coverage totals and per-file gate
 
@@ -85,7 +86,7 @@ Per-file results for logic-bearing modules:
 | `api/src/lib/events.ts` | 100% | 87.50% | 100% | 100% |
 | `api/src/lib/mastery.ts` | 95.83% | 80.85% | 100% | 95.65% |
 | `api/src/lib/quota.ts` | 100% | 93.75% | 100% | 100% |
-| `api/src/lib/retrieval.ts` | 100% | 96.67% | 100% | 100% |
+| `api/src/lib/retrieval.ts` | 100% | 96.07% | 100% | 100% |
 | `src/lib/hotspot-store.ts` | 100% | 93.33% | 100% | 100% |
 | `src/lib/offline-queue.ts` | 96.87% | 90.00% | 89.47% | 100% |
 
@@ -148,7 +149,7 @@ Production and local browser tests exercise poster fallback, WebGL recovery, key
 
 **PASS** — local gates, production E2E, production Lighthouse, real-service smoke, authentication proof, coverage gates, secret audit, and fallback evidence are complete.
 
-`627b01f4558a9de2eb99ce7cde5dc1db4d80b217`
+`40b66d81df5af51c51f84a55286da202f9d7064f`
 
 ## 10. Primary verification
 
