@@ -10,7 +10,8 @@
 - Auth-schema base/head: `2068c9203c48777c8ae83b28d7d1df0615402a1e` / `1d584b679bbb89c2186ecd2f8f4e6842433e1673`
 - Gemini-chat base/head: `0e4bd88e3d3ef84f9ae7236c65e4bce6cc582b4a` / `c6b2f14ef05d83251cb197f3e08ed0589e2b68f9`
 - Request-scoped Neon base/head: `8734311076fcdf4075141ce4cedaae1410ee8b85` / `33167f1b0d299ada1b1bd437372cf329683daaf0`
-- Result: **preparation, Worker entry point, Better Auth session schema, Gemini chat settings, and request-scoped Neon lifecycle verified locally; production migration/redeploy evidence pending primary**
+- Lighthouse-poster base/head: `43a5626c8a7bbe757b94c45165fda216dc94b80d` / `0f41ef188ecd7dc0eb2d683878a342e0d77b7811`
+- Result: **preparation, Worker entry point, Better Auth session schema, Gemini chat settings, request-scoped Neon lifecycle, and optimized heart poster verified locally; production migration/redeploy/Lighthouse evidence pending primary**
 
 ## Preparation
 
@@ -439,3 +440,92 @@ pnpm verify
 - The existing >500 kB chunk warning remained non-blocking.
 
 Production redeployment and repeated email sign-up/sign-in followed by authenticated API smoke verification remain primary-owned.
+
+## Follow-up: production Lighthouse heart poster — 2026-11-25
+
+### Production symptom and measurement
+
+Production Playwright passed 16 of 17 tests, but Lighthouse on `/lessons/heart/` failed twice with
+performance **0.79** and LCP **5.7 s**. Browser network inspection identified the 960×960
+`public/assets/heart/heart-poster.png` as the dominant LCP resource. The PNG was **902,567 bytes**;
+the unthrottled capture transferred it in approximately 129 ms while same-origin TTFB was about
+41 ms.
+
+### Root cause
+
+The lesson manifest pointed its fallback poster at the nearly 903 KB PNG. The oversized image
+dominated the LCP resource and pushed the production lesson below its performance budget even
+though the surrounding same-origin responses were fast.
+
+### Fix
+
+- Retained the deterministic `assets/heart/build_heart.py` recipe and the existing PNG as the
+  reproducible WebP source.
+- Added Blender-native WEBP export at quality 85 immediately after the deterministic 960×960 PNG
+  render. No image conversion dependency was added.
+- Generated `public/assets/heart/heart-poster.webp` at **7,228 bytes** with a valid `RIFF`/`WEBP`
+  signature, approximately **99.2% smaller** than the source PNG. Visual QA found no compression
+  artifacts, clipping, blank regions, or rendering failures.
+- Pointed `src/content/lessons/heart.mdx` at `/assets/heart/heart-poster.webp` while retaining the
+  committed PNG source.
+- Updated `assets/heart/ASSET_CONTRACT.md`, README, architecture, and deployment documentation to
+  describe the delivered WebP, retained PNG source, regeneration path, and 120,000-byte budget.
+- The primary restored incidental GLB/PNG byte rewrites from the regeneration; those binary source
+  artifacts are unchanged in this follow-up.
+
+### Regression coverage
+
+`tests/integration/glb-manifest.test.ts` now reads the poster path directly from the lesson
+frontmatter, requires `/assets/heart/heart-poster.webp`, verifies the file exists and is nonempty,
+checks the `RIFF` and `WEBP` signatures, and enforces a size below **120,000 bytes**. The test first
+failed against the old PNG reference as an expected red baseline (**1 failed, 45 passed**). The
+final integration suite passed all **46 tests**.
+
+### Verification
+
+Exact required command:
+
+```text
+pnpm verify
+```
+
+The final run exited `0`:
+
+- Lint passed with seven non-blocking existing warnings (four `prefer-add-event-listener`, two
+  `no-array-sort`, and the existing Worker identity-test `no-shadow`).
+- Format check passed across 98 files. A preceding `pnpm fmt` reported the known exit-5-with-work-
+  completed formatter flake; the required full verification still passed on its first run.
+- TypeScript/Astro typecheck passed.
+- Unit tests: **21 files, 177 tests passed**.
+- Coverage: **98.61% statements, 92.41% branches, 97.84% functions, 99.12% lines**.
+- Integration tests: **7 files, 46 tests passed**.
+- Astro production build passed with **3 pages**; the existing large-chunk warning remained
+  non-blocking.
+- `git diff --check` passed with no output.
+
+Implementation commit: `0f41ef188ecd7dc0eb2d683878a342e0d77b7811` —
+`perf(assets): ship optimized heart WebP poster`.
+
+No deployment command was run, `.conductor/deploy/production.env` was not read, and no credential
+or production connection value was recorded. Production redeployment and a new Lighthouse run
+proving the heart lesson meets its performance budget remain primary-owned.
+
+## Primary verification — poster follow-up
+
+The primary independently ran:
+
+```text
+git status --porcelain
+git diff --stat 43a5626c8a7bbe757b94c45165fda216dc94b80d..HEAD
+pnpm verify
+```
+
+- Working tree was clean before verification.
+- The diff contained only the declared asset recipe/contract, new WebP, lesson manifest, integration
+  test, README/architecture/deployment docs, and this evidence file.
+- `pnpm verify` exited `0`: seven non-blocking lint warnings, 98 formatted files, clean typecheck,
+  177 unit tests, coverage 98.61% statements / 92.41% branches / 97.84% functions / 99.12% lines,
+  46 integration tests, and a 3-page production build.
+- Vision inspection of the 7,228-byte WebP confirmed a complete, recognizable stylized heart with
+  visible chambers and vessels; it is neither blank nor cropped.
+- Production redeploy and Lighthouse confirmation remain primary-owned.
