@@ -11,6 +11,7 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
+| RM-5 | Establish release readiness with CI, real DB scripts, deployment runbook and clean status | chore | high | — | — | user |
 | RM-1 | Build multi-topic library with 3–5 more subjects and prove topic-agnosticism | feature | high | — | — | user |
 
 ## Next
