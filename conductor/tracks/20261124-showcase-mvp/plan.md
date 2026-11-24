@@ -114,13 +114,16 @@
 - **Covers:** FR-1, FR-14, NFR-1, NFR-5, NFR-6, NFR-8, AC-1, AC-18, AC-19, AC-20, AC-22
 - **Touches:** `README.md`, `src/styles/global.css`, `src/pages/index.astro`, `src/components/**`, `tests/e2e/**`, `lighthouse.config.*`, `docs/**`, `conductor/tracks/20261124-showcase-mvp/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** `0bd954e`
+- **Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-6.md
 
-- [ ] **P6.T1: Design tokens, responsive polish, light reading surface** — covers: FR-1
-- [ ] **P6.T2: Accessibility audit, reduced-motion, keyboard pass** — covers: FR-14, NFR-5
-- [ ] **P6.T3: Lighthouse ≥95 and bundle-budget assertions** — covers: NFR-1, AC-18
-- [ ] **P6.T4: README: vision, demo script, architecture, setup, licenses, AI disclosure, WCAG statement** — covers: NFR-8, AC-20, AC-22
-- [ ] **P6.T5: Integrated verification + committed evidence** — covers: NFR-6
+- [x] **P6.T1: Design tokens, responsive polish, light reading surface** — covers: FR-1
+- [x] **P6.T2: Accessibility audit, reduced-motion, keyboard pass** — covers: FR-14, NFR-5
+- [x] **P6.T3: Lighthouse ≥95 and bundle-budget assertions** — covers: NFR-1, AC-18
+- [x] **P6.T4: README: vision, demo script, architecture, setup, licenses, AI disclosure, WCAG statement** — covers: NFR-8, AC-20, AC-22
+- [x] **P6.T5: Integrated verification + committed evidence** — covers: NFR-6
 
 <!--
 Review fixes are appended by `conductor-review` as:
