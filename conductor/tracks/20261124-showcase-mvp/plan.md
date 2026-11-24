@@ -139,3 +139,18 @@ Review fixes are appended by `conductor-review` as:
 
 - [ ] **R1.T1: Resolve <finding ID>** — covers: <finding ID>
 -->
+
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve all review findings and make the evidence truthful.
+- **Depends:** Phase 6
+- **Covers:** F1, F2, F3, F4, F5
+- **Touches:** `src/components/scene/**`, `api/src/**`, `scripts/**`, `src/lib/offline-queue.ts`, `vitest.config.ts`, `tests/**`, `conductor/tracks/20261124-showcase-mvp/verification/**`
+- **Verification:** `pnpm verify:full`
+- **Status:** in_progress
+
+- [ ] **R1.T1: Make the renderer step-down remount and keep the poster until the GLB loads** — covers: F1, F4
+- [ ] **R1.T2: Wire DB-backed embedded chunks into tutor and quiz retrieval with cosine threshold and topic-agnostic discovery** — covers: F2
+- [ ] **R1.T3: Broaden the coverage gate to the NFR-7 logic modules and add tests to meet 80%** — covers: F3
+- [ ] **R1.T4: Rename `userid` to `userId`** — covers: F5
+- [ ] **R1.T5: Update evidence and re-run integrated verification** — covers: F1, F2, F3, F4, F5
