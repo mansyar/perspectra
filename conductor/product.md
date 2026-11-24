@@ -64,11 +64,7 @@ Most LMS platforms win on distribution, not craft — learners face passive vide
 
 ## Roadmap to Full Version
 
-- **Phase A — Showcase MVP:** Foundation, one heart lesson, tutor, mastery, badge. (first track)
-- **Phase B — Multi-topic library:** Authoring toolkit + 3–5 more topics across different subjects; prove topic-agnosticism.
-- **Phase C — Cohorts & social:** Cohort learning, shared progress, team goals (no public leaderboards that harm motivation).
-- **Phase D — Assessment depth:** IRT adaptive tests, richer SRS scheduling, rubric grading with human review.
-- **Phase E — Open platform:** LTI 1.3 / xAPI / cmi5 integrations for real-LMS interoperability; external authors; standards-based credentials beyond OB3.
+Planned phases now live in [conductor/roadmap.md](./roadmap.md). Phase A (Showcase MVP) is complete and archived in [conductor/archive/20261124-showcase-mvp](./archive/20261124-showcase-mvp/index.md).
 
 ## Open Questions & Assumptions
 

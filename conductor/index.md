@@ -18,6 +18,10 @@
 - [Tracks Registry](./tracks.md)
 - [Tracks Directory](./tracks/)
 
+## Roadmap
+
+- [Roadmap](./roadmap.md)
+
 ## Capabilities
 
 - [Phase Executor](../.opencode/agents/conductor-phase.md)
