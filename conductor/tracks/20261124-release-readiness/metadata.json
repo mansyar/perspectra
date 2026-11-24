@@ -21,7 +21,7 @@
   "last_checkpoint": "8e0fbf0fef6347930cf785bddccaefa3933ad02f",
   "review_verdict": "PASS",
   "review_rounds": 1,
-  "doc_sync": "pending",
+  "doc_sync": "updated",
   "pr_url": null,
   "reverted_at": null,
   "revert_commit": null,

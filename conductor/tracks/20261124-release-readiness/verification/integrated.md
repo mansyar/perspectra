@@ -96,8 +96,12 @@ All categories meet the configured budgets (performance 0.95, accessibility 0.95
 
 ## Deviations
 
-None. No source, script, dependency, lockfile, coverage config, workflow, doc, roadmap, plan,
-metadata or registry change was made in this phase; only evidence was written and committed.
+Phase 4 added a clearly labelled public offline fixture in `src/pages/verify.astro` (lines 5-14,
+174-184) so the primary could verify the generalized badge narrative in a static preview. It was
+deliberately outside Phase 4's declared Touches and is recorded here during post-review doc sync;
+it is presentation-only, uses no deployment secret, and does not claim signature verification.
+No other source, script, dependency, lockfile, coverage config, workflow, doc, roadmap, plan,
+metadata or registry change was made in Phase 5; only evidence was written and committed.
 
 ## Human-only exceptions
 

@@ -87,4 +87,4 @@ AC-2 live GitHub Actions dry run is deferred as human-only and recorded honestly
 
 ## Doc sync
 
-pending
+updated — post-review sync reconciled the Phase 4 `src/pages/verify.astro` offline-fixture deviation in `verification/integrated.md`, recorded the primary browser pass, and confirmed no product-definition or product-guideline change was required.
