@@ -9,7 +9,8 @@
 - Follow-up base/head: `f7ec177cf710d1bf544b678325070d2e79810901` / `8c96f365583fc55d6cfbedfa04bac2f57f777316`
 - Auth-schema base/head: `2068c9203c48777c8ae83b28d7d1df0615402a1e` / `1d584b679bbb89c2186ecd2f8f4e6842433e1673`
 - Gemini-chat base/head: `0e4bd88e3d3ef84f9ae7236c65e4bce6cc582b4a` / `c6b2f14ef05d83251cb197f3e08ed0589e2b68f9`
-- Result: **preparation, Worker entry point, Better Auth session schema, and Gemini chat settings verified locally; production migration/redeploy evidence pending primary**
+- Request-scoped Neon base/head: `8734311076fcdf4075141ce4cedaae1410ee8b85` / `33167f1b0d299ada1b1bd437372cf329683daaf0`
+- Result: **preparation, Worker entry point, Better Auth session schema, Gemini chat settings, and request-scoped Neon lifecycle verified locally; production migration/redeploy evidence pending primary**
 
 ## Preparation
 
@@ -344,3 +345,80 @@ pnpm verify
 - The existing >500 kB chunk warning remained non-blocking.
 
 Production redeployment and complete cited-tutor smoke verification remain primary-owned.
+
+## Follow-up: request-scoped Neon Pool lifecycle — 2026-11-25
+
+### Production symptom
+
+Sign-up intermittently succeeded, but immediate sign-in returned a Cloudflare `500`. `wrangler tail`
+reported a Neon serverless cross-request I/O error (`Cannot perform I/O on behalf of a different
+request`) followed by request cancellation while the Worker appeared hung. The stack pointed into
+`@neondatabase/serverless` Pool activity.
+
+### Root cause
+
+`createApp` cached the production database and resolved dependencies in `WeakMap<Env, ...>` maps.
+Cloudflare reuses bindings across requests, so a WebSocket Pool created during request A could be
+reused by request B. Neon serverless requires its WebSocket Pool/Client to be created, used, and
+closed within one request. `neon-http` could not be substituted because Better Auth requires
+interactive transactions.
+
+### Fix
+
+- `createDatabase` now returns both the Drizzle client and its owning Pool as `RequestDatabase`.
+- Production database and dependency caches are keyed by `Request`, not the reusable bindings
+  object. Each request receives one Pool/Drizzle pair, and all of its auth, progress, retrieval,
+  quiz, and badge work resolves against that pair.
+- Hono middleware runs around the routes and registers `pool.end()` with
+  `c.executionCtx.waitUntil` in a `finally` block. Cleanup is asynchronous through `waitUntil`, so
+  it does not delay or block the response and still runs when a handler rejects.
+- Tutor, quiz, mastery, badge, Better Auth, and progress resolvers now receive `c.req.raw`; direct
+  auth/progress calls thread the same request through dependency resolution.
+- Existing object-based dependency injection, unauthorized behavior, asset fallback, and public
+  app exports are unchanged. Injected fakes do not create production Pools and are never closed by
+  Worker middleware.
+- README, architecture, and deployment documentation now explain the request boundary and why
+  Better Auth retains the WebSocket Pool rather than `neon-http`.
+
+### Regression coverage
+
+`tests/unit/request-db-scope.test.ts` mocks `createDatabase` and uses injected auth/KV/LLM fakes with
+an unauthorized progress route. It sends two sequential `app.request` calls using the same bindings
+and proves:
+
+- two distinct Drizzle clients and Pools are created;
+- both Pools receive exactly one `end()` call;
+- each Pool closure promise is registered through its request's `waitUntil` context and can be
+  awaited independently;
+- a fully injected application creates no production Pool and registers no production cleanup.
+
+The first request-scope test failed against the old binding-keyed implementation because
+`createDatabase` was called only once for the two requests (**1 failed, 1 passed**). After the fix,
+the focused suite passed **2 of 2 tests** without a database or network.
+
+### Verification
+
+Exact required command:
+
+```text
+pnpm verify
+```
+
+The run exited `0`:
+
+- Lint passed with seven non-blocking existing warnings (four `prefer-add-event-listener`, two
+  `no-array-sort`, and the existing Worker identity-test `no-shadow`).
+- Format check passed across 98 files.
+- TypeScript/Astro typecheck passed.
+- Unit tests: **21 files, 177 tests passed**.
+- Coverage: **98.61% statements, 92.41% branches, 97.84% functions, 99.12% lines**.
+- Integration tests: **7 files, 46 tests passed**.
+- Astro production build passed with **3 pages**; the existing large-chunk warning remained
+  non-blocking.
+- `git diff --check` passed with no output.
+
+Commit: `33167f1b0d299ada1b1bd437372cf329683daaf0` — `fix(api): scope Neon pools to requests`.
+
+No deployment or database command was run, no Cloudflare/Neon resource was changed, and
+`.conductor/deploy/production.env` was not read. Production redeployment and repeated sign-up/sign-in
+plus authenticated API smoke verification remain primary-owned.
