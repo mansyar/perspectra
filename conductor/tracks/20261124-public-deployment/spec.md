@@ -31,7 +31,7 @@ Primary metric: the public URL demonstrates the complete catalog-to-credential l
 
 - Workers Static Assets serving `dist/`.
 - API-first routing for `/api/*` and `/health`, with static fallback through `ASSETS`.
-- Gemini `gemini-2.5-flash` chat and `gemini-embedding-2` embeddings at 1536 dimensions.
+- Configurable Gemini Flash chat (production: `gemini-3.5-flash-lite`) and `gemini-embedding-2` embeddings at 1536 dimensions.
 - Gemini-aware lesson ingestion and embedding tests.
 - `E2E_BASE_URL` production mode for Playwright.
 - Manual deployment runbook and credential guidance.
@@ -85,7 +85,7 @@ Primary metric: the public URL demonstrates the complete catalog-to-credential l
 | AC-2 | FR-2 | Known lesson/verifier routes render; unknown routes produce a real not-found response rather than an HTML fallback loop. |
 | AC-3 | FR-3, FR-4 | Unit/integration tests prove Gemini-only embeddings, batch ordering, 1536 dimensions, normalization, and zero OpenAI calls. |
 | AC-4 | FR-5, FR-7 | Fresh Neon production branch contains the heart lesson, six hotspots, and valid Gemini embeddings. |
-| AC-5 | FR-7 | GitHub, Google, and email/password authentication work against the workers.dev origin with correct callbacks. |
+| AC-5 | FR-7 | Google and email/password authentication work against the workers.dev origin with correct callbacks; GitHub OAuth is explicitly deferred by the user. |
 | AC-6 | FR-9 | Anonymous and authenticated tutor flows work; quota, disclosure, and static fallback behavior remain intact. |
 | AC-7 | FR-9 | A real Gemini answer is grounded in the heart lesson and contains valid clickable citations. |
 | AC-8 | FR-9 | Quiz updates mastery, FSRS due cards appear, and OB3 issuance/verification works on the public URL. |
@@ -109,7 +109,7 @@ Primary metric: the public URL demonstrates the complete catalog-to-credential l
 - Cloudflare account, Wrangler login, and KV namespace.
 - Neon production branch and connection string.
 - `BETTER_AUTH_SECRET`.
-- GitHub and Google OAuth applications configured for the final workers.dev callbacks.
+- Google OAuth application configured for the final workers.dev callback; GitHub OAuth deferred by the user.
 - Gemini API key from Google AI Studio.
 - GitHub CLI authentication for PR creation.
 - Human approval for production deployment.
@@ -121,6 +121,7 @@ Primary metric: the public URL demonstrates the complete catalog-to-credential l
 - Production uses a fresh Neon branch with no existing embedding migration.
 - Gemini `gemini-embedding-2` is the production embedding model and emits 1536-dimensional normalized vectors.
 - Human-only credential and account steps may pause implementation until supplied.
+- Production chat uses an available configurable Gemini Flash model; the initial `gemini-2.5-flash` choice was superseded after the provider reported it unavailable to new users.
 
 ## References
 
