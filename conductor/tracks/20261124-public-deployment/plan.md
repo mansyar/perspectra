@@ -13,7 +13,7 @@
 - **Covers:** FR-10, AC-11
 - **Touches:** `conductor/roadmap.md`, `README.md`, `.conductor/runs/20261124-release-readiness*`
 - **Verification:** `pnpm verify`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Retire RM-5 and add RM-6 Public deployment** — covers: FR-10, AC-11
 - [ ] **P1.T2: Remove stale release-readiness run artifacts** — covers: FR-10, AC-11
