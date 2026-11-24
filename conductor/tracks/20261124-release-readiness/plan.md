@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-8, AC-1, AC-2, NFR-2, NFR-3
 - **Touches:** `.github/workflows/**`, `scripts/check-ci.mjs`, `package.json`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Add pull-request CI workflow** — covers: FR-1, AC-2
   - [ ] **P1.T1.1: Install pnpm/Node and cache the pnpm store**
