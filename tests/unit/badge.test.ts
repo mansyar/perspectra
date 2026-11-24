@@ -69,4 +69,79 @@ describe('createBadgeService', () => {
       reason: 'malformed',
     });
   });
+
+  it('derives a non-heart narrative from lesson id, count and vocabulary', async () => {
+    const service = createBadgeService(SECRET);
+    const { credential } = await service.issue({
+      hotspots: ['cortex', 'hippocampus'],
+      lessonId: 'brain',
+      mastery: 0.91,
+      userId: 'user-brain',
+    });
+    const result = await service.verify(credential);
+    expect(result.valid).toBe(true);
+    const achieved = achievement(result);
+    expect(achieved.criteria?.narrative).toContain('brain');
+    expect(achieved.criteria?.narrative).toContain('2 hotspots');
+    expect(achieved.criteria?.narrative).toContain('cortex, hippocampus');
+    expect(achieved.description).toContain('brain lesson concepts');
+    const prose = `${achieved.criteria?.narrative ?? ''} ${achieved.description ?? ''}`;
+    expect(prose).not.toMatch(/heart|six landmarks/i);
+
+    const tampered = tamper(credential);
+    expect(await service.verify(tampered)).toMatchObject({ valid: false });
+  });
+
+  it('uses count-free prose when hotspots are absent or empty', async () => {
+    const service = createBadgeService(SECRET);
+    for (const hotspots of [undefined, []]) {
+      const { credential } = await service.issue({
+        lessonId: 'planets',
+        mastery: 1,
+        userId: 'user-planets',
+        hotspots,
+      });
+      const result = await service.verify(credential);
+      expect(result.valid).toBe(true);
+      const achieved = achievement(result);
+      expect(achieved.criteria?.narrative).toBe(
+        'Mastered the planets lesson with mastery at or above 0.85.',
+      );
+      expect(achieved.criteria?.narrative).not.toMatch(/heart|six|hotspot/i);
+      expect(achieved.description).not.toMatch(/heart/i);
+    }
+  });
+
+  it('reads a single hotspot as singular', async () => {
+    const service = createBadgeService(SECRET);
+    const { credential } = await service.issue({
+      hotspots: ['planet_core'],
+      lessonId: 'planets',
+      mastery: 1,
+      userId: 'user-planets',
+    });
+    const achieved = achievement(await service.verify(credential));
+    expect(achieved.criteria?.narrative).toContain('1 hotspot (planet_core)');
+    expect(achieved.criteria?.narrative).not.toContain('1 hotspots');
+  });
 });
+
+function achievement(result: { credential?: Record<string, unknown> }): {
+  criteria?: { narrative?: string };
+  description?: string;
+} {
+  const subject = result.credential?.credentialSubject as
+    | { achievement?: { criteria?: { narrative?: string }; description?: string } }
+    | undefined;
+  return subject?.achievement ?? {};
+}
+
+function tamper(credential: string): string {
+  const [payload, signature] = credential.split('.');
+  const position = 12;
+  const changed =
+    payload.slice(0, position) +
+    (payload[position] === 'A' ? 'B' : 'A') +
+    payload.slice(position + 1);
+  return `${changed}.${signature}`;
+}

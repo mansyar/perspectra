@@ -1,0 +1,31 @@
+{
+  "id": "20261124-release-readiness",
+  "title": "Release readiness",
+  "type": "chore",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-24T15:53:35+11:00",
+  "updated_at": "2026-11-24T17:10:00+11:00",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "chore/20261124-release-readiness",
+  "base_branch": "master",
+  "base_sha": "496f53c5805d42f983f6aba0104249d7ebfd8b28",
+  "progress": {
+    "phases_total": 5,
+    "phases_verified": 5,
+    "tasks_total": 20,
+    "tasks_done": 20
+  },
+  "last_checkpoint": "8e0fbf0fef6347930cf785bddccaefa3933ad02f",
+  "review_verdict": "PASS",
+  "review_rounds": 1,
+  "doc_sync": "updated",
+  "pr_url": "https://github.com/mansyar/perspectra/pull/2",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-24T17:10:00+11:00",
+  "archive_path": "conductor/archive/20261124-release-readiness"
+}

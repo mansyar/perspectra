@@ -1,0 +1,88 @@
+name: PR verification
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.23.0
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Static, unit, integration and build checks
+        shell: bash
+        run: |
+          # oxfmt 0.80 can exit 5 while reporting every file is formatted.
+          # Retry that single known flake once; any other failure is surfaced as-is.
+          output="$(pnpm verify 2>&1)" && { printf '%s\n' "$output"; exit 0; }
+          status=$?
+          printf '%s\n' "$output"
+          if grep -q 'All matched files use the correct format' <<<"$output" \
+            && grep -q 'exit code 5' <<<"$output"; then
+            echo '::warning::Known oxfmt exit-5 flake; retrying pnpm verify once.'
+            pnpm verify
+          else
+            exit "$status"
+          fi
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.23.0
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build static site
+        run: pnpm build
+
+      - name: Smoke and end-to-end checks
+        shell: bash
+        run: |
+          # Lighthouse can fail transiently while chrome-launcher kills Chromium.
+          # Retry that single known flake once; any other failure is surfaced as-is.
+          output="$( { pnpm smoke && pnpm test:e2e; } 2>&1 )" && { printf '%s\n' "$output"; exit 0; }
+          status=$?
+          printf '%s\n' "$output"
+          if grep -Fq 'chrome.kill()' <<<"$output" \
+            && grep -Eq 'EPERM|EACCES|EBUSY' <<<"$output"; then
+            echo '::warning::Known Lighthouse Chromium-cleanup flake; retrying once.'
+            pnpm smoke && pnpm test:e2e
+          else
+            exit "$status"
+          fi

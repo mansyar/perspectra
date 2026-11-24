@@ -61,7 +61,7 @@ pr:
   merge_method: "merge"
 ```
 
-Notes: GitHub CLI 2.103.0 is installed, so media demos in PR bodies are supported (GitHub only). No git remote exists yet — PR creation is deferred until one is added. `phase_squash` refers to task commits inside a phase and remains enabled; the PR merge method is `merge`.
+Notes: GitHub CLI 2.103.0 is installed, so media demos in PR bodies are supported (GitHub only). The `origin` remote exists and PR creation is enabled. `phase_squash` refers to task commits inside a phase and remains enabled; the PR merge method is `merge`.
 
 ## Development Commands
 

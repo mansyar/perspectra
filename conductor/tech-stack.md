@@ -28,7 +28,7 @@
 ## Hosting & Deployment
 - Static Astro output served by Cloudflare; Hono API on **Cloudflare Workers** via **Wrangler 4.167.0**; **@cloudflare/workers-types 5.20261123.1**.
 - **workers.dev** subdomain first; custom domain deferred.
-- **GitHub Actions** CI: typecheck, lint, format check, Vitest + coverage gate, Astro build.
+- **GitHub Actions** CI on pull requests only: a `verify` job (lint, format, typecheck, Vitest + coverage gate, Astro build) and an `e2e` job (Playwright smoke, E2E, axe and Lighthouse budgets with a build step for `astro preview`).
 
 ## Tooling
 - **Vitest 5.1.1 + @vitest/coverage-v8 5.1.1** for unit tests; **@playwright/test 1.65.1** for smoke, E2E, axe accessibility and Lighthouse performance specs; **Lighthouse 13.6.0**, **chrome-launcher 1.2.0**, **@axe-core/playwright 4.14.0** for audited evidence.
@@ -56,6 +56,7 @@
 ## Doc Sync Notes
 
 - **2026-11-24 (Showcase MVP):** corrected the scheduler to `ts-fsrs 6.0.1`; recorded Playwright/Lighthouse/axe as active verification tooling; confirmed the OB3 credential uses an HMAC-SHA-256 `DataIntegrityProof` at portfolio scale (no external trust framework). Product definition and product guidelines required no change.
+- **2026-11-24 (Release readiness):** recorded the two-job PR-only GitHub Actions workflow, real `db:push`/`db:seed` scripts via drizzle-kit and `tsx 4.23.15`, the documented `RATE_LIMIT_KV` placeholder with `RATE_LIMIT_KV_ID` validation, `docs/DEPLOYMENT.md`, the primary-run browser verification gate, and lesson-correct badge narratives for any topic. Product definition and product guidelines required no change.
 
 ## Open Questions & Assumptions
 - Custom domain deferred; exact embedding model picked at implementation time.

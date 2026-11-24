@@ -1,5 +1,18 @@
 ---
+import { createBadgeService } from '../../api/src/lib/badge';
 import '../styles/global.css';
+
+// Static fixtures are public sample data, never deployment credentials.
+const FIXTURE_SECRET = 'public-browser-fixture-secret';
+const fixtureService = createBadgeService(FIXTURE_SECRET);
+const fixture = await fixtureService.issue({
+  hotspots: ['cortex', 'hippocampus'],
+  lessonId: 'brain',
+  mastery: 0.91,
+  userId: 'fixture-learner',
+  now: new Date('2026-11-24T00:00:00.000Z'),
+});
+const fixtureVerification = await fixtureService.verify(fixture.credential);
 ---
 
 <!doctype html>
@@ -36,11 +49,28 @@ import '../styles/global.css';
       <dl data-verify-details hidden>
         <dt>Achievement</dt>
         <dd data-verify-achievement></dd>
+        <dt>Narrative</dt>
+        <dd data-verify-narrative></dd>
         <dt>Issuer</dt>
         <dd data-verify-issuer></dd>
         <dt>Issued</dt>
         <dd data-verify-issued></dd>
       </dl>
+      <section class="verify-fixture" aria-label="Offline sample credential">
+        <h2>Non-heart sample</h2>
+        <p>
+          Static preview has no Worker API. This public fixture displays the signed sample prose
+          only; it is not signature-verified here.
+        </p>
+        <button
+          data-fixture-button
+          data-fixture-credential={fixture.credential}
+          data-fixture-parsed={JSON.stringify(fixtureVerification.credential ?? {})}
+          type="button"
+        >
+          Show brain sample narrative
+        </button>
+      </section>
     </main>
   </body>
 </html>
@@ -50,6 +80,43 @@ import '../styles/global.css';
     const node = document.querySelector<HTMLElement>(selector);
     if (node) {
       node.textContent = value;
+    }
+  }
+
+  function renderCredential(
+    parsed: Record<string, unknown>,
+    statusText: string,
+    markValid: boolean,
+  ): void {
+    const subject = parsed.credentialSubject as
+      | {
+          achievement?: {
+            criteria?: { narrative?: string };
+            description?: string;
+            name?: string;
+          };
+        }
+      | undefined;
+    const issuer = parsed.issuer as { name?: string } | undefined;
+    setText('[data-verify-status]', statusText);
+    setText('[data-verify-achievement]', subject?.achievement?.name ?? 'Unknown achievement');
+    setText(
+      '[data-verify-narrative]',
+      subject?.achievement?.criteria?.narrative ?? 'No narrative supplied',
+    );
+    setText('[data-verify-issuer]', issuer?.name ?? 'Unknown issuer');
+    setText('[data-verify-issued]', String(parsed.issuanceDate ?? 'Unknown date'));
+    const details = document.querySelector<HTMLElement>('[data-verify-details]');
+    if (details) {
+      details.hidden = false;
+    }
+    const status = document.querySelector<HTMLElement>('[data-verify-status]');
+    if (status) {
+      if (markValid) {
+        status.setAttribute('data-valid', 'true');
+      } else {
+        status.removeAttribute('data-valid');
+      }
     }
   }
 
@@ -83,19 +150,7 @@ import '../styles/global.css';
         }
         return;
       }
-      const parsed = result.credential ?? {};
-      const subject = parsed.credentialSubject as { achievement?: { name?: string } } | undefined;
-      const issuer = parsed.issuer as { name?: string } | undefined;
-      setText('[data-verify-status]', 'Valid credential');
-      setText('[data-verify-achievement]', subject?.achievement?.name ?? 'Unknown achievement');
-      setText('[data-verify-issuer]', issuer?.name ?? 'Unknown issuer');
-      setText('[data-verify-issued]', String(parsed.issuanceDate ?? 'Unknown date'));
-      if (details) {
-        details.hidden = false;
-      }
-      if (status) {
-        status.setAttribute('data-valid', 'true');
-      }
+      renderCredential(result.credential ?? {}, 'Valid credential', true);
     } catch {
       setText('[data-verify-status]', 'Verification is currently unavailable.');
       if (details) {
@@ -115,4 +170,16 @@ import '../styles/global.css';
     void verifyCredential(input?.value.trim() ?? '');
   });
   void verifyCredential(supplied ?? '');
+
+  const fixtureButton = document.querySelector<HTMLButtonElement>('[data-fixture-button]');
+  fixtureButton?.addEventListener('click', () => {
+    const parsed = JSON.parse(fixtureButton.dataset.fixtureParsed ?? '{}') as Record<
+      string,
+      unknown
+    >;
+    if (input) {
+      input.value = fixtureButton.dataset.fixtureCredential ?? '';
+    }
+    renderCredential(parsed, 'Sample credential (offline fixture, not signature-verified)', false);
+  });
 </script>
