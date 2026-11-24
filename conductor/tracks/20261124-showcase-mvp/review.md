@@ -3,47 +3,51 @@
 - **Track:** `20261124-showcase-mvp`
 - **Type:** `mvp`
 - **Branch:** `feat/20261124-showcase-mvp`
-- **Range:** `79c054e8d6e5ca89d7cc389210b768b8484f9b17..59cbe67f7b705e69fc3b5835aa7c182a93f80476`
-- **Date:** `2026-11-24T13:10:16+11:00`
-- **Verdict:** `BLOCK`
+- **Range:** `79c054e8d6e5ca89d7cc389210b768b8484f9b17..41691650ee681dc5ec2ff41c537644d0dfc5ac8b`
+- **Date:** `2026-11-24T14:55:00+11:00`
+- **Verdict:** `PASS WITH FINDINGS`
 
 ## Summary
 
-The six implementation phases are individually verified and the integrated checks pass, but the independent reviewer found three High-severity conformance gaps that must be fixed before this track can be accepted. The WebGPU→WebGL step-down cannot remount its scene, the runtime tutor/quiz retrieval never uses pgvector embeddings or the cosine threshold and depends on a hardcoded MDX mirror, and the coverage gate measures none of the logic modules NFR-7 names. A further High finding (missing scene lighting) and three lower-severity findings (poster removal timing, one naming inconsistency, and a 3D framing defect) were found during primary browser verification after the initial fixes and are also being addressed in round 1. All findings were checked against the track diff and their cited lines by the primary orchestrator. All seven findings were fixed in round 1 and primary browser verification passed on both renderer tiers, but re-review found a new High regression (N1) in the production second-lesson retrieval path plus one Medium residual topic lock (N2). Round 2 is required.
+All six implementation phases and both review fix rounds pass together. The initial reviewer found three High gaps (renderer step-down, runtime retrieval and coverage measurement); primary browser verification then found two visual defects (framing and lighting), and re-review found a production second-lesson retrieval regression plus residual topic lock. All seven round-1 findings and both round-2 findings are fixed in source and covered by real tests. The final re-review found no Critical or High issue and one non-blocking Low residual in badge prose wording. Review strictness is `false`, so the track is acceptable.
 
 ## Verification
 
 | Layer | Command | Result | Evidence |
 | --- | --- | --- | --- |
-| test | `pnpm test` | pass | 83 unit tests, exit 0 |
-| coverage | `pnpm coverage` | pass | exit 0, but only `src/lib/scene-manifest.ts` measured — see F3 |
+| test | `pnpm test` | pass | 103 unit tests, exit 0 |
+| coverage | `pnpm coverage` | pass | 98.6% stmts / 91.7% branches / 97.84% funcs / 99.11% lines; every included module ≥80% |
 | lint | `pnpm lint` | pass | 6 pre-existing warnings, 0 errors |
-| format | `pnpm fmt:check` | pass | one transient exit 5 with "all files correct"; rerun exit 0 |
+| format | `pnpm fmt:check` | pass | intermittent exit 5 with "all files correct"; rerun exit 0 |
 | typecheck | `pnpm typecheck` | pass | exit 0 |
 | build | `pnpm build` | pass | 3 static pages |
-| integrated | `pnpm verify:full` | pass | exit 0; 1 smoke + 14 E2E (axe, Lighthouse, tutor, learning loop) |
+| integration | `pnpm test:integration` | pass | 37 tests, exit 0 |
+| smoke | `pnpm smoke` | pass | 1 test |
+| e2e | `pnpm test:e2e` | pass | 17 tests including renderer step-down, poster fallback, delayed GLB, tutor, learning loop, axe and Lighthouse |
+| integrated | `pnpm verify:full` | pass | exit 0 on final rerun |
+| browser | in-app browser skill | pass | WebGPU and forced WebGL visual/console pass; see `verification/browser.md` |
 
 ## Requirements
 
 | ID | Implemented by | Verified by | Status |
 | --- | --- | --- | --- |
 | FR-1 / AC-1 / NFR-1 / AC-18 | P1.T5, P6.T1, P6.T3 | `tests/e2e/performance.spec.ts`, `dist/index.html`, Lighthouse | covered |
-| FR-2 / AC-2 / AC-16 / NFR-9 | P1.T3, P1.T6 | `tests/unit/manifest*.test.ts`, `tests/integration/content-contract.test.ts` | partial (F2) |
-| FR-3 / AC-3 / AC-4 / NFR-2 | P2.T1–P2.T3 | `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts` | partial (F1, F4) |
+| FR-2 / AC-2 / AC-16 / NFR-9 | P1.T3, P1.T6, R1.T2, R2.T1–R2.T3 | manifest tests, content-contract tests, production-path tutor test, topic-agnostic mastery/badge tests | covered (Low R2-L1 wording residual) |
+| FR-3 / AC-3 / AC-4 / NFR-2 | P2.T1–P2.T3, R1.T1, R1.T4, R1.T6, R1.T7 | GLB/manifest test, scene E2E, browser pass | covered |
 | FR-4 / AC-5 | P2.T4 | `tests/unit/hotspot-store.test.ts`, `tests/e2e/scene.spec.ts` | covered |
 | FR-5 / AC-6 / NFR-6 | P4.T4 | `tests/unit/quota.test.ts`, `tests/integration/tutor.test.ts` | covered |
 | FR-6 / AC-7 | P3.T3 | `api/src/lib/auth.ts`, `tests/integration/progress.test.ts`, human-only OAuth exception | covered |
-| FR-7 / AC-8 | P4.T1 | `tests/unit/retrieval.test.ts`, `tests/integration/tutor.test.ts` | partial (F2) |
-| FR-8 / AC-9 / AC-10 | P4.T2, P4.T4 | `tests/unit/{intent,prompt,quota}.test.ts`, `tests/integration/tutor.test.ts` | partial (F2) |
-| FR-9 / AC-11 | P5.T2 | `tests/unit/quiz.test.ts`, `tests/e2e/learning-loop.spec.ts` | covered |
-| FR-10 / AC-12 | P5.T1, P5.T3 | `tests/unit/mastery.test.ts`, `tests/e2e/learning-loop.spec.ts` | covered |
+| FR-7 / AC-8 | P4.T1, R1.T2, R2.T1 | `tests/unit/retrieval.test.ts`, `tests/integration/tutor.test.ts` | covered |
+| FR-8 / AC-9 / AC-10 | P4.T2, P4.T4, R2.T3 | `tests/unit/{intent,prompt,quota}.test.ts`, `tests/integration/tutor.test.ts` | covered |
+| FR-9 / AC-11 | P5.T2, R1.T2 | `tests/unit/quiz.test.ts`, `tests/e2e/learning-loop.spec.ts` | covered |
+| FR-10 / AC-12 | P5.T1, P5.T3, R2.T3 | `tests/unit/mastery.test.ts`, `tests/e2e/learning-loop.spec.ts` | covered |
 | FR-11 / AC-13 | P3.T5 | `tests/unit/offline-queue.test.ts`, `tests/integration/progress.test.ts` | covered |
-| FR-12 / AC-14 / AC-15 | P5.T4 | `tests/unit/badge.test.ts`, `tests/integration/badge.test.ts` | covered |
+| FR-12 / AC-14 / AC-15 | P5.T4, R2.T3 | `tests/unit/badge.test.ts`, `tests/integration/badge.test.ts` | covered |
 | FR-13 / AC-4 | P2.T1 | `assets/heart/ASSET_CONTRACT.md`, `tests/integration/glb-manifest.test.ts` | covered |
 | FR-14 / AC-19 / AC-20 / NFR-5 | P2.T5, P4.T5, P6.T2 | `tests/e2e/a11y.spec.ts`, `tests/e2e/tutor.spec.ts` | covered |
 | NFR-3 / NFR-4 / AC-21 | P3.T1, P3.T4, P4.T4, P6.T5 | source audits, `tests/e2e/tutor.spec.ts` | covered |
-| NFR-6 | P2.T3, P4.T4 | `tests/integration/tutor.test.ts`, `tests/e2e/scene.spec.ts` | partial (F1) |
-| NFR-7 / AC-17 | P1.T2, P4.T6, P5.T5 | `vitest.config.ts`, `coverage/coverage-summary.json` | missing (F3) |
+| NFR-6 | P2.T3, P4.T4, R1.T1 | `tests/integration/tutor.test.ts`, `tests/e2e/scene.spec.ts` | covered |
+| NFR-7 / AC-17 | P1.T2, P4.T6, P5.T5, R1.T3 | `vitest.config.ts`, `coverage/coverage-summary.json` | covered |
 | NFR-8 / AC-22 | P6.T4 | `LICENSE`, `README.md`, `tests/integration/content-contract.test.ts` | covered |
 
 ## Findings
@@ -54,82 +58,30 @@ The six implementation phases are individually verified and the integrated check
 
 ### High
 
-- **F1 — WebGPU→WebGL step-down renders nothing (error boundary never resets)**
-  - **File:** `src/components/scene/SceneIsland.tsx:99`
-  - **What:** `RendererErrorBoundary` is rendered without a changing key and `state.failed` is permanent (`RendererErrorBoundary.tsx:13–24`). `stepDown()` changes the tier from `webgpu` to `webgl` and sets `ready=false`, but React reuses the boundary instance, so it keeps returning `null` and `HeartScene` never remounts. The learner is left on a poster with no start button (`interactive` stays true) and no status text (tier is `webgl`, not `poster`).
-  - **Why:** AC-3 / NFR-6 require a working WebGPU→WebGL→poster ladder; a runtime WebGPU failure cannot fall back and there is no retry.
-  - **Fix:** Key the boundary by tier, e.g. `<RendererErrorBoundary key={tier} onError={stepDown}>`, so a step-down remounts it with `failed=false`; also surface status/retry affordance when a tier fails.
-  - **Requirement:** AC-3, NFR-6
-  - **Test gap:** Scene E2E that forces a renderer error, asserts `data-renderer="webgl"` with a mounted canvas/retry, then a second failure to `poster`.
-
-- **F2 — Tutor/quiz retrieval is lexical-only over a hardcoded MDX mirror; no pgvector or cosine threshold at runtime**
-  - **File:** `api/src/lib/retrieval.ts:187`
-  - **What:** `loadLessonChunks()` builds chunks from the in-source `HEART_LESSON_MDX` string; those chunks carry no embeddings, so `retrieveChunks()` always takes the lexical branch and the query embedding fetched in `tutor.ts:167–171` is discarded. `minCosine=0.7` is never applied. No runtime code reads `lesson_embedding`; `scripts/embed-lessons.ts` emits NDJSON only. `quiz.ts:71` also hardcodes the mirror.
-  - **Why:** FR-7 / FR-8 require grounded hybrid BM25+vector retrieval with a cosine threshold, and NFR-9 / AC-16 require adding topics via MDX + GLB only.
-  - **Fix:** Wire a DB-backed chunk source that loads `lesson_embedding` rows (with embeddings) for the lesson and use it as `getChunks` in tutor/quiz so cosine + lexical ranking and `minCosine` actually run; drive quiz prose from the same content. If the mirror is retained by design, withdraw or explicitly downgrade FR-7/FR-8/NFR-9 and record the deviation.
-  - **Requirement:** FR-7, FR-8, NFR-9, AC-8, AC-9, AC-10, AC-16
-  - **Test gap:** Integration test with embedded chunks asserting cosine filtering and `minCosine` rejection; second-topic test proving no code change is needed.
-
-- **F3 — Coverage gate measures none of the modules NFR-7 names**
-  - **File:** `vitest.config.ts:9`
-  - **What:** `coverage.include` is only `src/lib/scene-manifest.ts`. NFR-7 requires 80% line/branch coverage on mastery, retrieval/scoring, prompt assembly, validation and badge logic. Those modules have unit tests but are excluded, so the reported 100% proves nothing about them; phase-6 and integrated evidence record NFR-7 as met on that basis.
-  - **Why:** AC-17 assumes the configured "logic-bearing modules" are the NFR-7 set; the required coverage is unmeasured and the evidence overstates conformance.
-  - **Fix:** Set `coverage.include` to the actual logic modules, keep 80% thresholds, raise coverage on gaps, and commit the resulting summary as evidence.
-  - **Requirement:** NFR-7, AC-17
-  - **Test gap:** Re-run `pnpm coverage` with the broadened include and commit `coverage/coverage-summary.json` as evidence.
+All original High findings are fixed:
+- **F1 — WebGPU→WebGL step-down renders nothing**: fixed with a keyed `RendererErrorBoundary`, visible step-down status and poster retry. Scene E2E covers both renderer failures and the poster fallback.
+- **F2 — Tutor/quiz retrieval lexical-only over a hardcoded MDX mirror**: fixed with a Drizzle-backed embedded chunk repository, cosine threshold, topic-agnostic `scripts/embed-lessons.ts` discovery, and production-path coverage.
+- **F7 — Interactive model has no lights, so materials render black/cyan**: fixed with ambient, hemisphere, key and fill lights in the shared Canvas and a softened active emissive; browser pass confirms authored colours on WebGPU and WebGL.
+- **N1 — Production chunk source filters out every non-heart hotspot**: fixed in R2. `api/src/index.ts` returns repository chunks unfiltered; `api/src/routes/tutor.ts` supplies no heart allowlist; `tests/integration/tutor.test.ts` injects only `chunkRepository` and asserts a grounded answer for a non-heart lesson.
 
 ### Medium
 
-- **F4 — Poster is hidden on Canvas creation, before the GLB is loaded**
-  - **File:** `src/components/scene/HeartScene.tsx:230`
-  - **What:** `onReady` is wired to `<Canvas onCreated>`, which fires before the suspended `SceneContents`/`useGLTF` resolves, while `SceneIsland.tsx:71` hides the poster as soon as `ready` is true. The GET probe does not populate the GLTF loader cache.
-  - **Why:** NFR-2 requires the poster until the scene is ready; slow loads show an empty viewport.
-  - **Fix:** Signal readiness from inside `SceneContents` after `useGLTF` resolves (or via a small ready component), not from `onCreated`.
-  - **Requirement:** NFR-2
-  - **Test gap:** E2E that delays the GLB and asserts the poster stays visible until a mesh is present.
+All original Medium findings are fixed:
+- **F4 — Poster hidden before GLB load**: fixed by signaling readiness from inside the loaded scene; E2E delays the GLB and asserts poster persistence.
+- **F6 — Cropped 3D heart and misaligned anchors**: fixed with `POSITION_SCALE=1`, measured GLB node centres, reframed camera and integration assertions for anchor alignment and frustum containment.
+- **N2 — Residual heart-only vocabulary**: fixed in R2. Intent terms, mastery vocabulary, next-best ordering and badge hotspot sets derive from lesson chunks, falling back to heart only when no chunk source is available.
 
 ### Low
 
-- **F5 — Non-conforming identifier `userid` on a changed line**
-  - **File:** `api/src/routes/quiz.ts:53`
-  - **What:** `StoredQuestion` declares `userid: string` (used at lines 154 and 201) instead of lowerCamelCase `userId`.
-  - **Why:** Inconsistent naming in new code; no functional impact.
-  - **Fix:** Rename the field to `userId` in the interface and both usages.
-  - **Requirement:** none (TypeScript style guide)
-  - **Test gap:** none
-
-- **F6 (Medium, found during primary browser verification after initial fixes) — interactive 3D heart is cropped and hotspot anchors are misaligned**
-  - **File:** `src/components/scene/HeartScene.tsx:11`, `src/content/lessons/heart.mdx:10–32`
-  - **What:** With the default active hotspot, the WebGPU canvas renders oversized, cropped cyan/black geometry instead of the framed heart shown on the poster. The exported GLB has a world-space Y range of roughly `-1.34…2.07` (height ~3.4 units) while the camera sits at `z=4.2` with `fov=42`, giving a view height of only ~3.2 units. In addition, `POSITION_SCALE = 2.5` maps the MDX anchors to points that do not match the GLB node centres (for example, `left_ventricle` resolves to `[0.55,-0.45,0.95]` while the actual node centre is near `[-0.35,-0.15,0]`).
-  - **Why:** AC-3/AC-4/NFR-2 require a navigable scene whose hotspots correspond to the visible anatomy and whose fallback poster matches the interactive view. The current framing makes the flagship demo unusable even though the DOM-level E2E checks pass.
-  - **Fix:** Widen the camera framing (for example `position: [0,0.35,7]`, `target: [0,0.45,0]`, keeping `fov: 42`) or scale the model group down so the whole heart fits with margin; set `POSITION_SCALE` to 1 and update the MDX hotspot positions to the real GLB node centres; keep the camera tween from cropping when a hotspot is focused. Add a regression check for framing/anchor alignment and verify visually in a browser after the fix.
-  - **Requirement:** AC-3, AC-4, NFR-2
-  - **Test gap:** E2E/geometry assertion that the camera view encompasses the GLB bounds and that each hotspot anchor is within tolerance of its named mesh centre.
-  - **Status:** fixed in round 1 — `POSITION_SCALE=1`, MDX anchors set to measured GLB node centres, camera reframed to `[0,0.35,7]` → `[0,0.45,0]` at fov 42, with integration assertions for anchor alignment and frustum containment. Browser re-check passed; see `verification/browser.md`.
-
-- **F7 (High, found during primary browser re-check after the F6 fix) — interactive model has no lights, so materials render black/cyan**
-  - **File:** `src/components/scene/HeartScene.tsx:249–263`
-  - **What:** After F6, the heart is framed correctly but renders as one cyan chamber and several near-black shapes. The GLB contains PBR materials with correct red/blue/purple `baseColorFactor` values (verified from the GLB JSON), but the R3F `<Canvas>` adds no ambient, hemisphere or directional lights, and no environment map. The only lit-looking surface is the active mesh's cyan emissive highlight.
-  - **Why:** The product is visual-first; a black/cyan model does not match the poster or the semi-realistic low-poly art direction and makes the flagship demo look broken even though the DOM/E2E checks pass.
-  - **Fix:** Add suitable lights to the Canvas (e.g. ambient + hemisphere + key/fill directional lights) so the GLB's authored colours are visible, and reduce/tune the active emissive highlight so it accents rather than replaces the mesh colour. Re-check visually in the browser on both WebGPU and WebGL tiers.
-  - **Requirement:** AC-3, NFR-2
-  - **Test gap:** No DOM-level test can assess material lighting; primary browser verification must confirm the authored colours appear on both renderer tiers.
-  - **Status:** fixed in round 1 — ambient, hemisphere, key and fill lights added to the shared Canvas, and active emissive reduced from 0.9 to 0.22. Primary browser re-check on both WebGPU and forced WebGL tiers passed; see `verification/browser.md`.
-
-## Re-review — round 2
-
-- **N1 (High) — production chunk source filters out every non-heart hotspot**
-  - **File:** `api/src/index.ts:67–74`, fed by `api/src/routes/tutor.ts:127`
-  - **What:** `tutor.ts` calls `getChunks(lessonId, DEFAULT_HOTSPOTS)`. The production source applies `chunks.filter((chunk) => hotspots.includes(chunk.hotspotId))` even to DB-backed chunks already scoped by `lessonId`, so a second lesson's embedded chunks are all discarded and its tutor always returns `no_context`. The second-lesson integration test injects a `getChunks` that ignores the allowlist, so it did not exercise the production path.
-  - **Why:** NFR-9/AC-16 require adding a topic with only MDX + GLB + frontmatter. The real Worker path still cannot tutor a second lesson.
-  - **Fix:** Do not filter DB-backed chunks by the heart allowlist; return them unfiltered. Pass an empty/undefined allowlist from the tutor and derive any vocabulary from the returned chunks. Add an integration test that reaches the production `productionChunks` path through `createApp({...})` with a fake chunk repository returning non-heart IDs and asserts a grounded answer instead of `no_context`.
-  - **Requirement:** NFR-9, AC-16, FR-7
-
-- **N2 (Medium) — residual heart-only vocabulary in intent routing and mastery/badge projection**
-  - **File:** `api/src/routes/tutor.ts:57–62,133–140`, `api/src/routes/quiz.ts:140–146`, `api/src/routes/badge.ts:32–43`, `api/src/lib/mastery.ts:143–155`
-  - **What:** `LESSON_TERMS` is built from `heart/cardiac/blood` plus `DEFAULT_HOTSPOTS`; mastery, badge and next-best ordering also use the heart list. A second-lesson question without a generic learning word can be classified off-topic, and its heatmap/credential report heart landmarks.
-  - **Why:** The topic-agnostic claim remains only partially true even though strict review does not block on Medium.
-  - **Fix:** Derive lesson terms from lesson ID plus the returned chunks (hotspot IDs and distinctive tokens); derive mastery/badge hotspot sets from the lesson's chunk source with a `heart` fallback for compatibility, and add a second-lesson case covering intent routing and mastery/badge vocabulary.
+- **F5 — Non-conforming identifier `userid`**: fixed in round 1; `StoredQuestion.userId` is used consistently.
+- **R2-L1 — Badge achievement narrative still hardcodes heart/six-landmark wording for non-heart lessons**
+  - **File:** `api/src/lib/badge.ts:93–95`
+  - **What:** `issue()` now receives the correct `lessonId` and credential achievement id/name, but the narrative says "Mastered all six landmarks of the `${input.lessonId}` lesson" and the description says "Demonstrated mastery of every heart landmark in the Perspectra lesson." For a second lesson the verifier displays factually wrong prose. The file was outside R2 Touches.
+  - **Why:** Cosmetic/UX only — credential lesson ID, mastery vocabulary, issuance gate and HMAC verification are lesson-correct and tested. No correctness, security or data impact.
+  - **Fix:** Derive the narrative from the lesson's hotspot count/vocabulary and drop the literal "heart" from the description.
+  - **Requirement:** NFR-9
+  - **Test gap:** When generalized, assert the issued credential narrative names the second lesson's hotspots/count.
+  - **Status:** accepted as non-blocking under strict=false; schedule as follow-up.
 
 ## Overrides
 
@@ -137,23 +89,24 @@ The six implementation phases are individually verified and the integrated check
 
 ## Plan compliance
 
-All six phases are marked verified with checkpoints and per-phase evidence, and all 34 top-level plan tasks are `[x]`. Metadata reports `tasks_total=38` / `tasks_done=34`; the remaining four are subtasks nested under P1.T3 and P2.T1, so this is a counting-convention inconsistency to reconcile during state sync, not unfinished work. No task is marked complete without phase verification.
+All six implementation phases and both review-fix phases are marked verified with checkpoints and evidence. Metadata reports `tasks_total=49` / `tasks_done=49`; all 49 top-level and fix tasks are `[x]`. No task is marked complete without phase verification.
 
 ## Out of scope
 
-Excluded from review: `conductor/**` prose and track state, generated `dist/**`, `coverage/**`, `pnpm-lock.yaml`, binary assets, and `assets/heart/build_heart.py`. E2E specs mock API endpoints, so they verify UI wiring; backend behavior was assessed from unit/integration tests and source. Real OAuth/LLM/Cloudflare/WebGPU-hardware paths remain documented human-only exceptions.
+Excluded from review: `conductor/**` prose and track state, generated `dist/**`, `coverage/**`, `pnpm-lock.yaml`, binary assets, and `assets/heart/build_heart.py`. E2E specs mock API endpoints, so they verify UI wiring; backend behavior was assessed from unit/integration tests and source. Real OAuth/LLM/Cloudflare/WebGPU-hardware/Neon-ingest paths remain documented human-only exceptions.
 
 ## Debt
 
-- <none>
+- R2-L1: generalize badge achievement narrative wording for non-heart lessons. Non-blocking; no remote issue was created because the repository has no git remote and the finding is Low.
 
 ## Doc sync
 
-`updated` — tech-stack scheduler/tooling note applied before this review, as recorded in `conductor/tech-stack.md`.
+`updated` — final post-review sync applied to `metadata.json` and this review artifact; the tech-stack scheduler/tooling note was applied before review and recorded in `conductor/tech-stack.md`.
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | BLOCK | 0 | 4 | 2 | 1 | 7 |
-| 2 | BLOCK | 0 | 1 | 1 | 0 | 0 |
+| 2 | BLOCK | 0 | 1 | 1 | 0 | 2 |
+| 3 | PASS WITH FINDINGS | 0 | 0 | 0 | 1 | 0 |

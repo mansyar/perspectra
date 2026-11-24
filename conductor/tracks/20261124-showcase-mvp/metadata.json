@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-24T10:12:18+11:00",
-  "updated_at": "2026-11-24T14:40:00+11:00",
+  "updated_at": "2026-11-24T14:55:00+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261124-showcase-mvp",
@@ -19,7 +19,7 @@
     "tasks_done": 49
   },
   "last_checkpoint": "1d84826748e3ddca4df57a4d97e00c38b418e614",
-  "review_verdict": "BLOCK",
+  "review_verdict": "PASS WITH FINDINGS",
   "review_rounds": 2,
   "doc_sync": "updated",
   "pr_url": null,
