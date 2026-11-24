@@ -12,7 +12,7 @@
     "preview": "astro preview",
     "test": "vitest run --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:e2e": "echo \"e2e reserved for phase 2+\"",
+    "test:e2e": "playwright test",
     "coverage": "vitest run --config vitest.config.ts --coverage",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
@@ -21,7 +21,7 @@
     "typecheck": "astro sync && tsc --noEmit",
     "verify": "pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration && pnpm build",
     "verify:full": "pnpm verify && pnpm smoke && pnpm test:e2e",
-    "smoke": "echo \"smoke reserved for phase 2+\"",
+    "smoke": "playwright test --grep @smoke",
     "db:push": "echo \"db:push reserved for phase 3\"",
     "db:seed": "echo \"db:seed reserved for phase 3\""
   },

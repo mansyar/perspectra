@@ -1,5 +1,7 @@
 ---
 import { getCollection, getEntry, render } from 'astro:content';
+import { ProseHotspotBinder } from '../../components/prose/ProseHotspotBinder';
+import { SceneIsland } from '../../components/scene/SceneIsland';
 import { sceneManifestSchema, validateHotspotReferences } from '../../lib/scene-manifest';
 import '../../styles/global.css';
 import '../../styles/lesson.css';
@@ -23,6 +25,15 @@ if (!entry) {
 }
 const { Content } = await render(entry);
 const manifest = sceneManifestSchema.parse(entry.data);
+
+// Resolve the manifest's model URL to the emitted asset without hard-coding a topic.
+const modelAssets = import.meta.glob('../../../assets/**/*.glb', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+});
+const modelKey = `../../../assets/${manifest.model.src.replace(/^\/assets\//, '')}`;
+const modelSrc = modelAssets[modelKey] ?? manifest.model.src;
 ---
 
 <!doctype html>
@@ -46,6 +57,8 @@ const manifest = sceneManifestSchema.parse(entry.data);
         <p class="page__intro">{entry.data.description}</p>
       </header>
 
+      <SceneIsland client:visible manifest={manifest} modelSrc={modelSrc} />
+
       <div class="lesson-layout">
         <nav class="landmarks" aria-label="Lesson landmarks">
           <h2>Landmarks</h2>
@@ -62,8 +75,7 @@ const manifest = sceneManifestSchema.parse(entry.data);
           <Content />
         </article>
       </div>
-
-      <p class="scene-notice">The interactive 3D scene is coming in the next milestone.</p>
+      <ProseHotspotBinder client:load />
     </main>
     <footer class="site-footer">
       <p>Open educational content. Code under MIT; shipped assets are CC0 or OFL.</p>

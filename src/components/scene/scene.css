@@ -1,0 +1,80 @@
+.scene-island {
+  background: #111a1c;
+  border-radius: var(--radius);
+  margin-bottom: var(--space-lg);
+  min-height: 22rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.scene-island__viewport {
+  aspect-ratio: 4 / 3;
+  min-height: 22rem;
+  position: relative;
+}
+
+.scene-island__viewport canvas {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.scene-island__poster {
+  height: 100%;
+  inset: 0;
+  object-fit: contain;
+  position: absolute;
+  width: 100%;
+}
+
+.scene-island__poster[hidden] {
+  display: none;
+}
+
+.scene-island__status {
+  bottom: var(--space-sm);
+  color: #d7e3e1;
+  font-size: 0.875rem;
+  left: var(--space-md);
+  margin: 0;
+  position: absolute;
+}
+
+.scene-island__hotspots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.scene-island__hotspot {
+  background: #1d2c2f;
+  border: 1px solid #3a5457;
+  border-radius: 999px;
+  color: #e8f2f0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.scene-island__hotspot:hover {
+  border-color: #7fd1c9;
+}
+
+.scene-island__hotspot:focus-visible {
+  outline: 2px solid #7fd1c9;
+  outline-offset: 2px;
+}
+
+.scene-island__hotspot[aria-pressed='true'] {
+  background: #0d6e6e;
+  border-color: #7fd1c9;
+  color: #fff;
+}
+
+@media (max-width: 40rem) {
+  .scene-island__viewport {
+    aspect-ratio: 1 / 1;
+  }
+}

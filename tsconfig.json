@@ -5,6 +5,22 @@
   "compilerOptions": {
     "strict": true,
     "noEmit": true,
-    "types": ["astro/client"]
+    "types": ["astro/client"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./node_modules/.pnpm/@types+react@19.3.0/node_modules/@types"
+    ],
+    "paths": {
+      "react": ["./node_modules/.pnpm/@types+react@19.3.0/node_modules/@types/react/index.d.ts"],
+      "react/jsx-runtime": [
+        "./node_modules/.pnpm/@types+react@19.3.0/node_modules/@types/react/jsx-runtime.d.ts"
+      ],
+      "react/jsx-dev-runtime": [
+        "./node_modules/.pnpm/@types+react@19.3.0/node_modules/@types/react/jsx-dev-runtime.d.ts"
+      ],
+      "react-dom": [
+        "./node_modules/.pnpm/@types+react-dom@19.3.0_@types+react@19.3.0/node_modules/@types/react-dom/index.d.ts"
+      ]
+    }
   }
 }

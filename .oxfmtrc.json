@@ -6,6 +6,7 @@
     ".astro/**",
     "node_modules/**",
     "coverage/**",
+    "test-results/**",
     "pnpm-lock.yaml",
     ".opencode/**",
     "conductor/**",
