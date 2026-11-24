@@ -1,5 +1,7 @@
 # Conductor Roadmap
 
+<!-- next-rm-id: 7 -->
+
 > Planned and future work. The roadmap stores **intent** — ordering, priority,
 > and dependencies — not live state. `conductor-status` joins every entry whose
 > `track` column is filled to that track's real metadata and registry state, so
@@ -11,6 +13,7 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
+| RM-6 | Deploy the public vertical slice on one Cloudflare Workers origin with Gemini-native embeddings and production proof | chore | high | — | — | user |
 | RM-5 | Establish release readiness with CI, real DB scripts, deployment runbook and clean status | chore | high | — | — | user |
 | RM-1 | Build multi-topic library with 3–5 more subjects and prove topic-agnosticism | feature | high | — | — | user |
 
