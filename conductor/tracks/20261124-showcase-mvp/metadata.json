@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-24T10:12:18+11:00",
-  "updated_at": "2026-11-24T11:38:07+11:00",
+  "updated_at": "2026-11-24T11:57:25+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261124-showcase-mvp",
@@ -14,11 +14,11 @@
   "base_sha": "79c054e8d6e5ca89d7cc389210b768b8484f9b17",
   "progress": {
     "phases_total": 6,
-    "phases_verified": 2,
+    "phases_verified": 3,
     "tasks_total": 38,
-    "tasks_done": 12
+    "tasks_done": 18
   },
-  "last_checkpoint": "9df6c5b91dba805e898fe67b0874abcc198f1fb7",
+  "last_checkpoint": "f43554b6d0e4b8fc8388fd3d582ae67a6a31cb17",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",

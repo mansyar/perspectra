@@ -57,21 +57,17 @@
 - **Covers:** FR-6, FR-11, NFR-3, NFR-4, AC-7, AC-13, AC-21
 - **Touches:** `api/**`, `drizzle.config.ts`, `migrations/**`, `wrangler.toml`, `src/lib/offline-queue.ts`, `src/lib/api-client.ts`, `tests/integration/progress.test.ts`, `tests/unit/api-client.test.ts`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** f43554b
+- **Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-3.md
 
-- [ ] **P3.T1: Scaffold Hono Worker with env bindings and health endpoint** — covers: NFR-4
-- [ ] **P3.T2: Drizzle schema + Neon pgvector migration + lesson seed** — covers: FR-6
-- [ ] **P3.T3: Better Auth with GitHub, Google, and email/password** — covers: FR-6
-- [ ] **P3.T4: Session-scoped progress endpoints + rate limiting** — covers: NFR-4
-- [ ] **P3.T5: IndexedDB append-only offline queue with auto-sync LWW** — covers: FR-11
-- [ ] **P3.T6: Integration tests and client secret audit** — covers: AC-7, AC-13, AC-21
-
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/20261124-showcase-mvp/verification/phase-3.md
--->
+- [x] **P3.T1: Scaffold Hono Worker with env bindings and health endpoint** — covers: NFR-4
+- [x] **P3.T2: Drizzle schema + Neon pgvector migration + lesson seed** — covers: FR-6
+- [x] **P3.T3: Better Auth with GitHub, Google, and email/password** — covers: FR-6
+- [x] **P3.T4: Session-scoped progress endpoints + rate limiting** — covers: NFR-4
+- [x] **P3.T5: IndexedDB append-only offline queue with auto-sync LWW** — covers: FR-11
+- [x] **P3.T6: Integration tests and client secret audit** — covers: AC-7, AC-13, AC-21
 
 ## Phase 4: Grounded Tutor
 
