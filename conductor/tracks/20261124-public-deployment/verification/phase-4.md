@@ -422,3 +422,20 @@ Commit: `33167f1b0d299ada1b1bd437372cf329683daaf0` — `fix(api): scope Neon poo
 No deployment or database command was run, no Cloudflare/Neon resource was changed, and
 `.conductor/deploy/production.env` was not read. Production redeployment and repeated sign-up/sign-in
 plus authenticated API smoke verification remain primary-owned.
+
+## Primary verification — request-scoped Neon follow-up
+
+The primary independently ran:
+
+```text
+git status --porcelain
+git diff --name-only 8734311076fcdf4075141ce4cedaae1410ee8b85..HEAD
+pnpm verify
+```
+
+- Working tree was clean before verification.
+- The diff contained only `README.md`, `api/src/db/client.ts`, `api/src/index.ts`, the three route resolvers, `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, `tests/unit/request-db-scope.test.ts`, and this evidence file.
+- `pnpm verify` exited `0`: seven non-blocking lint warnings, 98 formatted files, clean typecheck, 177 unit tests, coverage 98.61% statements / 92.41% branches / 97.84% functions / 99.12% lines, 46 integration tests, and a 3-page production build.
+- The existing >500 kB chunk warning remained non-blocking.
+
+Production redeployment and repeated email sign-up/sign-in followed by authenticated API smoke verification remain primary-owned.
