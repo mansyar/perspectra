@@ -56,6 +56,7 @@ export interface BadgeIssueInput {
   mastery: number;
   userId: string;
   now?: Date;
+  hotspots?: readonly string[];
 }
 
 export interface CredentialEnvelope {
@@ -82,6 +83,12 @@ export interface BadgeService {
 export function createBadgeService(secret: string): BadgeService {
   return {
     async issue(input: BadgeIssueInput): Promise<CredentialEnvelope> {
+      const hotspots = input.hotspots ?? [];
+      const noun = hotspots.length === 1 ? 'hotspot' : 'hotspots';
+      const narrative =
+        hotspots.length > 0
+          ? `Mastered all ${hotspots.length} ${noun} (${hotspots.join(', ')}) of the ${input.lessonId} lesson with mastery at or above 0.85.`
+          : `Mastered the ${input.lessonId} lesson with mastery at or above 0.85.`;
       const credential: Record<string, unknown> = {
         '@context': [
           'https://www.w3.org/2018/credentials/v1',
@@ -89,10 +96,8 @@ export function createBadgeService(secret: string): BadgeService {
         ],
         credentialSubject: {
           achievement: {
-            criteria: {
-              narrative: `Mastered all six landmarks of the ${input.lessonId} lesson with mastery at or above 0.85.`,
-            },
-            description: 'Demonstrated mastery of every heart landmark in the Perspectra lesson.',
+            criteria: { narrative },
+            description: `Demonstrated mastery of the ${input.lessonId} lesson concepts in Perspectra.`,
             id: `https://perspectra.example/lessons/${input.lessonId}`,
             name: input.lessonId === 'heart' ? 'Human Heart Mastery' : `${input.lessonId} mastery`,
           },

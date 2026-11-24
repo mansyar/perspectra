@@ -62,6 +62,7 @@ async function issueHandler(
     return c.json({ error: 'not_mastered', failing }, 403);
   }
   const envelope = await createBadgeService(resolved.secret).issue({
+    hotspots,
     lessonId,
     mastery: mastery.overall,
     userId: identity.userId,

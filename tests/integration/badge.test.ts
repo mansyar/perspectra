@@ -134,11 +134,38 @@ describe('badge routes', () => {
     const { credential } = (await issued.json()) as { credential: string };
     const verified = await request(app, '/api/badge/verify', { credential });
     const result = (await verified.json()) as {
-      credential?: { credentialSubject?: { achievement?: { id?: string } } };
+      credential?: {
+        credentialSubject?: {
+          achievement?: {
+            criteria?: { narrative?: string };
+            description?: string;
+            id?: string;
+          };
+        };
+      };
       valid: boolean;
     };
     expect(result.valid).toBe(true);
-    expect(result.credential?.credentialSubject?.achievement?.id).toContain('brain');
+    const achieved = result.credential?.credentialSubject?.achievement;
+    expect(achieved?.id).toContain('brain');
+    expect(achieved?.criteria?.narrative).toContain('brain');
+    expect(achieved?.criteria?.narrative).toContain('2 hotspots');
+    expect(achieved?.criteria?.narrative).toContain('cortex, hippocampus');
+    expect(achieved?.description).toContain('brain lesson concepts');
+    expect(`${achieved?.criteria?.narrative ?? ''} ${achieved?.description ?? ''}`).not.toMatch(
+      /heart|six landmarks/i,
+    );
+
+    const [payload, signature] = credential.split('.');
+    const position = 8;
+    const tampered =
+      payload.slice(0, position) +
+      (payload[position] === 'A' ? 'B' : 'A') +
+      payload.slice(position + 1);
+    const rejected = await request(app, '/api/badge/verify', {
+      credential: `${tampered}.${signature}`,
+    });
+    expect((await rejected.json()) as { valid: boolean }).toMatchObject({ valid: false });
   });
 
   it('reports non-heart hotspot IDs when the lesson is not mastered', async () => {
