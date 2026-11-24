@@ -25,8 +25,8 @@
     "smoke": "playwright test --grep @smoke",
     "test:a11y": "playwright test --grep @a11y",
     "perf:lighthouse": "playwright test --grep @perf",
-    "db:push": "echo \"db:push reserved for phase 3\"",
-    "db:seed": "echo \"db:seed reserved for phase 3\""
+    "db:push": "drizzle-kit push --config=drizzle.config.ts",
+    "db:seed": "tsx api/src/db/seed.ts"
   },
   "dependencies": {
     "@astrojs/compiler-rs": "0.5.3",
@@ -58,6 +58,7 @@
     "lighthouse": "13.6.0",
     "oxfmt": "0.80.0",
     "oxlint": "1.95.0",
+    "tsx": "4.23.15",
     "typescript": "6.0.3",
     "vitest": "5.1.1",
     "wrangler": "4.167.0"
