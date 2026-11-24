@@ -95,7 +95,7 @@
 - **Covers:** FR-9, FR-10, FR-12, AC-11, AC-12, AC-14, AC-15
 - **Touches:** `api/src/lib/mastery.ts`, `api/src/routes/{quiz,badge}.ts`, `api/src/lib/badge.ts`, `src/pages/verify.astro`, `src/components/mastery/**`, `src/components/quiz/**`, `tests/unit/{mastery,badge,quiz}.test.ts`, `tests/integration/badge.test.ts`, `tests/e2e/learning-loop.spec.ts`
 - **Verification:** `pnpm verify:full`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P5.T1: BKT + FSRS mastery engine and heatmap state** — covers: FR-10
 - [ ] **P5.T2: Quiz generation + rubric grading + remediation links** — covers: FR-9
