@@ -184,23 +184,49 @@ describe('Gemini LLM adapter', () => {
     );
   });
 
-  it('keeps Gemini chat generation and joins returned text parts', async () => {
+  it('uses current Gemini chat defaults and joins returned text parts', async () => {
     const fetchMock = stubFetch({
       candidates: [{ content: { parts: [{ text: 'Grounded ' }, { text: 'answer' }] } }],
     });
 
     await expect(adapter().complete('lesson prompt')).resolves.toBe('Grounded answer');
     expect(fetchMock).toHaveBeenCalledWith(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
       {
         body: JSON.stringify({
           contents: [{ parts: [{ text: 'lesson prompt' }], role: 'user' }],
-          generationConfig: { maxOutputTokens: 400, temperature: 0 },
+          generationConfig: {
+            maxOutputTokens: 400,
+            temperature: 1,
+            thinkingConfig: { thinkingLevel: 'minimal' },
+          },
         }),
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          'x-goog-api-key': API_KEY,
+        },
         method: 'POST',
       },
     );
-    expect(fetchMock.mock.calls[0]?.[0]).not.toContain('api.openai.com');
+    const [url] = fetchMock.mock.calls[0] ?? [];
+    expect(url).not.toContain(API_KEY);
+    expect(url).not.toContain('api.openai.com');
+  });
+
+  it('uses LLM_MODEL for the Gemini chat request', async () => {
+    const fetchMock = stubFetch({
+      candidates: [{ content: { parts: [{ text: 'Custom answer' }] } }],
+    });
+
+    await expect(
+      adapter({ LLM_MODEL: 'gemini-custom-preview' }).complete('lesson prompt'),
+    ).resolves.toBe('Custom answer');
+
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
+    expect(url).toBe(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-custom-preview:generateContent',
+    );
+    expect(url).not.toContain(API_KEY);
+    expect(init?.headers).toMatchObject({ 'x-goog-api-key': API_KEY });
   });
 });

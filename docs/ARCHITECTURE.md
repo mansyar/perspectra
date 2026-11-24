@@ -51,13 +51,14 @@ The Hono application in `api/src/index.ts` keeps routing and dependency injectio
 ```
 
 `api/src/routes/tutor.ts` resolves intent before model generation, computes a session-scoped
-quota, retrieves only static lesson evidence, calls Gemini with temperature `0` and a
-`maxOutputTokens` cap, rejects empty output or invalid lesson citations, and streams validated
+quota, retrieves only static lesson evidence, calls Gemini with temperature `1`, minimal thinking,
+and a `maxOutputTokens` cap, rejects empty output or invalid lesson citations, and streams validated
 text as SSE. It never accepts browser-supplied context as trusted lesson content.
 
 `api/src/lib/llm.ts` is the Gemini-only boundary:
 
-- Chat uses `generateContent` with `LLM_API_KEY`; `LLM_MODEL` defaults to `gemini-2.5-flash`.
+- Chat uses `generateContent` with the `x-goog-api-key` header; `LLM_MODEL` defaults to `gemini-3.5-flash`.
+- Chat sends temperature `1` and `thinkingConfig.thinkingLevel: 'minimal'`. Because Gemini 3 includes thinking tokens in `maxOutputTokens`, minimal thinking reserves more of the retained 400-token cap for the response.
 - `EMBEDDING_API_KEY` is optional and falls back to `LLM_API_KEY`.
 - Embeddings use `gemini-embedding-2:batchEmbedContents`, `outputDimensionality: 1536`, and the
   `task: question answering | query:` / `title: none | text:` prefixes for asymmetric retrieval.

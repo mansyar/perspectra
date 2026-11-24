@@ -7,6 +7,7 @@ export interface LlmPort {
   complete(prompt: string): Promise<string>;
 }
 
+const DEFAULT_CHAT_MODEL = 'gemini-3.5-flash';
 const EMBEDDING_MODEL = 'gemini-embedding-2';
 const EMBEDDING_DIMENSIONS = 1536;
 const EMBEDDING_URL =
@@ -147,15 +148,22 @@ export function createLlmAdapter(env: Env): LlmPort {
 
     async complete(prompt: string): Promise<string> {
       const key = required(env.LLM_API_KEY, 'LLM_API_KEY');
-      const model = env.LLM_MODEL ?? 'gemini-2.5-flash';
+      const model = env.LLM_MODEL ?? DEFAULT_CHAT_MODEL;
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            'x-goog-api-key': key,
+          },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }], role: 'user' }],
-            generationConfig: { maxOutputTokens: 400, temperature: 0 },
+            generationConfig: {
+              maxOutputTokens: 400,
+              temperature: 1,
+              thinkingConfig: { thinkingLevel: 'minimal' },
+            },
           }),
         },
       );

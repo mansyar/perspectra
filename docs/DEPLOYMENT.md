@@ -35,10 +35,15 @@ private config, or enter the same values in the Cloudflare dashboard.
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | yes | Google OAuth application |
 | `LLM_PROVIDER` | no | Omit for the default or set to `gemini`; no other provider is supported |
 | `LLM_API_KEY` | yes | Gemini chat key and default embedding key |
-| `LLM_MODEL` | no | Optional chat override; defaults to `gemini-2.5-flash` |
+| `LLM_MODEL` | no | Optional chat override; defaults to `gemini-3.5-flash` |
 | `EMBEDDING_API_KEY` | no | Optional Gemini embedding key; falls back to `LLM_API_KEY` |
 | `EMBEDDING_MODEL` | no | Omit or set to `gemini-embedding-2`; other models are rejected |
 | `RATE_LIMIT_KV_ID` | deploy only | Private 32-hex KV namespace id used by `pnpm deploy:prepare`; never commit it |
+
+Chat uses `gemini-3.5-flash` by default and sends the API key in the `x-goog-api-key` header rather
+than the URL. The adapter uses temperature `1` and minimal thinking while retaining
+`maxOutputTokens: 400`. Gemini 3 counts thinking tokens against that cap, so minimal thinking
+preserves response capacity for the validated answer.
 
 Embeddings use `gemini-embedding-2:batchEmbedContents` with `outputDimensionality: 1536`. The
 adapter validates every row and normalizes vectors to unit L2 norm before writing the existing

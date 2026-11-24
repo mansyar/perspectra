@@ -95,11 +95,11 @@ All secrets are **Worker bindings**. `wrangler.toml` declares only non-secret bi
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth app | Worker |
 | `LLM_PROVIDER` | `gemini` only; omit for the default | Worker |
 | `LLM_API_KEY` | Gemini chat key and default embedding key | Worker |
-| `LLM_MODEL` | Optional chat model override; defaults to `gemini-2.5-flash` | Worker |
+| `LLM_MODEL` | Optional chat model override; defaults to `gemini-3.5-flash` | Worker |
 | `EMBEDDING_API_KEY` | Optional Gemini embedding key; falls back to `LLM_API_KEY` | Worker |
 | `EMBEDDING_MODEL` | Optional; only `gemini-embedding-2` (or `models/gemini-embedding-2`) | Worker |
 
-Chat and embeddings both use Gemini. Embeddings call `gemini-embedding-2:batchEmbedContents` with `outputDimensionality: 1536`; the adapter validates each vector and normalizes it to unit L2 norm before it reaches the fixed `vector(1536)` column. Queries and documents use Gemini's task-specific prefixes, and the model is pinned so incompatible embedding spaces cannot be configured.
+Chat and embeddings both use Gemini. Chat defaults to `gemini-3.5-flash`, authenticates with the `x-goog-api-key` header, and uses temperature `1` with minimal thinking. Gemini 3 counts thinking tokens against `maxOutputTokens`, so minimal thinking preserves more of the retained 400-token cap for the response. Embeddings call `gemini-embedding-2:batchEmbedContents` with `outputDimensionality: 1536`; the adapter validates each vector and normalizes it to unit L2 norm before it reaches the fixed `vector(1536)` column. Queries and documents use Gemini's task-specific prefixes, and the model is pinned so incompatible embedding spaces cannot be configured.
 
 The browser uses same-origin relative API URLs. `pnpm deploy:prepare` requires `RATE_LIMIT_KV_ID` and writes the private KV id to gitignored `.conductor/deploy/wrangler.toml`; the committed template keeps its 32-zero placeholder. Build with `pnpm build`, then deploy the Worker and static assets together with `pnpm exec wrangler deploy --config .conductor/deploy/wrangler.toml`. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for secrets, Neon setup, production E2E, and rollback.
 
