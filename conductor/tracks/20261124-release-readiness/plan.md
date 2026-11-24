@@ -77,7 +77,7 @@
 - **Covers:** FR-7, FR-8, AC-8, AC-9, NFR-6
 - **Touches:** `api/src/lib/badge.ts`, `api/src/routes/badge.ts`, `tests/unit/badge.test.ts`, `tests/integration/badge.test.ts`, `conductor/tracks/20261124-release-readiness/verification/browser.md`, `conductor/tracks/20261124-release-readiness/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P4.T1: Derive badge narrative from lesson vocabulary and hotspot count** — covers: FR-7, NFR-6
 - [ ] **P4.T2: Add non-heart narrative tests** — covers: AC-8
