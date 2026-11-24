@@ -17,9 +17,13 @@ export interface Env {
   GITHUB_CLIENT_SECRET?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  /** Only `gemini` is supported; omit for the default. */
   LLM_PROVIDER?: string;
   LLM_API_KEY?: string;
+  /** Chat model override; defaults to `gemini-2.5-flash`. */
   LLM_MODEL?: string;
+  /** Optional Gemini embedding key; falls back to `LLM_API_KEY`. */
   EMBEDDING_API_KEY?: string;
+  /** Only `gemini-embedding-2` (optionally prefixed with `models/`) is supported. */
   EMBEDDING_MODEL?: string;
 }

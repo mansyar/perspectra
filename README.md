@@ -90,14 +90,14 @@ All secrets are **Worker bindings**. `wrangler.toml` declares only non-secret bi
 | `BETTER_AUTH_URL` | Public auth base URL | Worker |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth app | Worker |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth app | Worker |
-| `LLM_PROVIDER` | `gemini` (default) or `openai` | Worker |
-| `LLM_API_KEY` | Chat model key | Worker |
-| `LLM_MODEL` | Optional chat model override | Worker |
-| `EMBEDDING_API_KEY` | Optional embedding key (falls back to `LLM_API_KEY` for OpenAI) | Worker |
-| `EMBEDDING_MODEL` | Optional embedding model override | Worker |
+| `LLM_PROVIDER` | `gemini` only; omit for the default | Worker |
+| `LLM_API_KEY` | Gemini chat key and default embedding key | Worker |
+| `LLM_MODEL` | Optional chat model override; defaults to `gemini-2.5-flash` | Worker |
+| `EMBEDDING_API_KEY` | Optional Gemini embedding key; falls back to `LLM_API_KEY` | Worker |
+| `EMBEDDING_MODEL` | Optional; only `gemini-embedding-2` (or `models/gemini-embedding-2`) | Worker |
 | `PUBLIC_API_URL` | Optional public Worker URL for client fetches | Static client |
 
-Embeddings always use the OpenAI-compatible `/v1/embeddings` endpoint with 1536 dimensions so they match the fixed `vector(1536)` column; chat is provider-configurable.
+Chat and embeddings both use Gemini. Embeddings call `gemini-embedding-2:batchEmbedContents` with `outputDimensionality: 1536`; the adapter validates each vector and normalizes it to unit L2 norm before it reaches the fixed `vector(1536)` column. Queries and documents use Gemini's task-specific prefixes, and the model is pinned so incompatible embedding spaces cannot be configured.
 
 ## Content authoring
 
@@ -107,10 +107,10 @@ Embeddings always use the OpenAI-compatible `/v1/embeddings` endpoint with 1536 
 4. Generate pgvector rows for retrieval with:
 
    ```bash
-   LLM_API_KEY=<your-key> pnpm exec node --experimental-strip-types scripts/embed-lessons.ts
+   LLM_PROVIDER=gemini EMBEDDING_MODEL=gemini-embedding-2 LLM_API_KEY=<your-key> pnpm exec node --experimental-strip-types scripts/embed-lessons.ts
    ```
 
-   The script prints NDJSON chunks and embeddings to stdout; it never writes to the database or prints keys.
+   Set `EMBEDDING_API_KEY` instead to override the key used for embeddings. The script prints NDJSON chunks and embeddings to stdout; it never writes to the database or prints keys.
 
 ### Adding a topic
 
