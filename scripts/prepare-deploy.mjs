@@ -8,8 +8,11 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkConfig, rateLimitKvId } from './check-config.mjs';
 
+const PROJECT_ROOT = fileURLToPath(new URL('../', import.meta.url));
 const TEMPLATE_PATH = fileURLToPath(new URL('../wrangler.toml', import.meta.url));
 const OUTPUT_PATH = fileURLToPath(new URL('../.conductor/deploy/wrangler.toml', import.meta.url));
+const MAIN_PATH = resolve(PROJECT_ROOT, 'api/src/index.ts').replaceAll('\\', '/');
+const ASSETS_PATH = resolve(PROJECT_ROOT, 'dist').replaceAll('\\', '/');
 const PLACEHOLDER = '0'.repeat(32);
 const ZERO_ID = /^0+$/;
 const ID_LINE = /^(\s*id\s*=\s*["'])0{32}(["'])/;
@@ -48,6 +51,45 @@ function replacePlaceholder(template, privateId) {
   return rendered.join(newline);
 }
 
+function resolveConfigPaths(template) {
+  const newline = template.includes('\r\n') ? '\r\n' : '\n';
+  let section = '';
+  let mainReplaced = false;
+  let directoryReplaced = false;
+
+  const rendered = template.split(/\r?\n/).map((line) => {
+    const header = line.trim().match(/^\[\[?([^\]]+)\]\]?$/);
+    if (header) {
+      section = header[1] ?? '';
+      return line;
+    }
+
+    const key = section === '' ? 'main' : section === 'assets' ? 'directory' : undefined;
+    if (!key || (key === 'main' && mainReplaced) || (key === 'directory' && directoryReplaced)) {
+      return line;
+    }
+
+    const pattern =
+      key === 'main'
+        ? /^(\s*main\s*=\s*)(["'])([^"']*)\2/
+        : /^(\s*directory\s*=\s*)(["'])([^"']*)\2/;
+    const match = line.match(pattern);
+    if (!match || match[2] === undefined) return line;
+
+    const path = key === 'main' ? MAIN_PATH : ASSETS_PATH;
+    if (key === 'main') mainReplaced = true;
+    else directoryReplaced = true;
+    return `${match[1]}${match[2]}${path}${match[2]}${line.slice(match[0].length)}`;
+  });
+
+  if (!mainReplaced || !directoryReplaced) {
+    throw new Error(
+      'Deployment config failed: committed wrangler.toml must include main and [assets].directory.',
+    );
+  }
+  return rendered.join(newline);
+}
+
 /**
  * Validate the template and operator-supplied id, then return private config text.
  * @param {string} template committed wrangler.toml text
@@ -75,7 +117,7 @@ export function renderDeploymentConfig(template, env = {}) {
     throw new Error(result.message);
   }
   const privateId = typeof env.RATE_LIMIT_KV_ID === 'string' ? env.RATE_LIMIT_KV_ID.trim() : '';
-  return replacePlaceholder(template, privateId);
+  return resolveConfigPaths(replacePlaceholder(template, privateId));
 }
 
 function invokedDirectly() {

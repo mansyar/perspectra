@@ -66,7 +66,10 @@ non-secret `ASSETS` binding configuration.
    ```
 
 3. The command validates the id, replaces only the committed placeholder, and writes
-   `.conductor/deploy/wrangler.toml`. `.conductor/` is gitignored. It never prints the id.
+   `.conductor/deploy/wrangler.toml`. Because that generated config lives in a subdirectory, the
+   command also resolves `main` and `[assets].directory` to absolute normalized project paths;
+   the committed template remains root-relative. `.conductor/` is gitignored, and the command never
+   prints the id.
 4. Keep the real id out of tracked files and command evidence. Wrangler does not substitute
    environment variables inside `wrangler.toml`; deploy with the generated private config instead.
 
