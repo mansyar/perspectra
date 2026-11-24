@@ -114,13 +114,13 @@ Embeddings always use the OpenAI-compatible `/v1/embeddings` endpoint with 1536 
 
 ### Adding a topic
 
-Adding a topic should require content and assets only: add MDX frontmatter + prose, add a GLB with matching named meshes and a poster, run the embed script, and register any new chunk source in the Worker. The scene renderer, progress API, mastery model, and verifier stay topic-agnostic.
+Adding a topic requires content, assets, and embedding ingest: add MDX frontmatter + prose, add a GLB with matching named meshes and a poster, and run the embed script. Production retrieval, the scene renderer, progress API, mastery model, and verifier stay topic-agnostic.
 
 ## Verification & evidence
 
 - Logic-bearing modules keep 80% line/branch coverage: `src/lib/scene-manifest.ts` in the unit config, plus mastery/retrieval/prompt/quota/badge paths in their suites.
 - `pnpm verify:full` runs the complete chain: lint → format → typecheck → unit → coverage → integration → build → smoke → Playwright (scene, tutor, learning-loop, a11y, perf).
-- Phase evidence lives under `conductor/tracks/20261124-showcase-mvp/verification/`.
+- Phase evidence lives under `conductor/archive/20261124-showcase-mvp/verification/`.
 
 ## Accessibility, privacy, and trust
 
