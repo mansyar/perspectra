@@ -1,0 +1,75 @@
+---
+import { getCollection } from 'astro:content';
+import '../styles/global.css';
+
+const lessons = await getCollection('lessons');
+const live = lessons
+  .filter((lesson) => lesson.data.status === 'live')
+  .toSorted((a, b) => a.data.order - b.data.order);
+
+const placeholders = [
+  { title: 'Respiratory system', topic: 'respiratory' },
+  { title: 'Renal system', topic: 'renal' },
+  { title: 'Nervous system', topic: 'nervous' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Interactive, topic-agnostic anatomy lessons." />
+    <title>Perspectra — Interactive anatomy lessons</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-header__brand" href="/">
+        Perspectra
+      </a>
+    </header>
+    <main class="page">
+      <h1>Learn anatomy by exploring it</h1>
+      <p class="page__intro">
+        Each lesson pairs a navigable 3D scene with layered reading. Start with the heart, or browse
+        the topics we are preparing next.
+      </p>
+
+      <section aria-labelledby="live-heading">
+        <h2 class="section-title" id="live-heading">
+          Available lesson
+        </h2>
+        <ul class="lesson-grid">
+          {live.map((lesson) => (
+            <li class="lesson-card">
+              <a href={`/lessons/${lesson.id}`}>
+                <span class="lesson-card__topic">{lesson.data.topic}</span>
+                <h3>{lesson.data.title}</h3>
+                <p>{lesson.data.description}</p>
+                <span class="lesson-card__cta">Open lesson</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="soon-heading">
+        <h2 class="section-title" id="soon-heading">
+          Coming soon
+        </h2>
+        <ul class="lesson-grid">
+          {placeholders.map((placeholder) => (
+            <li class="lesson-card lesson-card--placeholder">
+              <span class="lesson-card__badge">Coming soon</span>
+              <span class="lesson-card__topic">{placeholder.topic}</span>
+              <h3>{placeholder.title}</h3>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <p>Open educational content. Code under MIT; shipped assets are CC0 or OFL.</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+.prose > div.is-active {
+  background: var(--bg-reading-highlight);
+  border-left-color: var(--accent-ink);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.prose > div:focus-visible {
+  outline: 3px solid var(--focus-reading);
+  outline-offset: 3px;
+}

@@ -1,0 +1,151 @@
+.tutor {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--fg-shell);
+  margin: var(--space-lg) 0;
+  padding: var(--space-md);
+}
+
+.tutor h2 {
+  color: var(--fg-shell);
+  font-size: 1.125rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.tutor__head p {
+  color: var(--fg-shell-muted);
+  font-size: 0.8125rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.tutor__privacy {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-sm);
+}
+
+.tutor__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.tutor__chip,
+.tutor__citation {
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.625rem;
+  transition: background-color var(--motion-fast) ease;
+}
+
+.tutor__chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.tutor__chip:hover:not(:disabled),
+.tutor__citation:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.tutor__chip:focus-visible,
+.tutor__citation:focus-visible,
+.tutor__send:focus-visible,
+.tutor textarea:focus-visible {
+  outline-color: var(--focus);
+}
+
+.tutor__context {
+  color: var(--fg-shell-muted);
+  font-size: 0.8125rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.tutor__form {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.tutor__label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.tutor textarea {
+  background: var(--bg-shell);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg-shell);
+  font: inherit;
+  padding: var(--space-sm);
+  resize: vertical;
+  width: 100%;
+}
+
+.tutor__send {
+  background: var(--accent);
+  border: 0;
+  border-radius: 8px;
+  color: var(--accent-contrast);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  justify-self: start;
+  padding: 0.4rem 1rem;
+}
+
+.tutor__send:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.tutor__answer {
+  font-size: 0.9375rem;
+  margin-top: var(--space-md);
+  min-height: 1.5rem;
+}
+
+.tutor__answer p {
+  margin: 0 0 var(--space-sm);
+}
+
+.tutor__citation {
+  border-radius: 6px;
+  margin: 0 0.125rem;
+}
+
+.tutor__sources {
+  color: var(--fg-shell-muted);
+  font-size: 0.8125rem;
+}
+
+.tutor__error {
+  background: var(--bg-surface-raised);
+  border-left: 3px solid var(--accent);
+  padding: var(--space-sm);
+}
+
+.tutor__error blockquote {
+  color: var(--fg-shell-muted);
+  margin: var(--space-sm) 0 0;
+}
+
+@media (min-width: 1400px) {
+  .tutor {
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    position: fixed;
+    right: var(--space-lg);
+    top: var(--space-lg);
+    width: 21rem;
+    z-index: 5;
+  }
+}

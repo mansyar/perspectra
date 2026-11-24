@@ -11,7 +11,7 @@
 - **React 19.3.1 / react-dom 19.3.1**, **three 0.187.0**, **@react-three/fiber 10.0.0-alpha.6** (alpha tag — first-class WebGPU; canary commits deliberately avoided), **@react-three/drei 10.7.9**, **zustand 5.1.0** for the single 3D island. WebGPU → WebGL → poster fallback chain; `useGLTF` for named-mesh GLBs.
 - **Hono 4.13.21** on Cloudflare Workers for all API routes: tutor proxy, quiz, mastery, badge issuance, rate limiting, kill switch.
 - **Drizzle ORM 0.45.4** (Apache-2.0) with **drizzle-kit 0.31.11** and **Zod 4.6.7** schemas; **Better Auth 1.7.27** (MIT) with Drizzle adapter, GitHub + Google OAuth and email/password.
-- **fsrs 1.0.0** (MIT) spaced repetition and a small BKT implementation for mastery.
+- **ts-fsrs 6.0.1** (MIT) spaced repetition scheduler and a small BKT implementation for mastery. The npm package named `fsrs` is an unrelated filesystem utility and is not used.
 - **oxlint 1.95.0** + **oxfmt 0.80.0**; `tsc --noEmit` / `astro check` for typechecking.
 
 ## Data Stores & Schemas
@@ -31,7 +31,7 @@
 - **GitHub Actions** CI: typecheck, lint, format check, Vitest + coverage gate, Astro build.
 
 ## Tooling
-- **Vitest 5.1.1 + @vitest/coverage-v8 5.1.1** for unit tests; **@playwright/test 1.65.1** reserved for a later 3D UI smoke test; Lighthouse for performance evidence.
+- **Vitest 5.1.1 + @vitest/coverage-v8 5.1.1** for unit tests; **@playwright/test 1.65.1** for smoke, E2E, axe accessibility and Lighthouse performance specs; **Lighthouse 13.6.0**, **chrome-launcher 1.2.0**, **@axe-core/playwright 4.14.0** for audited evidence.
 - Coverage gate applies to new/changed code.
 
 ## Local Development
@@ -53,7 +53,11 @@
 ## Upgrade & Maintenance Policy
 - Pin exact versions; Dependabot/Renovate-style monthly minor updates; keep Astro, React, R3F, and Wrangler versions in sync; re-run full verification on upgrade. Re-evaluate R3F v10 stable and TypeScript 7 support at each upgrade cycle.
 
+## Doc Sync Notes
+
+- **2026-11-24 (Showcase MVP):** corrected the scheduler to `ts-fsrs 6.0.1`; recorded Playwright/Lighthouse/axe as active verification tooling; confirmed the OB3 credential uses an HMAC-SHA-256 `DataIntegrityProof` at portfolio scale (no external trust framework). Product definition and product guidelines required no change.
+
 ## Open Questions & Assumptions
 - Custom domain deferred; exact embedding model picked at implementation time.
-- R2, Playwright, and multi-topic authoring tooling are post-MVP.
+- R2 and multi-topic authoring tooling are post-MVP; Playwright and Lighthouse are in the MVP verification suite.
 - oxlint does not lint `.astro` templates — only script blocks (accepted limitation).

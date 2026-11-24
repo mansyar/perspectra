@@ -1,0 +1,92 @@
+.lesson-header {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+}
+
+.lesson-header__topic {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lesson-layout {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.landmarks {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+}
+
+.landmarks h2 {
+  color: var(--fg-shell);
+  font-size: 1rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.landmarks ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.landmarks a {
+  color: var(--accent);
+}
+
+.landmarks a:hover {
+  color: var(--fg-shell);
+}
+
+/* Long-form reading is the one light surface on an otherwise dark page. */
+.prose {
+  background: var(--bg-reading);
+  border: 1px solid var(--border-reading);
+  border-radius: var(--radius);
+  color: var(--fg-reading);
+  margin-bottom: var(--space-lg);
+  max-width: 48rem;
+  overflow-wrap: anywhere;
+  padding: var(--space-lg) clamp(var(--space-md), 3vw, var(--space-lg));
+}
+
+.prose > div {
+  border-left: 3px solid var(--border-reading);
+  margin-bottom: var(--space-lg);
+  padding-left: var(--space-md);
+  scroll-margin-top: var(--space-md);
+}
+
+.prose > div:target {
+  border-left-color: var(--accent-ink);
+}
+
+.prose h2 {
+  color: var(--fg-reading);
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.prose p {
+  color: var(--fg-reading-muted);
+  margin: 0 0 var(--space-sm);
+}
+
+.prose p[data-layer='overview'] strong {
+  color: var(--fg-reading);
+}
+
+.scene-notice {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg-shell-muted);
+  font-size: 0.875rem;
+  padding: var(--space-md);
+}

@@ -1,0 +1,214 @@
+/*
+ * Design tokens: one teal accent hue across a dark cinematic shell and a light
+ * reading surface. `--accent` is the high-contrast tint used on dark surfaces;
+ * `--accent-ink` is the same hue darkened for text on the reading surface.
+ * All text and interactive states target WCAG 2.2 AA (4.5:1 text, 3:1 UI).
+ */
+:root {
+  --bg-shell: #081618;
+  --bg-surface: #102b2e;
+  --bg-surface-raised: #17383c;
+  --bg-reading: #f7f4ec;
+  --bg-reading-highlight: #e2eeea;
+  --fg-shell: #eaf4f2;
+  --fg-shell-muted: #b7cbc8;
+  --fg-reading: #15211f;
+  --fg-reading-muted: #42534f;
+  --accent: #6ee7d7;
+  --accent-ink: #0c6a62;
+  --accent-contrast: #052422;
+  --border: #35585b;
+  --border-reading: #b9c9c4;
+  --focus: #ffd166;
+  --focus-reading: #8a3b00;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgb(0 0 0 / 30%);
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --motion-fast: 120ms;
+  --motion-normal: 240ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-shell);
+  color: var(--fg-shell);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  margin: 0;
+}
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.site-header {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: var(--space-md) clamp(var(--space-md), 4vw, var(--space-lg));
+}
+
+.site-header__brand {
+  color: var(--fg-shell);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.page {
+  margin: 0 auto;
+  max-width: 60rem;
+  padding: var(--space-lg) clamp(var(--space-md), 4vw, var(--space-lg)) var(--space-xl);
+}
+
+.page__intro {
+  color: var(--fg-shell-muted);
+  font-size: 1.125rem;
+  max-width: 44rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-md);
+}
+
+.lesson-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  list-style: none;
+  margin: 0 0 var(--space-lg);
+  padding: 0;
+}
+
+.lesson-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-md);
+}
+
+.lesson-card a {
+  color: inherit;
+  display: block;
+  text-decoration: none;
+}
+
+.lesson-card__topic {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lesson-card h3 {
+  color: var(--fg-shell);
+  margin: var(--space-sm) 0;
+}
+
+.lesson-card p {
+  color: var(--fg-shell-muted);
+  margin: 0 0 var(--space-md);
+}
+
+.lesson-card__cta {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.lesson-card--placeholder {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.lesson-card__badge {
+  color: var(--fg-shell-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  color: var(--fg-shell-muted);
+  font-size: 0.875rem;
+  padding: var(--space-md) clamp(var(--space-md), 4vw, var(--space-lg));
+}
+
+.verify-form {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-lg);
+  max-width: 44rem;
+}
+
+.verify-form input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg-shell);
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  width: 100%;
+}
+
+.verify-form button {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent-contrast);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  justify-self: start;
+  padding: 0.5rem 1rem;
+}
+
+[data-verify-details]:not([hidden]) {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+}
+
+[data-verify-status] {
+  color: var(--fg-shell);
+}
+
+/* The reading surface inverts to a light, paper-like card for long-form prose. */
+.prose :focus-visible {
+  outline-color: var(--focus-reading);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -112,6 +112,12 @@ permissions:
     resource: "pnpm fmt:check *"
     effect: allow
   - action: shell
+    resource: "pnpm fmt"
+    effect: allow
+  - action: shell
+    resource: "pnpm fmt *"
+    effect: allow
+  - action: shell
     resource: "pnpm typecheck *"
     effect: allow
   - action: shell
@@ -119,6 +125,27 @@ permissions:
     effect: allow
   - action: shell
     resource: "pnpm verify *"
+    effect: allow
+  - action: shell
+    resource: "pnpm verify"
+    effect: allow
+  - action: shell
+    resource: "pnpm verify:full *"
+    effect: allow
+  - action: shell
+    resource: "pnpm verify:full"
+    effect: allow
+  - action: shell
+    resource: "pnpm smoke"
+    effect: allow
+  - action: shell
+    resource: "pnpm test:e2e"
+    effect: allow
+  - action: shell
+    resource: "pnpm test:a11y"
+    effect: allow
+  - action: shell
+    resource: "pnpm perf:lighthouse"
     effect: allow
 ---
 
