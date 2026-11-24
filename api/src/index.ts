@@ -6,7 +6,10 @@ import { masteryRoutes, quizRoutes, type QuizDeps } from './routes/quiz';
 import { createAuth, type AuthPort } from './lib/auth';
 import { learningEventSchema, syncBatchSchema, type LearningEvent } from './lib/events';
 import { createWorkersKv, type KvPort } from './lib/kv';
-import { createDrizzleLessonChunkRepository } from './lib/lesson-chunk-repository';
+import {
+  createDrizzleLessonChunkRepository,
+  type LessonChunkRepository,
+} from './lib/lesson-chunk-repository';
 import { createLlmAdapter, type LlmPort } from './lib/llm';
 import { createNeonProgressRepository, type ProgressRepository } from './lib/progress-repository';
 import { loadLessonChunks } from './lib/retrieval';
@@ -17,6 +20,7 @@ export interface AppDeps {
   db: ProgressRepository;
   auth: AuthPort;
   kv: KvPort;
+  chunkRepository?: LessonChunkRepository;
   llm?: LlmPort;
   getChunks?: ChunkSource;
 }
@@ -45,41 +49,30 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
   }
 
   function resolve(env: Env): AppDeps {
-    if (dependencies?.db && dependencies.auth && dependencies.kv) {
-      return {
-        auth: dependencies.auth,
-        db: dependencies.db,
-        getChunks: dependencies.getChunks,
-        kv: dependencies.kv,
-        llm: dependencies.llm,
-      };
-    }
-    const cached = production.get(env);
+    // app.request() in tests may omit bindings; production always passes an object.
+    const bindings = env ?? ({} as Env);
+    const cached = production.get(bindings);
     if (cached) {
       return cached;
     }
-    const db = dependencies?.db ?? createNeonProgressRepository(databaseFor(env));
-    const auth = dependencies?.auth ?? createAuth(env, databaseFor(env));
-    const kv = dependencies?.kv ?? createWorkersKv(env.RATE_LIMIT_KV);
-    const chunkRepository = env.DATABASE_URL
-      ? createDrizzleLessonChunkRepository(databaseFor(env))
-      : null;
-    const productionChunks: ChunkSource = async (lessonId, hotspots) => {
-      const chunks = chunkRepository
-        ? await chunkRepository.getChunks(lessonId)
-        : loadLessonChunks(lessonId, hotspots);
-      return hotspots.length > 0
-        ? chunks.filter((chunk) => hotspots.includes(chunk.hotspotId))
-        : chunks;
-    };
+    const db = dependencies?.db ?? createNeonProgressRepository(databaseFor(bindings));
+    const auth = dependencies?.auth ?? createAuth(bindings, databaseFor(bindings));
+    const kv = dependencies?.kv ?? createWorkersKv(bindings.RATE_LIMIT_KV);
+    // The repository is already scoped by lessonId; never apply a heart-only
+    // allowlist to its results or a second lesson's chunks would all vanish.
+    const chunkRepository =
+      dependencies?.chunkRepository ??
+      (bindings.DATABASE_URL ? createDrizzleLessonChunkRepository(databaseFor(bindings)) : null);
+    const productionChunks: ChunkSource = (lessonId, hotspots) =>
+      chunkRepository ? chunkRepository.getChunks(lessonId) : loadLessonChunks(lessonId, hotspots);
     const resolved = {
       auth,
       db,
       getChunks: dependencies?.getChunks ?? productionChunks,
       kv,
-      llm: dependencies?.llm ?? createLlmAdapter(env),
+      llm: dependencies?.llm ?? createLlmAdapter(bindings),
     };
-    production.set(env, resolved);
+    production.set(bindings, resolved);
     return resolved;
   }
 
@@ -97,7 +90,12 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
 
   function badgeFor(env: Env): BadgeDeps {
     const deps = resolve(env);
-    return { auth: deps.auth, db: deps.db, secret: env.BETTER_AUTH_SECRET ?? '' };
+    return {
+      auth: deps.auth,
+      db: deps.db,
+      getChunks: deps.getChunks,
+      secret: env.BETTER_AUTH_SECRET ?? '',
+    };
   }
 
   app.get('/health', (c) => c.json({ status: 'ok', service: 'perspectra-api' }));

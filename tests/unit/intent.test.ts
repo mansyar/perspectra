@@ -19,4 +19,8 @@ describe('classifyIntent', () => {
   it('rejects an empty question', () => {
     expect(classifyIntent('', lessonTerms)).toBe('off_topic');
   });
+
+  it('accepts a non-heart lesson term without generic learning words', () => {
+    expect(classifyIntent('cortex signals', ['brain', 'cortex', 'signals'])).toBe('lesson');
+  });
 });

@@ -8,7 +8,7 @@ import type { LlmPort } from '../lib/llm';
 import { assemblePrompt, stripCitations, validateCitations } from '../lib/prompt';
 import { checkQuota } from '../lib/quota';
 import {
-  DEFAULT_HOTSPOTS,
+  hotspotIdsFromChunks,
   loadLessonChunks,
   retrieveChunks,
   type LessonChunk,
@@ -25,7 +25,7 @@ export interface TutorEvent {
 
 export type ChunkSource = (
   lessonId: string,
-  hotspots: readonly string[],
+  hotspots?: readonly string[],
 ) => LessonChunk[] | Promise<LessonChunk[]>;
 
 export interface TutorDeps {
@@ -54,12 +54,28 @@ const tutorRequestSchema = z.object({
   sessionId: z.string().optional(),
 });
 
-const LESSON_TERMS = [
-  'heart',
-  'cardiac',
-  'blood',
-  ...DEFAULT_HOTSPOTS.flatMap((id) => id.replaceAll('_', ' ').split(' ')),
-];
+const MAX_LESSON_TERMS = 120;
+
+/** Intent vocabulary is derived from the lesson actually being served. */
+function termsForLesson(lessonId: string, chunks: readonly LessonChunk[]): string[] {
+  const normalized = lessonId.toLowerCase();
+  const terms = new Set<string>([normalized, ...normalized.split(/[\s_-]+/)]);
+  for (const hotspotId of hotspotIdsFromChunks(chunks)) {
+    terms.add(hotspotId);
+    for (const part of hotspotId.split('_')) {
+      terms.add(part);
+    }
+  }
+  for (const chunk of chunks) {
+    for (const token of chunk.text.toLowerCase().match(/[a-z]{4,}/g) ?? []) {
+      if (terms.size >= MAX_LESSON_TERMS) {
+        return [...terms];
+      }
+      terms.add(token);
+    }
+  }
+  return [...terms];
+}
 
 const GENERIC_EXCERPT = 'The full lesson prose remains available below.';
 
@@ -124,17 +140,17 @@ export function tutorRoutes(deps: TutorDeps | TutorDepsResolver): Hono<{ Binding
       const body = parsed.data;
 
       const getChunks: ChunkSource = resolved.getChunks ?? loadLessonChunks;
-      const chunks = await getChunks(body.lessonId, DEFAULT_HOTSPOTS);
+      const chunks = await getChunks(body.lessonId);
       staticExcerpt = excerpt(chunks);
 
       const identity = await resolved.auth.getSession(c.req.raw);
       const sessionId = identity?.userId ?? body.sessionId ?? crypto.randomUUID();
 
-      if (classifyIntent(body.question, LESSON_TERMS) === 'off_topic') {
+      if (classifyIntent(body.question, termsForLesson(body.lessonId, chunks)) === 'off_topic') {
         return sseResponse([
           errorEvent(
             'off_topic',
-            'That question is outside this lesson. Ask about the structures in the heart instead.',
+            'That question is outside this lesson. Ask about the topics covered here instead.',
             staticExcerpt,
           ),
         ]);

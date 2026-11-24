@@ -7,7 +7,7 @@ import { computeMastery, recommendNext, type MasteryView } from '../lib/mastery'
 import type { KvPort } from '../lib/kv';
 import type { LlmPort } from '../lib/llm';
 import type { ProgressRepository } from '../lib/progress-repository';
-import { DEFAULT_HOTSPOTS, HEART_LESSON_MDX } from '../lib/retrieval';
+import { DEFAULT_HOTSPOTS, HEART_LESSON_MDX, hotspotIdsFromChunks } from '../lib/retrieval';
 import type { ChunkSource } from './tutor';
 
 export interface QuizDeps {
@@ -85,10 +85,17 @@ async function lessonContext(
       source: body.hotspotId ? hotspotSection(HEART_LESSON_MDX, body.hotspotId) : HEART_LESSON_MDX,
     };
   }
-  const all = await deps.getChunks(body.lessonId, []);
+  const all = await deps.getChunks(body.lessonId);
+  const hotspots = hotspotIdsFromChunks(all);
+  if (hotspots.length === 0) {
+    return {
+      hotspots: DEFAULT_HOTSPOTS,
+      source: body.hotspotId ? hotspotSection(HEART_LESSON_MDX, body.hotspotId) : HEART_LESSON_MDX,
+    };
+  }
   const chunks = body.hotspotId ? all.filter((chunk) => chunk.hotspotId === body.hotspotId) : all;
   return {
-    hotspots: [...new Set(all.map((chunk) => chunk.hotspotId))],
+    hotspots,
     source: chunks
       .map((chunk) => {
         return `<div data-hotspot="${chunk.hotspotId}"><p data-layer="${chunk.layer}">${chunk.text}</p></div>`;
@@ -137,13 +144,31 @@ function parseGeneration(raw: string, hotspots: readonly string[]): GeneratedQue
   return result.success ? result.data : null;
 }
 
-async function masteryFor(deps: QuizDeps, userId: string): Promise<MasteryResponse> {
-  const mastery = computeMastery(await deps.db.getEvents(userId), DEFAULT_HOTSPOTS);
+/** Mastery vocabulary follows the lesson's chunk source, not the heart defaults. */
+async function hotspotVocabulary(deps: QuizDeps, lessonId: string): Promise<string[]> {
+  if (!deps.getChunks) {
+    return [...DEFAULT_HOTSPOTS];
+  }
+  try {
+    const hotspots = hotspotIdsFromChunks(await deps.getChunks(lessonId));
+    return hotspots.length > 0 ? hotspots : [...DEFAULT_HOTSPOTS];
+  } catch {
+    return [...DEFAULT_HOTSPOTS];
+  }
+}
+
+async function masteryFor(
+  deps: QuizDeps,
+  userId: string,
+  lessonId: string,
+): Promise<MasteryResponse> {
+  const hotspots = await hotspotVocabulary(deps, lessonId);
+  const mastery = computeMastery(await deps.db.getEvents(userId), hotspots);
   const soon = Date.now() + 60_000;
   const dueCards = mastery.hotspots
     .filter((hotspot) => hotspot.dueAt !== null && Date.parse(hotspot.dueAt) <= soon)
     .map((hotspot) => hotspot.hotspotId);
-  return { ...mastery, dueCards, nextHotspot: recommendNext(mastery) };
+  return { ...mastery, dueCards, nextHotspot: recommendNext(mastery, hotspots) };
 }
 
 /** Quiz generation, grading, and the shared mastery view. All routes are session-scoped. */
@@ -262,7 +287,7 @@ export function quizRoutes(deps: QuizDeps | QuizDepsResolver): Hono<{ Bindings: 
       type: 'quiz_result' as const,
     };
     await resolved.db.appendEvents(identity.userId, [event]);
-    const mastery = await masteryFor(resolved, identity.userId);
+    const mastery = await masteryFor(resolved, identity.userId, record.lessonId);
 
     return c.json({
       correct,
@@ -287,7 +312,7 @@ async function masteryHandler(
   if (!identity) {
     return c.json({ error: 'unauthorized' }, 401);
   }
-  return c.json(await masteryFor(resolved, identity.userId));
+  return c.json(await masteryFor(resolved, identity.userId, c.req.query('lessonId') ?? 'heart'));
 }
 
 /** Mounted at /api/mastery so the heatmap and the quiz share one view. */

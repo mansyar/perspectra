@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildChunks,
   cosine,
+  hotspotIdsFromChunks,
   lexicalScore,
   loadLessonChunks,
   retrieveChunks,
@@ -130,5 +131,17 @@ describe('retrieveChunks', () => {
       [],
     );
     expect(results.map((result) => result.chunk.id)).toEqual(['heart:a', 'heart:b']);
+  });
+});
+
+describe('hotspotIdsFromChunks', () => {
+  it('derives a unique hotspot vocabulary from non-heart chunks', () => {
+    expect(
+      hotspotIdsFromChunks([
+        chunk({ hotspotId: 'planet_core', id: 'planets:planet_core:overview' }),
+        chunk({ hotspotId: 'planet_core', id: 'planets:planet_core:detail', layer: 'detail' }),
+        chunk({ hotspotId: 'crust', id: 'planets:crust:overview' }),
+      ]),
+    ).toEqual(['planet_core', 'crust']);
   });
 });

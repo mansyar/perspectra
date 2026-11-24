@@ -96,4 +96,72 @@ describe('badge routes', () => {
     expect(verify.status).toBe(200);
     expect((await verify.json()) as { valid: boolean }).toMatchObject({ valid: false });
   });
+
+  it('uses a non-heart lesson vocabulary for mastery and the credential', async () => {
+    const hotspots = ['cortex', 'hippocampus'];
+    const db = new InMemoryProgressRepository();
+    await db.appendEvents(
+      'learner',
+      hotspots.flatMap((hotspotId, index) =>
+        [0, 1].map((attempt) => ({
+          hotspotId,
+          id: `learner:${hotspotId}:${attempt}`,
+          lessonId: 'brain',
+          payload: { correct: true },
+          timestamp: 1_700_000_000_000 + index * 1000 + attempt,
+          type: 'quiz_result' as const,
+        })),
+      ),
+    );
+    const app = createApp({
+      auth: authFor('learner'),
+      db,
+      getChunks: (lessonId) =>
+        lessonId === 'brain'
+          ? hotspots.map((hotspotId) => ({
+              hotspotId,
+              id: `brain:${hotspotId}:overview`,
+              layer: 'overview',
+              lessonId,
+              text: `The ${hotspotId} is part of the brain lesson.`,
+            }))
+          : [],
+      kv: new InMemoryKv(),
+    });
+
+    const issued = await request(app, '/api/badge/issue', { lessonId: 'brain' });
+    expect(issued.status).toBe(200);
+    const { credential } = (await issued.json()) as { credential: string };
+    const verified = await request(app, '/api/badge/verify', { credential });
+    const result = (await verified.json()) as {
+      credential?: { credentialSubject?: { achievement?: { id?: string } } };
+      valid: boolean;
+    };
+    expect(result.valid).toBe(true);
+    expect(result.credential?.credentialSubject?.achievement?.id).toContain('brain');
+  });
+
+  it('reports non-heart hotspot IDs when the lesson is not mastered', async () => {
+    const app = createApp({
+      auth: authFor('newcomer'),
+      db: new InMemoryProgressRepository(),
+      getChunks: (lessonId) =>
+        lessonId === 'planets'
+          ? [
+              {
+                hotspotId: 'planet_core',
+                id: 'planets:planet_core:overview',
+                layer: 'overview',
+                lessonId,
+                text: 'The planet core is dense and hot.',
+              },
+            ]
+          : [],
+      kv: new InMemoryKv(),
+    });
+    const response = await request(app, '/api/badge/issue', { lessonId: 'planets' });
+    expect(response.status).toBe(403);
+    const body = (await response.json()) as { failing: string[] };
+    expect(body.failing).toEqual(['planet_core']);
+  });
 });

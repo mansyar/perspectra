@@ -9,8 +9,16 @@ const HOTSPOT_IDS = [
   'aortic_valve',
 ];
 
+async function openLesson(
+  page: import('@playwright/test').Page,
+  path = '/lessons/heart/',
+): Promise<void> {
+  await page.goto(path);
+  await expect(page.locator('.scene-island')).toHaveAttribute('data-scene-hydrated', 'true');
+}
+
 test('scene renders six linked landmarks', { tag: '@smoke' }, async ({ page }) => {
-  await page.goto('/lessons/heart/');
+  await openLesson(page);
   await expect(page.locator('.scene-island[data-active-hotspot]')).toBeVisible();
   await expect(page.locator('.landmarks a')).toHaveCount(6);
   await expect(page.locator('[data-hotspot-button]')).toHaveCount(6);
@@ -35,7 +43,7 @@ test('poster fallback when model is unavailable', async ({ page }) => {
   await page.route('**/*.glb', (route) => {
     return route.abort();
   });
-  await page.goto('/lessons/heart/');
+  await openLesson(page);
   await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'poster');
   await expect(page.locator('.scene-island__poster')).toBeVisible();
   await expect(page.locator('.landmarks a')).toHaveCount(6);
@@ -43,7 +51,7 @@ test('poster fallback when model is unavailable', async ({ page }) => {
 });
 
 test('scene click highlights and scrolls prose', async ({ page }) => {
-  await page.goto('/lessons/heart/');
+  await openLesson(page);
   await page.locator('[data-hotspot-button="pulmonary_artery"]').click();
   const section = page.locator('[data-hotspot="pulmonary_artery"]');
   await expect(section).toHaveClass(/is-active/);
@@ -62,7 +70,7 @@ test('scene click highlights and scrolls prose', async ({ page }) => {
 });
 
 test('scrolling prose activates a hotspot', async ({ page }) => {
-  await page.goto('/lessons/heart/');
+  await openLesson(page);
   await page.locator('[data-hotspot="mitral_valve"]').scrollIntoViewIfNeeded();
   await expect(page.locator('.scene-island')).toHaveAttribute(
     'data-active-hotspot',
@@ -72,7 +80,7 @@ test('scrolling prose activates a hotspot', async ({ page }) => {
 });
 
 test('hotspots are keyboard reachable in order', async ({ page }) => {
-  await page.goto('/lessons/heart/');
+  await openLesson(page);
   await page.locator('[data-hotspot-button]').first().focus();
 
   for (const id of HOTSPOT_IDS) {
@@ -89,7 +97,7 @@ test('hotspots are keyboard reachable in order', async ({ page }) => {
 
 test('reduced motion keeps prose usable', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/lessons/heart/');
+  await openLesson(page);
   await expect(page.locator('.scene-island')).toHaveAttribute('data-motion', 'reduced');
 
   await page.locator('[data-hotspot-button="aortic_valve"]').click();
@@ -113,7 +121,7 @@ async function forceWebGpu(page: import('@playwright/test').Page): Promise<void>
 
 test('a failed WebGPU scene remounts on WebGL with a visible recovery', async ({ page }) => {
   await forceWebGpu(page);
-  await page.goto('/lessons/heart/?rendererErrors=1');
+  await openLesson(page, '/lessons/heart/?rendererErrors=1');
   await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'webgpu');
   await page.locator('.scene-island__start').click();
   await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'webgl');
@@ -124,7 +132,7 @@ test('a failed WebGPU scene remounts on WebGL with a visible recovery', async ({
 
 test('a second renderer failure steps down to the poster with a retry', async ({ page }) => {
   await forceWebGpu(page);
-  await page.goto('/lessons/heart/?rendererErrors=2');
+  await openLesson(page, '/lessons/heart/?rendererErrors=2');
   await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'webgpu');
   await page.locator('.scene-island__start').click();
   await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'poster');
@@ -138,7 +146,7 @@ test('poster stays visible until the delayed GLB has loaded', async ({ page }) =
     await new Promise((resolve) => setTimeout(resolve, 1500));
     await route.continue();
   });
-  await page.goto('/lessons/heart/');
+  await openLesson(page);
   const poster = page.locator('.scene-island__poster');
   await expect(poster).toBeVisible();
   await expect(page.locator('.scene-island__start')).toBeVisible({ timeout: 15_000 });

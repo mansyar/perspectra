@@ -124,4 +124,16 @@ describe('recommendNext', () => {
     expect(recommendNext(view([0.9, 0.9, 0.4, 0.9, 0.9, 0.9]))).toBe('aorta');
     expect(recommendNext(view([0.9, 0.9, 0.9, 0.9, 0.9, 0.9]))).toBeNull();
   });
+
+  it('uses a custom hotspot order for a non-heart lesson', () => {
+    const brain: MasteryView = {
+      hotspots: [
+        { hotspotId: 'hippocampus', mastery: 0.4, attempts: 0, correct: 0, dueAt: null },
+        { hotspotId: 'cortex', mastery: 0.4, attempts: 0, correct: 0, dueAt: null },
+      ],
+      overall: 0.4,
+      updatedAt: null,
+    };
+    expect(recommendNext(brain, ['cortex', 'hippocampus'])).toBe('cortex');
+  });
 });

@@ -139,8 +139,11 @@ export function computeMastery(
 }
 
 /** Lowest mastery first; mastered hotspots are skipped unless all are mastered. */
-export function recommendNext(view: MasteryView): string | null {
-  const order = new Map<string, number>(DEFAULT_HOTSPOTS.map((id, index) => [id, index]));
+export function recommendNext(
+  view: MasteryView,
+  hotspots: readonly string[] = DEFAULT_HOTSPOTS,
+): string | null {
+  const order = new Map<string, number>(hotspots.map((id, index) => [id, index]));
   const candidates = view.hotspots.filter((hotspot) => hotspot.mastery < MASTERY_THRESHOLD);
   if (candidates.length === 0) {
     return null;
@@ -150,8 +153,8 @@ export function recommendNext(view: MasteryView): string | null {
       (left, right) =>
         left.mastery - right.mastery ||
         left.attempts - right.attempts ||
-        (order.get(left.hotspotId) ?? DEFAULT_HOTSPOTS.length) -
-          (order.get(right.hotspotId) ?? DEFAULT_HOTSPOTS.length),
+        (order.get(left.hotspotId) ?? hotspots.length) -
+          (order.get(right.hotspotId) ?? hotspots.length),
     )[0]?.hotspotId ?? null
   );
 }

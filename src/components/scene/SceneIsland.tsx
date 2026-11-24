@@ -29,6 +29,7 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   const forcedFailures = (() => {
     if (typeof window === 'undefined') {
@@ -40,6 +41,8 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
   })();
 
   const handleReady = useCallback(() => setReady(true), []);
+
+  useEffect(() => setHydrated(true), []);
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -105,6 +108,7 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
     <div
       className="scene-island"
       data-active-hotspot={activeHotspot ?? ''}
+      data-scene-hydrated={hydrated ? 'true' : 'false'}
       data-motion={reducedMotion ? 'reduced' : 'full'}
       data-renderer={tier}
       data-scene-ready={ready ? 'true' : 'false'}

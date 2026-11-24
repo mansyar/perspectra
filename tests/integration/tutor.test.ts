@@ -197,6 +197,37 @@ describe('tutor route', () => {
     expect(events.at(-1)).toEqual({ citations: ['brain:cortex:overview'], type: 'done' });
   });
 
+  it('serves a second lesson through the production chunk repository path', async () => {
+    const cortexChunk = chunk({
+      hotspotId: 'cortex',
+      id: 'brain:cortex:overview',
+      lessonId: 'brain',
+      text: 'The cortex processes sensory signals.',
+      embedding: [1, 0],
+    });
+    const repository: LessonChunkRepository = {
+      async getChunks(lessonId: string) {
+        return lessonId === 'brain' ? [cortexChunk] : chunks;
+      },
+    };
+    const llm = llmFor('Signals are processed [[brain:cortex:overview]].');
+    const app = createApp({
+      auth: authFor(null),
+      chunkRepository: repository,
+      db: new InMemoryProgressRepository(),
+      kv: new InMemoryKv(),
+      llm,
+      // Deliberately no getChunks: this must exercise the production lookup.
+    });
+    const response = await post(app, {
+      lessonId: 'brain',
+      question: 'cortex signals',
+      sessionId: 'brain-production',
+    });
+    const events = parseSse(await response.text());
+    expect(events.at(-1)).toEqual({ citations: ['brain:cortex:overview'], type: 'done' });
+  });
+
   it('returns an SSE error rather than throwing when the adapter fails', async () => {
     const failing: LlmPort = {
       async complete() {

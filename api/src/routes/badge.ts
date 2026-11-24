@@ -5,17 +5,33 @@ import type { AuthPort } from '../lib/auth';
 import { createBadgeService } from '../lib/badge';
 import { computeMastery, MASTERY_THRESHOLD } from '../lib/mastery';
 import type { ProgressRepository } from '../lib/progress-repository';
-import { DEFAULT_HOTSPOTS } from '../lib/retrieval';
+import { DEFAULT_HOTSPOTS, hotspotIdsFromChunks } from '../lib/retrieval';
+import type { ChunkSource } from './tutor';
 
 export interface BadgeDeps {
   db: ProgressRepository;
   auth: AuthPort;
+  getChunks?: ChunkSource;
   secret: string;
 }
 
 export type BadgeDepsResolver = (env: Env) => BadgeDeps;
 
 const verifySchema = z.object({ credential: z.string().min(1) });
+const issueSchema = z.object({ lessonId: z.string().min(1) });
+
+/** Default heart vocabulary is only a fallback for clients without a chunk source. */
+async function badgeHotspots(deps: BadgeDeps, lessonId: string): Promise<string[]> {
+  if (!deps.getChunks) {
+    return [...DEFAULT_HOTSPOTS];
+  }
+  try {
+    const hotspots = hotspotIdsFromChunks(await deps.getChunks(lessonId));
+    return hotspots.length > 0 ? hotspots : [...DEFAULT_HOTSPOTS];
+  } catch {
+    return [...DEFAULT_HOTSPOTS];
+  }
+}
 
 async function issueHandler(
   c: Context<{ Bindings: Env }>,
@@ -29,7 +45,16 @@ async function issueHandler(
   if (!identity) {
     return c.json({ error: 'unauthorized' }, 401);
   }
-  const mastery = computeMastery(await resolved.db.getEvents(identity.userId), DEFAULT_HOTSPOTS);
+  let body: unknown = {};
+  try {
+    body = await c.req.json();
+  } catch {
+    body = {};
+  }
+  const parsed = issueSchema.safeParse(body);
+  const lessonId = parsed.success ? parsed.data.lessonId : 'heart';
+  const hotspots = await badgeHotspots(resolved, lessonId);
+  const mastery = computeMastery(await resolved.db.getEvents(identity.userId), hotspots);
   const failing = mastery.hotspots
     .filter((hotspot) => hotspot.mastery < MASTERY_THRESHOLD)
     .map((hotspot) => hotspot.hotspotId);
@@ -37,7 +62,7 @@ async function issueHandler(
     return c.json({ error: 'not_mastered', failing }, 403);
   }
   const envelope = await createBadgeService(resolved.secret).issue({
-    lessonId: 'heart',
+    lessonId,
     mastery: mastery.overall,
     userId: identity.userId,
   });

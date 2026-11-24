@@ -3,7 +3,7 @@ import type { AuthPort } from '../../api/src/lib/auth';
 import { InMemoryKv } from '../../api/src/lib/kv';
 import type { LlmPort } from '../../api/src/lib/llm';
 import { InMemoryProgressRepository } from '../../api/src/lib/progress-repository';
-import { quizRoutes, type QuizDeps } from '../../api/src/routes/quiz';
+import { masteryRoutes, quizRoutes, type QuizDeps } from '../../api/src/routes/quiz';
 
 const VALID = {
   answerIndex: 2,
@@ -207,5 +207,32 @@ describe('quiz grading', () => {
     const events = await deps.db.getEvents('user-1');
     expect(events).toHaveLength(1);
     expect(events[0].payload).toMatchObject({ correct: false, questionId: 'q-aorta' });
+  });
+});
+
+describe('mastery route', () => {
+  it('reports the vocabulary of the requested lesson instead of heart landmarks', async () => {
+    const deps = depsFor(new FakeLlm(), 'user-1');
+    deps.getChunks = (lessonId) =>
+      lessonId === 'planets'
+        ? [
+            {
+              hotspotId: 'planet_core',
+              id: 'planets:planet_core:overview',
+              layer: 'overview',
+              lessonId: 'planets',
+              text: 'The planet core is dense and hot.',
+            },
+          ]
+        : [];
+    const app = masteryRoutes(deps);
+    const response = await Promise.resolve(app.request('/?lessonId=planets'));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      hotspots: { hotspotId: string }[];
+      nextHotspot: string | null;
+    };
+    expect(body.hotspots.map((hotspot) => hotspot.hotspotId)).toEqual(['planet_core']);
+    expect(body.nextHotspot).toBe('planet_core');
   });
 });

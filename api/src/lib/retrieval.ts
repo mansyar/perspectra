@@ -181,11 +181,13 @@ export function buildChunks(
 }
 
 /** Server-side chunk loader for the Worker path (no node:fs in a Worker). */
-export function loadLessonChunks(
-  lessonId: string,
-  hotspots: readonly string[] = DEFAULT_HOTSPOTS,
-): LessonChunk[] {
+export function loadLessonChunks(lessonId: string, hotspots?: readonly string[]): LessonChunk[] {
   return lessonId === 'heart' ? buildChunks(HEART_LESSON_MDX, lessonId, hotspots) : [];
+}
+
+/** Hotspot vocabulary actually present in a set of chunks. */
+export function hotspotIdsFromChunks(chunks: readonly LessonChunk[]): string[] {
+  return [...new Set(chunks.map((chunk) => chunk.hotspotId))];
 }
 
 export function cosine(a: readonly number[], b: readonly number[]): number {
