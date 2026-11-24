@@ -72,7 +72,8 @@ Review fixes are appended by `conductor-review` as needed.
 - **Covers:** FR-7, FR-8, FR-9, AC-4, AC-5, AC-6, AC-7, AC-8, AC-10, NFR-2, NFR-4, NFR-6, NFR-8
 - **Touches:** ignored local environment files, `docs/DEPLOYMENT.md`, production and browser evidence
 - **Verification:** `pnpm verify:full`, `pnpm test:production`, and primary browser verification
-- **Status:** pending
+- **Status:** blocked
+- **Result:** blocked — required human-only Cloudflare, Neon, OAuth, Better Auth, and Gemini credentials are unavailable in the execution environment. Do not paste secrets into chat.
 
 - [ ] **P4.T1: Guide credential setup and validate production configuration** — covers: FR-8, AC-10, NFR-8
 - [ ] **P4.T2: Deploy the Worker and initialize the fresh Neon branch, seed, and Gemini embeddings** — covers: FR-7, AC-4
