@@ -2,11 +2,12 @@
 
 - Track: `20261124-public-deployment`
 - Phase: `4`
-- Date: 2026-11-24
+- Preparation date: 2026-11-24
+- Follow-up date: 2026-11-25
 - Branch: `chore/20261124-public-deployment`
-- Base: `35ffadd4a059020c5850f5a0e747c105f222afe1`
-- Preparation head: `792e9f31a60980a25917ac0dedd24326c3e10bd2`
-- Result: **preparation verified locally; production deployment evidence pending primary**
+- Preparation base/head: `35ffadd4a059020c5850f5a0e747c105f222afe1` / `792e9f31a60980a25917ac0dedd24326c3e10bd2`
+- Follow-up base/head: `f7ec177cf710d1bf544b678325070d2e79810901` / `8c96f365583fc55d6cfbedfa04bac2f57f777316`
+- Result: **preparation and Worker entry-point fix verified locally; production redeploy evidence pending primary**
 
 ## Preparation
 
@@ -51,6 +52,34 @@ The updated tests were first run against the old implementation as a red baselin
 passed**, with failures showing root-relative `main` and assets paths. After the fix, the focused
 suite passed **9 of 9 tests**.
 
+## Follow-up: Cloudflare Worker default entry point
+
+### Production symptom
+
+After the preparation fix allowed deployment, static `/` returned `200`, but `/health` and `/api/*`
+returned Cloudflare `error code: 1042`. The failure persisted even with
+`assets.run_worker_first = true`.
+
+### Root cause
+
+`api/src/index.ts` exported only the named `app`. Cloudflare Workers requires a default export as
+the module entry point. Without it, Workers Static Assets could serve `/`, but the Hono Worker was
+not invoked for API requests.
+
+### Fix
+
+- Added `export default app;` while preserving the existing named `app` export used by tests and
+  dependency-injection callers.
+- Left the committed root-relative Wrangler template, generated absolute config paths, Hono routes,
+  and asset fallback unchanged.
+
+### Regression coverage
+
+`tests/integration/worker-assets.test.ts` now imports the module's default and named entry points,
+asserts they are the same Hono app, and verifies the default export has a callable `fetch` method.
+All five existing asset-fallback tests remain unchanged and passing. The follow-up integration
+suite contains **46 tests**, up from 45.
+
 ## Verification
 
 Exact required command:
@@ -59,30 +88,37 @@ Exact required command:
 pnpm verify
 ```
 
-Final run exited `0`:
+Preparation verification on 2026-11-24 exited `0` after formatting the updated test: lint,
+format, typecheck, **173 unit tests**, coverage, **45 integration tests**, and the **3-page** Astro
+build passed. Coverage was **98.61% statements, 92.41% branches, 97.84% functions, 99.12% lines**.
+
+The final follow-up run on 2026-11-25 exited `0`:
 
 - Lint passed with six pre-existing warnings: two `no-array-sort` warnings in `glb-manifest.test.ts`
-  and four `prefer-add-event-listener` warnings in `offline-queue.ts`.
+  and four `prefer-add-event-listener` warnings in `offline-queue.ts`. The new entry-point identity
+  test also produced one non-blocking `no-shadow` warning for its imported `app` name.
 - Format check passed across 96 files.
 - TypeScript/Astro typecheck passed.
 - Unit tests: **19 files, 173 tests passed**.
 - Coverage: **98.61% statements, 92.41% branches, 97.84% functions, 99.12% lines**.
-- Integration tests: **7 files, 45 tests passed**.
+- Integration tests: **7 files, 46 tests passed**.
 - Astro production build passed with **3 pages**; the existing large-chunk warning remained
   non-blocking.
 - `git diff --check` passed with no output.
 
-The first `pnpm verify` attempt stopped at a real formatting issue in the updated test file. `pnpm fmt`
-was run once, then the exact `pnpm verify` command was rerun successfully. This was not the known
-exit-5-with-all-files-correct flake.
+After the passing follow-up run, an optional alias-only lint cleanup was attempted. The known
+`oxfmt` exit-5-with-all-files-correct flake recurred on the permitted rerun, so that optional cleanup
+was reverted. The final committed source/test tree is identical to the tree that passed `pnpm verify`.
 
 ## Scope and safety
 
-- Commit: `792e9f31a60980a25917ac0dedd24326c3e10bd2` —
+- Preparation commit: `792e9f31a60980a25917ac0dedd24326c3e10bd2` —
   `fix(deploy): resolve generated Wrangler project paths`.
-- Changed only `scripts/prepare-deploy.mjs`, `tests/unit/prepare-deploy.test.ts`, and
-  `docs/DEPLOYMENT.md` before this evidence file.
-- No package, lockfile, workspace, committed Wrangler template, source application, schema,
+- Follow-up commit: `8c96f365583fc55d6cfbedfa04bac2f57f777316` —
+  `fix(api): export Hono app as Worker default`.
+- The follow-up changed only `api/src/index.ts` and `tests/integration/worker-assets.test.ts` before
+  this evidence update.
+- No package, lockfile, workspace, committed Wrangler template, unrelated source, schema,
   migration, or coverage configuration was changed.
 - No deployment command was run, no Cloudflare/Neon resource was changed, and
   `.conductor/deploy/production.env` was not read.
@@ -93,6 +129,10 @@ exit-5-with-all-files-correct flake.
 | Requirement | Preparation result |
 | --- | --- |
 | P4.T1 preparation portion | Met locally: generated config now resolves project entry/assets paths and regression tests prove the result. |
+| Worker entry-point follow-up | Met locally: the module now exposes the same Hono app as both named and default exports, with identity/fetch regression coverage. |
+| FR-1 | Supported: the Worker module now has the default entry point required to execute behind Workers Static Assets. |
+| FR-2 | Supported: API-first Hono routing can now be invoked by Cloudflare instead of failing with error 1042; public-origin proof remains primary-owned. |
+| AC-1 / AC-2 | Supported locally by entry-point and existing asset-fallback tests; production `/health`, `/api/*`, and 404 smoke checks remain primary-owned. |
 | FR-8 | Supported: the documented generated-config deployment step no longer carries the known path-resolution defect. |
 | AC-10 | Supported locally: repeatable preparation, clear validation, no committed production values, and passing configured local checks. |
 | NFR-5 | Met: preparation fails clearly for invalid config/id inputs and now emits paths independent of the caller's working directory. |
@@ -104,8 +144,9 @@ None.
 
 ## Human-only exceptions and production follow-up
 
-- The primary will append actual deployment and production-origin evidence to this file.
-- Production deployment, production E2E/Lighthouse, browser/console checks, and OAuth/email auth
+- The primary will append redeployment and production-origin evidence to this file, including proof
+  that `/health` and `/api/*` no longer return Cloudflare error 1042.
+- Production redeployment, production E2E/Lighthouse, browser/console checks, and OAuth/email auth
   verification were not performed by this preparation subagent.
 - GitHub OAuth remains explicitly deferred by the user; Google OAuth and email/password remain in
   scope for the primary's production verification.
