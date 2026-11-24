@@ -13,7 +13,6 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
-| RM-6 | Deploy the public vertical slice on one Cloudflare Workers origin with Gemini-native embeddings and production proof | chore | high | — | 20261124-public-deployment | user |
 | RM-1 | Build multi-topic library with 3–5 more subjects and prove topic-agnosticism | feature | high | — | — | user |
 
 ## Next
