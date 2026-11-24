@@ -6,7 +6,7 @@
 - Branch: `chore/20261124-release-readiness`
 - Phase base: `dc87115121be2e93f438b7586017e7dc27f6a14e`
 - Result: **PASS**
-- Final checkpoint: **PENDING_PRIMARY** (primary replaces this marker after squashing)
+- Final checkpoint: **8e0fbf0fef6347930cf785bddccaefa3933ad02f**
 
 ## Verification command table
 
@@ -57,7 +57,7 @@ All categories meet the configured budgets (performance 0.95, accessibility 0.95
 | 2 | Real Database Scripts | `verification/phase-2.md` | `b45ef3f` | Complete; live Neon push/seed remains human-only. |
 | 3 | Deploy Configuration, Docs and Workspace Cleanup | `verification/phase-3.md` | `481eedc` | Complete; primary closed the two denied follow-up actions. |
 | 4 | Generic Badge Narrative | `verification/phase-4.md`, `verification/browser.md` | `31456fc` | Complete; browser pass recorded as **PASS** by primary. |
-| 5 | Integrated Verification and Proof | this file | pending primary squash | PASS; final checkpoint `PENDING_PRIMARY`. |
+| 5 | Integrated Verification and Proof | this file | `8e0fbf0` | PASS; final checkpoint `8e0fbf0`. |
 
 ## Browser verification references
 
