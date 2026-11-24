@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MASTERY_REFRESH_EVENT } from '../mastery/MasteryPanel';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
 import './quiz.css';
@@ -33,6 +33,11 @@ export function QuizPanel({ lessonId }: QuizPanelProps) {
   const [result, setResult] = useState<GradeResult | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   async function generate(): Promise<void> {
     setBusy(true);
@@ -97,11 +102,15 @@ export function QuizPanel({ lessonId }: QuizPanelProps) {
   }
 
   return (
-    <section className="quiz-panel" aria-label="Check your understanding">
+    <section
+      aria-label="Check your understanding"
+      className="quiz-panel"
+      data-quiz-hydrated={hydrated ? 'true' : 'false'}
+    >
       <h2>Check your understanding</h2>
       <button
         data-testid="quiz-generate"
-        disabled={busy}
+        disabled={busy || !hydrated}
         onClick={() => void generate()}
         type="button"
       >

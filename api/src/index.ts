@@ -6,6 +6,7 @@ import { masteryRoutes, quizRoutes, type QuizDeps } from './routes/quiz';
 import { createAuth, type AuthPort } from './lib/auth';
 import { learningEventSchema, syncBatchSchema, type LearningEvent } from './lib/events';
 import { createWorkersKv, type KvPort } from './lib/kv';
+import { createDrizzleLessonChunkRepository } from './lib/lesson-chunk-repository';
 import { createLlmAdapter, type LlmPort } from './lib/llm';
 import { createNeonProgressRepository, type ProgressRepository } from './lib/progress-repository';
 import { loadLessonChunks } from './lib/retrieval';
@@ -60,10 +61,21 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
     const db = dependencies?.db ?? createNeonProgressRepository(databaseFor(env));
     const auth = dependencies?.auth ?? createAuth(env, databaseFor(env));
     const kv = dependencies?.kv ?? createWorkersKv(env.RATE_LIMIT_KV);
+    const chunkRepository = env.DATABASE_URL
+      ? createDrizzleLessonChunkRepository(databaseFor(env))
+      : null;
+    const productionChunks: ChunkSource = async (lessonId, hotspots) => {
+      const chunks = chunkRepository
+        ? await chunkRepository.getChunks(lessonId)
+        : loadLessonChunks(lessonId, hotspots);
+      return hotspots.length > 0
+        ? chunks.filter((chunk) => hotspots.includes(chunk.hotspotId))
+        : chunks;
+    };
     const resolved = {
       auth,
       db,
-      getChunks: dependencies?.getChunks ?? loadLessonChunks,
+      getChunks: dependencies?.getChunks ?? productionChunks,
       kv,
       llm: dependencies?.llm ?? createLlmAdapter(env),
     };
@@ -76,6 +88,7 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
     return {
       auth: deps.auth,
       db: deps.db,
+      getChunks: deps.getChunks,
       kv: deps.kv,
       llm: deps.llm ?? createLlmAdapter(env),
       secret: env.BETTER_AUTH_SECRET ?? '',

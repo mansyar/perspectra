@@ -79,6 +79,61 @@ describe('quiz generation', () => {
     expect(llm.prompts[0]).toContain('Target hotspot: aorta');
   });
 
+  it('uses the injected chunk source instead of the hardcoded mirror', async () => {
+    const llm = new FakeLlm();
+    const deps = depsFor(llm, 'user-1');
+    deps.getChunks = (lessonId, _hotspots) =>
+      lessonId === 'brain'
+        ? [
+            {
+              hotspotId: 'cortex',
+              id: 'brain:cortex:overview',
+              layer: 'overview',
+              lessonId: 'brain',
+              text: 'The cortex folds into gyri to increase surface area.',
+            },
+          ]
+        : [];
+    llm.response = JSON.stringify({ ...VALID, hotspotId: 'cortex', remediationId: 'cortex' });
+    const app = quizRoutes(deps);
+    const response = await post(app, '/generate', { hotspotId: 'cortex', lessonId: 'brain' });
+    expect(response.status).toBe(200);
+    expect(llm.prompts[0]).toContain('The cortex folds into gyri');
+    expect(llm.prompts[0]).not.toContain('largest artery in the body');
+  });
+
+  it('generates for a second lesson whose hotspot IDs are not heart landmarks', async () => {
+    const llm = new FakeLlm();
+    llm.response = JSON.stringify({
+      ...VALID,
+      hotspotId: 'planet_core',
+      id: 'q-planet-core',
+      remediationId: 'planet_core',
+    });
+    const deps = depsFor(llm, 'user-1');
+    deps.getChunks = (lessonId, _hotspots) =>
+      lessonId === 'planets'
+        ? [
+            {
+              hotspotId: 'planet_core',
+              id: 'planets:planet_core:overview',
+              layer: 'overview',
+              lessonId: 'planets',
+              text: 'The planet core is dense and hot.',
+            },
+          ]
+        : [];
+    const app = quizRoutes(deps);
+    const response = await post(app, '/generate', {
+      hotspotId: 'planet_core',
+      lessonId: 'planets',
+    });
+    expect(response.status).toBe(200);
+    expect(llm.prompts[0]).toContain('planet_core');
+    expect(llm.prompts[0]).toContain('The planet core is dense and hot.');
+    expect(await response.json()).toMatchObject({ hotspotId: 'planet_core' });
+  });
+
   it('rejects malformed LLM JSON with a safe 502', async () => {
     const llm = new FakeLlm();
     llm.response = '{"definitely":"not a quiz"}';

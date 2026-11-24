@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  clear,
+  drain,
+  enqueue,
   mergeEvents,
   toSyncBatch,
   type OfflineEvent,
@@ -72,5 +75,141 @@ describe('toSyncBatch', () => {
 
   it('returns an empty batch for no events', () => {
     expect(toSyncBatch([])).toEqual({ events: [] });
+  });
+});
+
+/** Minimal IndexedDB stand-in: enough to exercise the queue without a browser. */
+class FakeRequest<T> {
+  error: unknown = null;
+  onsuccess: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  onupgradeneeded: (() => void) | null = null;
+  result!: T;
+}
+
+class FakeStore {
+  items = new Map<string, OfflineEvent>();
+
+  put(value: OfflineEvent): FakeRequest<void> {
+    const request = new FakeRequest<void>();
+    queueMicrotask(() => {
+      this.items.set(value.id, value);
+      request.result = undefined;
+      request.onsuccess?.();
+    });
+    return request;
+  }
+
+  getAll(): FakeRequest<OfflineEvent[]> {
+    const request = new FakeRequest<OfflineEvent[]>();
+    queueMicrotask(() => {
+      request.result = [...this.items.values()];
+      request.onsuccess?.();
+    });
+    return request;
+  }
+
+  clear(): FakeRequest<void> {
+    const request = new FakeRequest<void>();
+    queueMicrotask(() => {
+      this.items.clear();
+      request.result = undefined;
+      request.onsuccess?.();
+    });
+    return request;
+  }
+}
+
+class FakeTransaction {
+  error: unknown = null;
+  oncomplete: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  onabort: (() => void) | null = null;
+
+  constructor(
+    private store: FakeStore,
+    private fail = false,
+  ) {
+    queueMicrotask(() => {
+      if (this.fail) {
+        this.error = new Error('transaction failed');
+        this.onerror?.();
+      } else {
+        this.oncomplete?.();
+      }
+    });
+  }
+
+  objectStore(): FakeStore {
+    return this.store;
+  }
+}
+
+class FakeDb {
+  store!: FakeStore;
+  objectStoreNames = { contains: (name: string) => this.store !== undefined && name === 'events' };
+
+  constructor(private fail = false) {}
+
+  createObjectStore(): FakeStore {
+    this.store = new FakeStore();
+    return this.store;
+  }
+
+  transaction(): FakeTransaction {
+    return new FakeTransaction(this.store, this.fail);
+  }
+
+  close(): void {}
+}
+
+function installFakeIndexedDb(fail = false): void {
+  const database = new FakeDb(fail);
+  vi.stubGlobal('indexedDB', {
+    open: () => {
+      const request = new FakeRequest<IDBDatabase>();
+      queueMicrotask(() => {
+        request.result = database as unknown as IDBDatabase;
+        if (!database.objectStoreNames.contains('events')) {
+          request.onupgradeneeded?.();
+        }
+        request.onsuccess?.();
+      });
+      return request;
+    },
+  });
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('IndexedDB queue', () => {
+  it('enqueues, drains and clears events durably', async () => {
+    installFakeIndexedDb();
+    await enqueue(event({ id: 'one' }));
+    await enqueue(event({ id: 'two', timestamp: 2000 }));
+    expect(await drain()).toHaveLength(2);
+    expect(await drain()).toEqual([]);
+    await enqueue(event({ id: 'three' }));
+    await clear();
+    expect(await drain()).toEqual([]);
+  });
+
+  it('rejects when the database cannot be opened', async () => {
+    vi.stubGlobal('indexedDB', {
+      open: () => {
+        const request = new FakeRequest<IDBDatabase>();
+        request.error = new Error('open failed');
+        queueMicrotask(() => request.onerror?.());
+        return request;
+      },
+    });
+    await expect(enqueue(event())).rejects.toThrow('open failed');
+  });
+
+  it('rejects when a transaction fails', async () => {
+    installFakeIndexedDb(true);
+    await expect(enqueue(event())).rejects.toBeTruthy();
   });
 });

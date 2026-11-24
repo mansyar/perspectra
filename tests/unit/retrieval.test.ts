@@ -3,6 +3,7 @@ import {
   buildChunks,
   cosine,
   lexicalScore,
+  loadLessonChunks,
   retrieveChunks,
   type LessonChunk,
 } from '../../api/src/lib/retrieval';
@@ -39,6 +40,27 @@ describe('buildChunks', () => {
     expect(chunks[0].text).toContain('The aorta carries oxygenated blood.');
     expect(chunks[0].text).not.toContain('<strong>');
   });
+
+  it('derives hotspot IDs from the MDX when no allowlist is supplied', () => {
+    expect(buildChunks(MDX, 'heart').map((entry) => entry.hotspotId)).toEqual([
+      'aorta',
+      'aorta',
+      'unknown',
+    ]);
+  });
+
+  it('caps oversized layer text and skips empty layers', () => {
+    const long = `aorta ${'filler '.repeat(700)}`;
+    const mdx = `<div data-hotspot="aorta"><p data-layer="overview">${long}</p><p data-layer="detail">   </p></div>`;
+    const chunks = buildChunks(mdx, 'heart');
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0].text.length).toBeLessThanOrEqual(3600);
+  });
+
+  it('keeps the local fallback loader limited to the built-in heart mirror', () => {
+    expect(loadLessonChunks('heart').length).toBeGreaterThan(0);
+    expect(loadLessonChunks('brain')).toEqual([]);
+  });
 });
 
 describe('cosine', () => {
@@ -47,9 +69,10 @@ describe('cosine', () => {
     expect(cosine([1, 0], [0, 1])).toBe(0);
   });
 
-  it('returns 0 for missing or mismatched vectors', () => {
+  it('returns 0 for missing, mismatched or zero-norm vectors', () => {
     expect(cosine([], [1])).toBe(0);
     expect(cosine([1], [1, 0])).toBe(0);
+    expect(cosine([0, 0], [1, 1])).toBe(0);
   });
 });
 
@@ -59,6 +82,8 @@ describe('lexicalScore', () => {
       0,
     );
     expect(lexicalScore('The ventricle generates pressure', 'chocolate cake')).toBe(0);
+    expect(lexicalScore('aorta', 'the')).toBe(0);
+    expect(lexicalScore('', 'aorta')).toBe(0);
   });
 });
 

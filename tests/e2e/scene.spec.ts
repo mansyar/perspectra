@@ -100,3 +100,52 @@ test('reduced motion keeps prose usable', async ({ page }) => {
     'aortic_valve',
   );
 });
+
+/** Makes tier detection choose WebGPU so a forced mount error steps down to WebGL. */
+async function forceWebGpu(page: import('@playwright/test').Page): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'gpu', {
+      configurable: true,
+      value: { requestAdapter: async () => ({}) },
+    });
+  });
+}
+
+test('a failed WebGPU scene remounts on WebGL with a visible recovery', async ({ page }) => {
+  await forceWebGpu(page);
+  await page.goto('/lessons/heart/?rendererErrors=1');
+  await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'webgpu');
+  await page.locator('.scene-island__start').click();
+  await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'webgl');
+  await expect(page.getByTestId('renderer-status')).toContainText('Retrying with webgl');
+  await expect(page.locator('.scene-island canvas')).toBeVisible();
+  await expect(page.locator('.scene-island__poster')).toBeHidden();
+});
+
+test('a second renderer failure steps down to the poster with a retry', async ({ page }) => {
+  await forceWebGpu(page);
+  await page.goto('/lessons/heart/?rendererErrors=2');
+  await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'webgpu');
+  await page.locator('.scene-island__start').click();
+  await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'poster');
+  await expect(page.getByTestId('renderer-status')).toContainText('lesson text remains below');
+  await expect(page.locator('.scene-island__poster')).toBeVisible();
+  await expect(page.locator('.prose')).toBeVisible();
+});
+
+test('poster stays visible until the delayed GLB has loaded', async ({ page }) => {
+  await page.route('**/*.glb', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await route.continue();
+  });
+  await page.goto('/lessons/heart/');
+  const poster = page.locator('.scene-island__poster');
+  await expect(poster).toBeVisible();
+  await expect(page.locator('.scene-island__start')).toBeVisible({ timeout: 15_000 });
+  await page.locator('.scene-island__start').click();
+  await expect(poster).toBeVisible();
+  await expect(page.locator('.scene-island')).toHaveAttribute('data-scene-ready', 'false');
+  await expect(poster).toBeHidden({ timeout: 20_000 });
+  await expect(page.locator('.scene-island')).toHaveAttribute('data-scene-ready', 'true');
+  await expect(page.locator('.scene-island canvas')).toBeVisible();
+});

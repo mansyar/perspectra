@@ -4,11 +4,13 @@ import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
 import type { SceneManifest } from '../../lib/scene-manifest';
+import { focusPose } from './framing';
 import type { RendererTier } from './renderer-support';
 
 const ACTIVE_EMISSIVE = 0x4de0c8;
+const ACTIVE_EMISSIVE_INTENSITY = 0.22;
 const PARTICLE_COUNT = 72;
-const POSITION_SCALE = 2.5;
+const POSITION_SCALE = 1;
 
 interface HeartSceneProps {
   manifest: SceneManifest;
@@ -16,6 +18,8 @@ interface HeartSceneProps {
   tier: Exclude<RendererTier, 'poster'>;
   reducedMotion: boolean;
   onReady: () => void;
+  /** QA hook: throw on mount so the fallback ladder can be exercised in E2E. */
+  failRender?: boolean;
 }
 
 interface FlowParticles {
@@ -88,9 +92,18 @@ interface SceneContentsProps {
   manifest: SceneManifest;
   modelSrc: string;
   reducedMotion: boolean;
+  onReady: () => void;
 }
 
-function SceneContents({ manifest, modelSrc, reducedMotion }: SceneContentsProps) {
+/** Signals readiness only after the suspended GLTF has resolved. */
+function SceneReady({ onReady }: { onReady: () => void }) {
+  useEffect(() => {
+    onReady();
+  }, [onReady]);
+  return null;
+}
+
+function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneContentsProps) {
   const { scene } = useGLTF(modelSrc);
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
   const group = useRef<THREE.Group>(null);
@@ -144,7 +157,7 @@ function SceneContents({ manifest, modelSrc, reducedMotion }: SceneContentsProps
       }
       if (id === activeHotspot) {
         material.emissive.setHex(ACTIVE_EMISSIVE);
-        material.emissiveIntensity = 0.9;
+        material.emissiveIntensity = ACTIVE_EMISSIVE_INTENSITY;
       } else {
         material.emissive.copy(previous.color);
         material.emissiveIntensity = previous.intensity;
@@ -187,10 +200,16 @@ function SceneContents({ manifest, modelSrc, reducedMotion }: SceneContentsProps
 
     flow.points.visible = true;
     const desired = positionsById.get(activeHotspot ?? '') ?? baseTarget;
-    const cameraGoal = basePosition.clone().add(desired.clone().multiplyScalar(0.35));
+    const pose = focusPose(
+      basePosition.toArray() as [number, number, number],
+      baseTarget.toArray() as [number, number, number],
+      desired.toArray() as [number, number, number],
+    );
+    const cameraGoal = new THREE.Vector3(...pose.camera);
+    const focusTarget = new THREE.Vector3(...pose.target);
     const alpha = 1 - Math.exp(-delta * 2.8);
     state.camera.position.lerp(cameraGoal, alpha);
-    lookAt.current.lerp(desired, alpha);
+    lookAt.current.lerp(focusTarget, alpha);
     state.camera.lookAt(lookAt.current);
 
     const positions = flow.attribute.array as Float32Array;
@@ -215,6 +234,7 @@ function SceneContents({ manifest, modelSrc, reducedMotion }: SceneContentsProps
 
   return (
     <group ref={group}>
+      <SceneReady onReady={onReady} />
       <primitive object={scene} onClick={handleClick} />
       <primitive object={flow.points} />
     </group>
@@ -222,16 +242,35 @@ function SceneContents({ manifest, modelSrc, reducedMotion }: SceneContentsProps
 }
 
 /** R3F island. One Canvas, with the renderer backend chosen by the caller. */
-export function HeartScene({ manifest, modelSrc, tier, reducedMotion, onReady }: HeartSceneProps) {
+export function HeartScene({
+  failRender = false,
+  manifest,
+  modelSrc,
+  tier,
+  reducedMotion,
+  onReady,
+}: HeartSceneProps) {
+  if (failRender) {
+    throw new Error('Forced renderer failure (QA hook)');
+  }
   return (
     <Canvas
       camera={{ fov: manifest.camera.fov ?? 42, position: manifest.camera.position }}
       dpr={[1, 2]}
-      onCreated={onReady}
       renderer={{ antialias: true, forceWebGL: tier === 'webgl' }}
     >
+      {/* Shared across WebGPU and WebGL: the GLB's authored PBR base colours need light. */}
+      <ambientLight intensity={0.75} />
+      <hemisphereLight args={[0xffffff, 0x1a2733, 0.65]} />
+      <directionalLight color={0xfff4e8} intensity={1.9} position={[3, 5, 5]} />
+      <directionalLight color={0xbcd8ff} intensity={0.65} position={[-4, 2, -3]} />
       <Suspense fallback={null}>
-        <SceneContents manifest={manifest} modelSrc={modelSrc} reducedMotion={reducedMotion} />
+        <SceneContents
+          manifest={manifest}
+          modelSrc={modelSrc}
+          onReady={onReady}
+          reducedMotion={reducedMotion}
+        />
       </Suspense>
     </Canvas>
   );

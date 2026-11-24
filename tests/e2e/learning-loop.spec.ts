@@ -102,6 +102,7 @@ test(
     await expect(page.getByRole('heading', { name: 'The Human Heart' })).toBeVisible();
     await expect(page.locator('.prose')).toBeVisible();
     await expect(page.locator('section[data-mastery]')).toBeVisible();
+    await expect(page.locator('.quiz-panel')).toHaveAttribute('data-quiz-hydrated', 'true');
 
     await page.getByTestId('quiz-generate').click();
     await expect(page.getByRole('radio')).toHaveCount(4);

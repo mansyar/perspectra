@@ -34,6 +34,7 @@ test('chip click sends the hotspot id in the request body', { tag: '@tutor' }, a
   await mockTutor(page, (body) => {
     sent = body;
   });
+  await expect(page.locator('.tutor')).toHaveAttribute('data-tutor-hydrated', 'true');
   await page.locator('[data-hotspot-chip="aorta"]').click();
   await expect.poll(() => sent).toContain('"activeHotspot":"aorta"');
   expect(JSON.parse(sent)).toMatchObject({ lessonId: 'heart', question: 'Explain Aorta.' });
@@ -43,6 +44,7 @@ test(
   'citation click scrolls prose and updates active hotspot',
   { tag: '@tutor' },
   async ({ page }) => {
+    await expect(page.locator('.tutor')).toHaveAttribute('data-tutor-hydrated', 'true');
     await page.locator('[data-hotspot-chip="aorta"]').click();
     const citation = page.locator('[data-citation="heart:aorta:overview"]').first();
     await expect(citation).toBeVisible();

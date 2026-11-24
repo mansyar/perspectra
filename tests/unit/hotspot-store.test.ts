@@ -1,5 +1,15 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { prefersReducedMotion, useHotspotStore } from '../../src/lib/hotspot-store';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  activeFocusLock,
+  focusHotspot,
+  prefersReducedMotion,
+  useHotspotStore,
+} from '../../src/lib/hotspot-store';
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe('hotspot store', () => {
   beforeEach(() => {
@@ -41,6 +51,40 @@ describe('hotspot store', () => {
   });
 
   it('reports no reduced-motion preference outside a browser', () => {
+    vi.stubGlobal('window', undefined);
     expect(prefersReducedMotion()).toBe(false);
+  });
+
+  it('reports reduced motion from matchMedia', () => {
+    vi.stubGlobal('window', { matchMedia: () => ({ matches: true }) });
+    expect(prefersReducedMotion()).toBe(true);
+  });
+});
+
+describe('focusHotspot', () => {
+  it('selects the hotspot and scrolls its prose smoothly', () => {
+    const scrollIntoView = vi.fn();
+    vi.stubGlobal('document', { querySelector: vi.fn(() => ({ scrollIntoView })) });
+    vi.stubGlobal('window', { matchMedia: () => ({ matches: false }) });
+    focusHotspot('aorta');
+    expect(useHotspotStore.getState().activeHotspot).toBe('aorta');
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+  });
+
+  it('uses instant scrolling when reduced motion is requested', () => {
+    const scrollIntoView = vi.fn();
+    vi.stubGlobal('document', { querySelector: vi.fn(() => ({ scrollIntoView })) });
+    vi.stubGlobal('window', { matchMedia: () => ({ matches: true }) });
+    focusHotspot('mitral_valve');
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'center' });
+  });
+
+  it('expires the focus lock and tolerates a missing DOM', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1000);
+    vi.stubGlobal('document', undefined);
+    focusHotspot('aortic_valve');
+    expect(activeFocusLock()?.id).toBe('aortic_valve');
+    vi.spyOn(Date, 'now').mockReturnValue(2201);
+    expect(activeFocusLock()).toBe(null);
   });
 });

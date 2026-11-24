@@ -8,10 +8,12 @@ import type { KvPort } from '../lib/kv';
 import type { LlmPort } from '../lib/llm';
 import type { ProgressRepository } from '../lib/progress-repository';
 import { DEFAULT_HOTSPOTS, HEART_LESSON_MDX } from '../lib/retrieval';
+import type { ChunkSource } from './tutor';
 
 export interface QuizDeps {
   db: ProgressRepository;
   auth: AuthPort;
+  getChunks?: ChunkSource;
   kv: KvPort;
   llm: LlmPort;
   secret: string;
@@ -34,27 +36,31 @@ const gradeSchema = z.object({
   questionId: z.string().min(1),
 });
 
-const generatedSchema = z.object({
-  answerIndex: z.number().int().min(0).max(3),
-  explanation: z.string().min(1),
-  hotspotId: z.string().refine((value) => isHotspot(value)),
-  id: z.string().min(1),
-  options: z.array(z.string().min(1)).length(4),
-  question: z.string().min(1),
-  remediationId: z.string().refine((value) => isHotspot(value)),
-});
+function generatedSchemaFor(hotspots: readonly string[]) {
+  const allowed = new Set(hotspots);
+  const known = (value: string): boolean => allowed.has(value);
+  return z.object({
+    answerIndex: z.number().int().min(0).max(3),
+    explanation: z.string().min(1),
+    hotspotId: z.string().refine(known),
+    id: z.string().min(1),
+    options: z.array(z.string().min(1)).length(4),
+    question: z.string().min(1),
+    remediationId: z.string().refine(known),
+  });
+}
 
-type GeneratedQuestion = z.infer<typeof generatedSchema>;
+type GeneratedQuestion = z.infer<ReturnType<typeof generatedSchemaFor>>;
 
 interface StoredQuestion {
   lessonId: string;
   question: GeneratedQuestion;
   signature: string;
-  userid: string;
+  userId: string;
 }
 
-function isHotspot(value: string): boolean {
-  return (DEFAULT_HOTSPOTS as readonly string[]).includes(value);
+function includesHotspot(hotspots: readonly string[], value: string): boolean {
+  return hotspots.includes(value);
 }
 
 function hotspotSection(mdx: string, hotspotId: string): string {
@@ -65,18 +71,50 @@ function hotspotSection(mdx: string, hotspotId: string): string {
   return pattern.exec(mdx)?.[0] ?? '';
 }
 
+/**
+ * Source prose and the hotspot vocabulary come from the same injectable chunk
+ * source. Direct/dev callers without a source fall back to the heart mirror.
+ */
+async function lessonContext(
+  deps: QuizDeps,
+  body: z.infer<typeof generateSchema>,
+): Promise<{ hotspots: readonly string[]; source: string }> {
+  if (!deps.getChunks) {
+    return {
+      hotspots: DEFAULT_HOTSPOTS,
+      source: body.hotspotId ? hotspotSection(HEART_LESSON_MDX, body.hotspotId) : HEART_LESSON_MDX,
+    };
+  }
+  const all = await deps.getChunks(body.lessonId, []);
+  const chunks = body.hotspotId ? all.filter((chunk) => chunk.hotspotId === body.hotspotId) : all;
+  return {
+    hotspots: [...new Set(all.map((chunk) => chunk.hotspotId))],
+    source: chunks
+      .map((chunk) => {
+        return `<div data-hotspot="${chunk.hotspotId}"><p data-layer="${chunk.layer}">${chunk.text}</p></div>`;
+      })
+      .join('\n'),
+  };
+}
+
 /** The entire generation contract is in the prompt; the reply must be bare JSON. */
-export function buildQuizPrompt(lessonId: string, hotspotId?: string): string {
-  const target = hotspotId && isHotspot(hotspotId) ? hotspotId : undefined;
-  const source = target ? hotspotSection(HEART_LESSON_MDX, target) : HEART_LESSON_MDX;
+export function buildQuizPrompt(
+  lessonId: string,
+  hotspotId?: string,
+  sourceProse?: string,
+  hotspots: readonly string[] = DEFAULT_HOTSPOTS,
+): string {
+  const target = hotspotId && includesHotspot(hotspots, hotspotId) ? hotspotId : undefined;
+  const source =
+    sourceProse ?? (target ? hotspotSection(HEART_LESSON_MDX, target) : HEART_LESSON_MDX);
   return [
-    'You write one multiple-choice check for understanding for anatomy learners.',
+    'You write one multiple-choice check for understanding.',
     `Lesson: ${lessonId}`,
-    `Target hotspot: ${target ?? 'any landmark in this lesson'}`,
-    'Use only the source prose below. Do not invent clinical claims.',
+    `Target hotspot: ${target ?? 'any hotspot in this lesson'}`,
+    'Use only the source prose below. Do not invent facts beyond it.',
     'Return JSON only, with exactly these keys:',
     '{ id, hotspotId, question, options: string[4], answerIndex: 0|1|2|3, explanation, remediationId }',
-    `hotspotId and remediationId must be one of: ${DEFAULT_HOTSPOTS.join(', ')}`,
+    `hotspotId and remediationId must be one of: ${hotspots.join(', ')}`,
     'The explanation is shown only after the learner answers.',
     '',
     'SOURCE PROSE:',
@@ -84,7 +122,7 @@ export function buildQuizPrompt(lessonId: string, hotspotId?: string): string {
   ].join('\n');
 }
 
-function parseGeneration(raw: string): GeneratedQuestion | null {
+function parseGeneration(raw: string, hotspots: readonly string[]): GeneratedQuestion | null {
   const bare = raw
     .replace(/^\s*```(?:json)?\s*/i, '')
     .replace(/\s*```\s*$/, '')
@@ -95,7 +133,7 @@ function parseGeneration(raw: string): GeneratedQuestion | null {
   } catch {
     return null;
   }
-  const result = generatedSchema.safeParse(parsed);
+  const result = generatedSchemaFor(hotspots).safeParse(parsed);
   return result.success ? result.data : null;
 }
 
@@ -122,15 +160,27 @@ export function quizRoutes(deps: QuizDeps | QuizDepsResolver): Hono<{ Bindings: 
       return c.json({ error: 'unauthorized' }, 401);
     }
     const parsed = generateSchema.safeParse(await c.req.json());
-    if (!parsed.success || (parsed.data.hotspotId && !isHotspot(parsed.data.hotspotId))) {
+    if (!parsed.success) {
       return c.json({ error: 'invalid_request' }, 400);
     }
     const body = parsed.data;
 
+    let context: Awaited<ReturnType<typeof lessonContext>> | null = null;
+    try {
+      context = await lessonContext(resolved, body);
+    } catch {
+      context = null;
+    }
+    if (!context || (body.hotspotId && !includesHotspot(context.hotspots, body.hotspotId))) {
+      return c.json({ error: 'invalid_request' }, 400);
+    }
+
     let generated: GeneratedQuestion | null = null;
     try {
-      const raw = await resolved.llm.complete(buildQuizPrompt(body.lessonId, body.hotspotId));
-      generated = parseGeneration(raw);
+      const raw = await resolved.llm.complete(
+        buildQuizPrompt(body.lessonId, body.hotspotId, context.source, context.hotspots),
+      );
+      generated = parseGeneration(raw, context.hotspots);
     } catch {
       generated = null;
     }
@@ -151,7 +201,7 @@ export function quizRoutes(deps: QuizDeps | QuizDepsResolver): Hono<{ Bindings: 
         resolved.secret,
         `${identity.userId}:${generated.id}:${generated.answerIndex}`,
       ),
-      userid: identity.userId,
+      userId: identity.userId,
     };
     await resolved.kv.put(`quiz:${identity.userId}:${generated.id}`, JSON.stringify(record), 3600);
 
@@ -198,7 +248,7 @@ export function quizRoutes(deps: QuizDeps | QuizDepsResolver): Hono<{ Bindings: 
       resolved.secret,
       `${identity.userId}:${record.question?.id}:${record.question?.answerIndex}`,
     );
-    if (record.userid !== identity.userId || record.signature !== expected) {
+    if (record.userId !== identity.userId || record.signature !== expected) {
       return c.json({ error: 'question_expired' }, 404);
     }
 

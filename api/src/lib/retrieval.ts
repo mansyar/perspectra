@@ -153,9 +153,10 @@ function textContent(html: string): string {
 export function buildChunks(
   mdx: string,
   lessonId: string,
-  hotspots: readonly string[],
+  hotspots?: readonly string[],
 ): LessonChunk[] {
-  const allowed = new Set(hotspots);
+  const derived = [...mdx.matchAll(SECTION_PATTERN)].map((section) => section[1]);
+  const allowed = new Set(hotspots ?? derived);
   const chunks: LessonChunk[] = [];
   for (const section of mdx.matchAll(SECTION_PATTERN)) {
     const hotspotId = section[1];

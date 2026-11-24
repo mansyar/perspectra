@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../api/src';
 import type { AuthPort } from '../../api/src/lib/auth';
 import { InMemoryKv } from '../../api/src/lib/kv';
+import type { LessonChunkRepository } from '../../api/src/lib/lesson-chunk-repository';
 import type { LlmPort } from '../../api/src/lib/llm';
 import { InMemoryProgressRepository } from '../../api/src/lib/progress-repository';
 import type { LessonChunk } from '../../api/src/lib/retrieval';
@@ -16,6 +17,17 @@ const chunks: LessonChunk[] = [
     text: 'The aorta carries oxygenated blood from the left ventricle.',
   },
 ];
+
+function chunk(overrides: Partial<LessonChunk> = {}): LessonChunk {
+  return {
+    hotspotId: 'aorta',
+    id: 'heart:aorta:overview',
+    layer: 'overview',
+    lessonId: 'heart',
+    text: 'The aorta carries oxygenated blood from the left ventricle.',
+    ...overrides,
+  };
+}
 
 function parseSse(text: string): TutorEvent[] {
   return text
@@ -121,6 +133,68 @@ describe('tutor route', () => {
     const response = await post(app, { history });
     const events = parseSse(await response.text());
     expect(events[0]).toMatchObject({ code: 'turn_limit', type: 'error' });
+  });
+
+  it('ranks embedded chunks by cosine and rejects low similarity before generation', async () => {
+    const embedded: LessonChunk[] = [chunk({ embedding: [1, 0] })];
+    const llm = llmFor('Blood flows [[heart:aorta:overview]].');
+    const app = createApp({
+      auth: authFor(null),
+      db: new InMemoryProgressRepository(),
+      getChunks: () => embedded,
+      kv: new InMemoryKv(),
+      llm,
+    });
+    const accepted = parseSse(await (await post(app, { sessionId: 'cosine-ok' })).text());
+    expect(accepted.at(-1)).toEqual({ citations: ['heart:aorta:overview'], type: 'done' });
+
+    const rejectedComplete = vi.fn(async (_prompt: string) => 'unexpected answer');
+    const orthogonal: LlmPort = {
+      complete: rejectedComplete,
+      async embed() {
+        return [[0, 1]];
+      },
+    };
+    const rejectedApp = createApp({
+      auth: authFor(null),
+      db: new InMemoryProgressRepository(),
+      getChunks: () => embedded,
+      kv: new InMemoryKv(),
+      llm: orthogonal,
+    });
+    const rejected = parseSse(await (await post(rejectedApp, { sessionId: 'cosine-low' })).text());
+    expect(rejected[0]).toMatchObject({ code: 'no_context', type: 'error' });
+    expect(rejectedComplete).not.toHaveBeenCalled();
+  });
+
+  it('serves a second lesson through the injectable chunk repository', async () => {
+    const brainChunk = chunk({
+      hotspotId: 'cortex',
+      id: 'brain:cortex:overview',
+      lessonId: 'brain',
+      text: 'The cortex processes sensory signals.',
+      embedding: [1, 0],
+    });
+    const repository: LessonChunkRepository = {
+      async getChunks(lessonId: string) {
+        return lessonId === 'brain' ? [brainChunk] : chunks;
+      },
+    };
+    const llm = llmFor('Signals are processed [[brain:cortex:overview]].');
+    const app = createApp({
+      auth: authFor(null),
+      db: new InMemoryProgressRepository(),
+      getChunks: (lessonId) => repository.getChunks(lessonId),
+      kv: new InMemoryKv(),
+      llm,
+    });
+    const response = await post(app, {
+      lessonId: 'brain',
+      question: 'What does the cortex do?',
+      sessionId: 'brain-1',
+    });
+    const events = parseSse(await response.text());
+    expect(events.at(-1)).toEqual({ citations: ['brain:cortex:overview'], type: 'done' });
   });
 
   it('returns an SSE error rather than throwing when the adapter fails', async () => {

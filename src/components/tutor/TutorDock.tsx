@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
 import { streamTutor, type TutorEvent } from '../../lib/tutor-client';
 import './tutor.css';
@@ -33,12 +33,15 @@ function hotspotFromCitation(citation: string, hotspots: readonly string[]): str
 export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
   const sessionId = useRef(crypto.randomUUID());
+  const [hydrated, setHydrated] = useState(false);
   const [answer, setAnswer] = useState('');
   const [citations, setCitations] = useState<string[]>([]);
   const [error, setError] = useState<TutorError | null>(null);
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [question, setQuestion] = useState('');
   const [streaming, setStreaming] = useState(false);
+
+  useEffect(() => setHydrated(true), []);
 
   async function ask(text: string, hotspot: string | null = activeHotspot): Promise<void> {
     const trimmed = text.trim();
@@ -99,7 +102,11 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
   }
 
   return (
-    <aside className="tutor" aria-label="Course tutor">
+    <aside
+      className="tutor"
+      aria-label="Course tutor"
+      data-tutor-hydrated={hydrated ? 'true' : 'false'}
+    >
       <div className="tutor__head">
         <h2>Ask the tutor</h2>
         <p className="tutor__disclosure" data-testid="tutor-disclosure">
@@ -116,7 +123,7 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
           <button
             className="tutor__chip"
             data-hotspot-chip={id}
-            disabled={streaming}
+            disabled={streaming || !hydrated}
             key={id}
             onClick={() => void ask(`Explain ${label(id)}.`, id)}
             type="button"
@@ -151,7 +158,11 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
           rows={3}
           value={question}
         />
-        <button className="tutor__send" disabled={streaming || !question.trim()} type="submit">
+        <button
+          className="tutor__send"
+          disabled={streaming || !hydrated || !question.trim()}
+          type="submit"
+        >
           {streaming ? 'Answering…' : 'Ask'}
         </button>
       </form>

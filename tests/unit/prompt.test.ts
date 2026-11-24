@@ -47,6 +47,28 @@ describe('assemblePrompt', () => {
   it('never embeds key names', () => {
     expect(prompt).not.toMatch(/API_KEY|SECRET|TOKEN/i);
   });
+
+  it('handles tutor turns, no hotspot and empty sources/history', () => {
+    const empty = assemblePrompt({
+      activeHotspot: null,
+      chunks: [],
+      history: [{ content: 'Earlier answer', role: 'assistant' }],
+      lessonTitle: 'The Human Heart',
+      question: 'Anything else?',
+    });
+    expect(empty).toContain('Tutor: Earlier answer');
+    expect(empty).toContain('Active hotspot: none selected');
+    expect(empty).toContain('Allowed chunk IDs: ');
+    expect(empty).toContain('(no chunks supplied)');
+    const noHistory = assemblePrompt({
+      activeHotspot: 'aorta',
+      chunks: [result],
+      history: [],
+      lessonTitle: 'The Human Heart',
+      question: 'What next?',
+    });
+    expect(noHistory).toContain('CONVERSATION SO FAR\n(none)');
+  });
 });
 
 describe('validateCitations', () => {

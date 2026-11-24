@@ -62,6 +62,43 @@
   outline-offset: 2px;
 }
 
+.scene-island__recovery {
+  align-items: center;
+  bottom: var(--space-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  left: var(--space-md);
+  position: absolute;
+  right: var(--space-md);
+  z-index: 3;
+}
+
+.scene-island__recovery p {
+  background: var(--bg-shell);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg-shell);
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0.375rem 0.625rem;
+}
+
+.scene-island__retry {
+  background: var(--bg-surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--fg-shell);
+  cursor: pointer;
+  font: inherit;
+  padding: 0.375rem 0.625rem;
+}
+
+.scene-island__retry:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .scene-island__hotspots {
   display: flex;
   flex-wrap: wrap;

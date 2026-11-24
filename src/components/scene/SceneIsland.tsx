@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
 import type { SceneManifest } from '../../lib/scene-manifest';
 import { RendererErrorBoundary } from './RendererErrorBoundary';
@@ -16,13 +16,30 @@ interface SceneIslandProps {
   modelSrc: string;
 }
 
-/** Mounts the 3D island and keeps the poster usable at every fallback tier. */
+/**
+ * Mounts the 3D island and keeps the poster usable at every fallback tier.
+ * `?rendererErrors=N` is a QA hook that makes the first N mount attempts throw,
+ * so the WebGPU→WebGL→poster ladder can be exercised deterministically in E2E.
+ */
 export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
   const [tier, setTier] = useState<RendererTier | 'detecting'>('detecting');
   const [ready, setReady] = useState(false);
   const [interactive, setInteractive] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const forcedFailures = (() => {
+    if (typeof window === 'undefined') {
+      return 0;
+    }
+    const raw = new URLSearchParams(window.location.search).get('rendererErrors');
+    const parsed = Number.parseInt(raw ?? '0', 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  })();
+
+  const handleReady = useCallback(() => setReady(true), []);
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -64,8 +81,22 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
   }, [modelSrc]);
 
   function stepDown(): void {
+    const next = tier === 'detecting' ? 'poster' : (nextTier(tier) ?? 'poster');
     setReady(false);
-    setTier((current) => (current === 'detecting' ? 'poster' : (nextTier(current) ?? 'poster')));
+    setAttempt((current) => current + 1);
+    setNotice(
+      next === 'poster'
+        ? 'Interactive 3D is unavailable. The complete lesson text remains below.'
+        : `${tier} rendering failed. Retrying with ${next}.`,
+    );
+    setTier(next);
+  }
+
+  function usePoster(): void {
+    setInteractive(false);
+    setReady(false);
+    setTier('poster');
+    setNotice('Interactive 3D is unavailable. The complete lesson text remains below.');
   }
 
   const showPoster = tier === 'poster' || !ready;
@@ -96,11 +127,12 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
         )}
         {interactive && (tier === 'webgpu' || tier === 'webgl') && (
           <Suspense fallback={null}>
-            <RendererErrorBoundary onError={stepDown}>
+            <RendererErrorBoundary key={`${tier}:${attempt}`} onError={stepDown}>
               <HeartScene
+                failRender={attempt < forcedFailures}
                 manifest={manifest}
                 modelSrc={modelSrc}
-                onReady={() => setReady(true)}
+                onReady={handleReady}
                 reducedMotion={reducedMotion}
                 tier={tier}
               />
@@ -110,7 +142,17 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
         {tier === 'detecting' && (
           <p className="scene-island__status">Preparing interactive scene…</p>
         )}
-        {tier === 'poster' && (
+        {notice !== null && (
+          <div className="scene-island__recovery" data-testid="renderer-status" role="status">
+            <p>{notice}</p>
+            {tier !== 'poster' && (
+              <button className="scene-island__retry" onClick={usePoster} type="button">
+                Use the illustrated poster
+              </button>
+            )}
+          </div>
+        )}
+        {tier === 'poster' && notice === null && (
           <p className="scene-island__status">
             Interactive preview unavailable; the lesson text is complete below.
           </p>
