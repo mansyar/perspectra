@@ -31,7 +31,7 @@
   verifier and catalog present truthful, polished copy.
 - **Depends on:** Phase 1
 - **Covers:** FR-4, FR-5, FR-6, AC-4, AC-5, AC-6, NFR-2, NFR-5
-- **Touches:** `src/components/mastery/**`, `src/components/quiz/**`, `src/pages/verify.astro`, `src/pages/index.astro`, `src/styles/**`, `tests/unit/**`, `tests/e2e/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
+- **Touches:** `src/components/mastery/**`, `src/components/quiz/**`, `src/lib/auth-navigation.ts`, `src/pages/verify.astro`, `src/pages/index.astro`, `src/styles/**`, `tests/unit/**`, `tests/e2e/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify`
 - **Status:** in_progress
 
