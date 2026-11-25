@@ -31,13 +31,16 @@
 - **Covers:** FR-2, FR-3, AC-1, AC-2, NFR-3, NFR-4
 - **Touches:** `assets/earth-interior/**`, `public/assets/earth-interior/**`, `src/content/lessons/earth-interior.mdx`, `src/components/scene/**`, `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts`, `tests/e2e/earth-scene.spec.ts`, `tests/e2e/performance.spec.ts`, `playwright.config.ts`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified — detailed Earth cutaway, generic scene integration, desktop/mobile browser pass, and per-lesson Lighthouse budgets.
+- **Checkpoint:** `77ad9a4`
+- **Evidence:** `conductor/tracks/20261125-earth-interior-proof/verification/phase-2.md`
 
-- [ ] **P2.T1: Author the deterministic detailed Blender recipe** — covers: FR-2, NFR-4
-- [ ] **P2.T2: Export and validate the GLB, WebP poster, and asset contract** — covers: FR-2, AC-2
-- [ ] **P2.T3: Connect the Earth manifest through generic scene code** — covers: FR-3, FR-7, AC-1
-- [ ] **P2.T4: Add hotspot, keyboard, reduced-motion, fallback, and per-lesson performance regression tests** — covers: FR-3, AC-1, AC-2, NFR-3
-- [ ] **P2.T5: Record visual-quality and phase evidence** — covers: FR-8, NFR-4
+- [x] **P2.T1: Author the deterministic detailed Blender recipe** — covers: FR-2, NFR-4
+- [x] **P2.T2: Export and validate the GLB, WebP poster, and asset contract** — covers: FR-2, AC-2
+- [x] **P2.T3: Connect the Earth manifest through generic scene code** — covers: FR-3, FR-7, AC-1
+- [x] **P2.T4: Add hotspot, keyboard, reduced-motion, fallback, and per-lesson performance regression tests** — covers: FR-3, AC-1, AC-2, NFR-3
+- [x] **P2.T5: Record visual-quality and phase evidence** — covers: FR-8, NFR-4
 
 ## Phase 3: Generic Learning Loop & Additive Ingestion
 
