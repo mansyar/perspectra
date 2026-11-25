@@ -33,20 +33,16 @@
 - **Covers:** FR-4, FR-5, FR-6, AC-4, AC-5, AC-6, NFR-2, NFR-5
 - **Touches:** `src/components/mastery/**`, `src/components/quiz/**`, `src/lib/auth-navigation.ts`, `src/pages/verify.astro`, `src/pages/index.astro`, `src/styles/**`, `tests/unit/**`, `tests/e2e/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified — `pnpm verify` exited 0; inline sign-in CTAs, truthful verifier copy, and coming-soon spacing are covered by unit and E2E specs.
+- **Checkpoint:** `1a2cea9c30493ea42a4302f6f5f27658b638754c`
+- **Evidence:** `conductor/tracks/20261126-reviewer-onboarding/verification/phase-2.md`
 
-- [ ] **P2.T1: Add mastery auth CTA with lesson return URL** — covers: FR-4, AC-4
-- [ ] **P2.T2: Add quiz auth CTA with lesson return URL** — covers: FR-4, AC-4
-- [ ] **P2.T3: Correct verifier copy and sample-button styling** — covers: FR-5, AC-5, NFR-2
-- [ ] **P2.T4: Fix catalog coming-soon label spacing** — covers: FR-6, AC-6, NFR-5
-- [ ] **P2.T5: Add CTA, verifier, and catalog regression tests** — covers: FR-4, FR-5, FR-6, AC-4, AC-5, AC-6
-
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/20261126-reviewer-onboarding/verification/phase-2.md
--->
+- [x] **P2.T1: Add mastery auth CTA with lesson return URL** — covers: FR-4, AC-4
+- [x] **P2.T2: Add quiz auth CTA with lesson return URL** — covers: FR-4, AC-4
+- [x] **P2.T3: Correct verifier copy and sample-button styling** — covers: FR-5, AC-5, NFR-2
+- [x] **P2.T4: Fix catalog coming-soon label spacing** — covers: FR-6, AC-6, NFR-5
+- [x] **P2.T5: Add CTA, verifier, and catalog regression tests** — covers: FR-4, FR-5, FR-6, AC-4, AC-5, AC-6
 
 ## Phase 3: Browser Proof & Final Gates
 
