@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": ["20261124-public-deployment"],
   "created_at": "2026-11-25T13:07:50+11:00",
-  "updated_at": "2026-11-25T15:12:45+11:00",
+  "updated_at": "2026-11-25T16:18:39+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261125-earth-interior-proof",
@@ -14,11 +14,11 @@
   "base_sha": "4b2067b0a4ae657e6339296cbbcaca6bbfb6d322",
   "progress": {
     "phases_total": 5,
-    "phases_verified": 2,
+    "phases_verified": 3,
     "tasks_total": 21,
-    "tasks_done": 9
+    "tasks_done": 14
   },
-  "last_checkpoint": "77ad9a46fc9be067376650702cf5b7665aeed6c8",
+  "last_checkpoint": "634648ee39181a7060bdb3bd0446d7140516a2f2",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",

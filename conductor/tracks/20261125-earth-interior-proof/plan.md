@@ -49,13 +49,16 @@
 - **Covers:** FR-5, FR-6, FR-7, AC-5, AC-6, AC-7, NFR-1, NFR-5
 - **Touches:** `api/src/db/seed.ts`, `scripts/embed-lessons.ts`, `api/src/lib/**`, `api/src/routes/**`, `src/components/tutor/**`, `src/components/quiz/**`, `src/components/mastery/**`, `tests/**`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** `634648e`
+- **Evidence:** `conductor/tracks/20261125-earth-interior-proof/verification/phase-3.md`
 
-- [ ] **P3.T1: Add idempotent Earth lesson and hotspot seeding** — covers: FR-5, NFR-5
-- [ ] **P3.T2: Ingest Earth chunks with Gemini and prove repeatability** — covers: FR-5, NFR-5
-- [ ] **P3.T3: Cover the second-topic tutor, quiz, mastery, FSRS, and badge loop** — covers: FR-6, AC-5, AC-6
-- [ ] **P3.T4: Audit and fix residual topic-specific application logic** — covers: FR-7, AC-7, NFR-1
-- [ ] **P3.T5: Record phase evidence** — covers: FR-8
+- [x] **P3.T1: Add idempotent Earth lesson and hotspot seeding** — covers: FR-5, NFR-5
+- [x] **P3.T2: Ingest Earth chunks with Gemini and prove repeatability** — covers: FR-5, NFR-5
+- [x] **P3.T3: Cover the second-topic tutor, quiz, mastery, FSRS, and badge loop** — covers: FR-6, AC-5, AC-6
+- [x] **P3.T4: Audit and fix residual topic-specific application logic** — covers: FR-7, AC-7, NFR-1
+- [x] **P3.T5: Record phase evidence** — covers: FR-8
 
 ## Phase 4: Production Rollout & Real-Service Proof
 
