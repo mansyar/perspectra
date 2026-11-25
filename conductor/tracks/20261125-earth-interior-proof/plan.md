@@ -85,9 +85,12 @@
 - **Covers:** FR-8, AC-8, AC-9, AC-10, NFR-2, NFR-6, NFR-7
 - **Touches:** `README.md`, `docs/**`, `assets/earth-interior/ASSET_CONTRACT.md`, `package.json`, `.github/workflows/ci.yml`, `tests/unit/ci-contract.test.ts`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full && pnpm test:production`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** `verified` — local and production gates pass, including serial Lighthouse; audits found no secrets or Earth-specific runtime logic; Lighthouse isolation added without changing thresholds.
+- **Checkpoint:** `74afc950e83da5fa9b976bb9d20ff62d53b13722`
+- **Evidence:** `conductor/tracks/20261125-earth-interior-proof/verification/integrated.md`, `conductor/tracks/20261125-earth-interior-proof/verification/phase-5.md`
 
-- [ ] **P5.T1: Run final local and production regression checks** — covers: AC-8, AC-10, NFR-2, NFR-7
-- [ ] **P5.T2: Audit secrets, asset provenance, and topic independence** — covers: AC-7, AC-9, NFR-1, NFR-4, NFR-6
-- [ ] **P5.T3: Consolidate integrated evidence, docs, and demo proof** — covers: FR-8, AC-10
-- [ ] **P5.T4: Isolate Lighthouse budgets from parallel E2E workers without changing thresholds** — covers: AC-8, NFR-2, NFR-7
+- [x] **P5.T1: Run final local and production regression checks** — covers: AC-8, AC-10, NFR-2, NFR-7
+- [x] **P5.T2: Audit secrets, asset provenance, and topic independence** — covers: AC-7, AC-9, NFR-1, NFR-4, NFR-6
+- [x] **P5.T3: Consolidate integrated evidence, docs, and demo proof** — covers: FR-8, AC-10
+- [x] **P5.T4: Isolate Lighthouse budgets from parallel E2E workers without changing thresholds** — covers: AC-8, NFR-2, NFR-7
