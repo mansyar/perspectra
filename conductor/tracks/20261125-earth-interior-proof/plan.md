@@ -49,7 +49,7 @@
 - **Covers:** FR-5, FR-6, FR-7, AC-5, AC-6, AC-7, NFR-1, NFR-5
 - **Touches:** `api/src/db/seed.ts`, `scripts/embed-lessons.ts`, `api/src/lib/**`, `api/src/routes/**`, `src/components/tutor/**`, `src/components/quiz/**`, `src/components/mastery/**`, `tests/**`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Add idempotent Earth lesson and hotspot seeding** — covers: FR-5, NFR-5
 - [ ] **P3.T2: Ingest Earth chunks with Gemini and prove repeatability** — covers: FR-5, NFR-5
