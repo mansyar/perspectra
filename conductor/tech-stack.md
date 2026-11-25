@@ -36,7 +36,7 @@
 - Coverage gate applies to new/changed code.
 
 ## Local Development
-- `pnpm install`, `pnpm dev` (Astro + `wrangler dev`), `.env.example` with all provider keys, Neon free branch, seed script for the heart lesson.
+- `pnpm install`, `pnpm dev` (Astro + `wrangler dev`), `.env.example` with all provider keys, Neon free branch, content-driven seed script for all MDX lessons.
 - No containers required.
 
 ## Constraints
@@ -60,6 +60,7 @@
 - **2026-11-24 (Release readiness):** recorded the two-job PR-only GitHub Actions workflow, real `db:push`/`db:seed` scripts via drizzle-kit and `tsx 4.23.15`, the documented `RATE_LIMIT_KV` placeholder with `RATE_LIMIT_KV_ID` validation, `docs/DEPLOYMENT.md`, the primary-run browser verification gate, and lesson-correct badge narratives for any topic. Product definition and product guidelines required no change.
 - **2026-11-25 (Public deployment):** recorded the live single-origin Workers Static Assets deployment, Gemini-only chat/embeddings (`gemini-3.5-flash-lite`, `gemini-embedding-2` at 1536 dimensions), request-scoped Neon pools, Better Auth session fields, Google/email auth with GitHub deferred, external `E2E_BASE_URL` production tests, and the optimized WebP poster. Product definition and product guidelines required no change.
 - **2026-11-25 (Earth interior proof):** two lessons (heart and Earth interior) now share one generic renderer, content-driven seed/embedding pipeline, topic-agnostic tutor/quiz/mastery/badge logic, and additive production ingestion. Lighthouse verification is split into serial `@perf` runs to avoid CPU contention with parallel E2E workers without changing budgets or retries. Product definition and product guidelines required no change.
+- **2026-11-26 (Reviewer onboarding & trust):** global header and dedicated `/sign-in` page reuse existing Better Auth email/password and Google endpoints with a validated same-origin `next`; anonymous mastery/quiz CTAs, truthful verifier copy, and separated coming-soon labels are covered by unit/E2E and a primary browser pass. Auth state uses cookie-backed `fetch('/api/auth/...', { credentials: 'include' })` in client islands; the catalog stays zero-JS. No new dependency, secret, deployment, or topic-specific logic. Product definition and product guidelines required no change.
 
 ## Open Questions & Assumptions
 - Custom domain and automatic deployment remain deferred; production currently uses workers.dev with manual deploy.
