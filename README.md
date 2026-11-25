@@ -32,7 +32,7 @@ If WebGPU/WebGL is unavailable or the LLM is down, skip steps 3–5 and read the
 ```
 Browser
 ├── /                         Astro static HTML, zero JS
-├── /lessons/heart/           Astro prose + React islands
+├── /lessons/[slug]/          Astro prose + React islands (heart, earth-interior)
 │   ├── SceneIsland           R3F: WebGPU → WebGL → poster
 │   ├── ProseHotspotBinder    two-way hotspot ↔ prose binding
 │   ├── TutorDock             cited SSE answers, chips, disclosure
@@ -108,7 +108,7 @@ The browser uses same-origin relative API URLs. `pnpm deploy:prepare` requires `
 
 1. Write or update `src/content/lessons/<topic>.mdx`. Frontmatter carries the generic scene manifest (model, camera, hotspots). Each hotspot must have a `<div id="..." data-hotspot="...">` section with overview and detail paragraphs plus a topic-appropriate third layer, such as `clinical` for a health lesson or `context` for Earth Science.
 2. Keep every `data-hotspot` ID in sync with the manifest's `hotspots[].id`. `pnpm build` fails on a mismatch (`AC-2`).
-3. Export a GLB whose **named meshes match the hotspot IDs exactly**, plus a manifest-referenced WebP poster under 120 KB. The heart recipe deterministically retains the PNG as its WebP source; its contract is `assets/heart/ASSET_CONTRACT.md`.
+3. Export a deterministic GLB whose **named meshes match the hotspot IDs exactly**, keeping it under 1 MB, plus a manifest-referenced WebP poster under 120 KB. The heart and Earth recipes retain their PNG sources; their contracts are `assets/heart/ASSET_CONTRACT.md` and `assets/earth-interior/ASSET_CONTRACT.md`.
 4. Generate pgvector rows for retrieval with:
 
    ```bash
@@ -125,12 +125,12 @@ Adding a topic requires content, assets, and embedding ingest: add MDX frontmatt
 
 - Logic-bearing modules keep 80% line/branch coverage: `src/lib/scene-manifest.ts` in the unit config, plus mastery/retrieval/prompt/quota/badge paths in their suites.
 - `pnpm verify:full` runs the complete chain: lint → format → typecheck → unit → coverage → integration → build → smoke → Playwright (scene, tutor, learning-loop, a11y, perf).
-- Phase evidence lives under `conductor/archive/20261124-showcase-mvp/verification/`.
+- Track phase evidence lives under `conductor/tracks/<track-id>/verification/`.
 
 ## Accessibility, privacy, and trust
 
 - Target: **WCAG 2.2 AA** with keyboard-reachable hotspots, visible focus indicators, reduced-motion behavior, and a light reading surface on a dark shell.
-- Reduced motion disables camera tweens, heartbeat/flow particles, and non-essential transitions. Prose, quiz, mastery, tutor, and verifier stay fully usable at 360px and above.
+- Reduced motion disables camera tweens, subtle model pulses/particles, and non-essential transitions. Prose, quiz, mastery, tutor, and verifier stay fully usable at 360px and above.
 - **AI disclosure:** the tutor panel states that answers are AI-generated and grounded in the lesson text. **Privacy note:** no keys are shipped to the browser; questions are counted by session and stored server-side only when you are signed in (see the in-product notes for current behavior).
 - Known limits: the 3D canvas is desktop-first; keyboard users get an equivalent set of hotspot buttons. A screen-reader-optimized description of the 3D geometry is future work.
 
@@ -141,6 +141,6 @@ At portfolio scale (a handful of reviewers): Neon free branch, Workers/KV free a
 ## Licensing
 
 - Code: **MIT** (`LICENSE`).
-- Shipped generated assets (heart GLB, poster): **CC0** or **OFL**.
+- Shipped generated assets (heart and Earth GLBs/posters): **CC0** or **OFL**.
 - Z-Anatomy and BodyParts3D are **reference-only** and are **not shipped**; their share-alike terms therefore do not apply to this repository.
 - Third-party runtime dependencies keep their own licenses (Notices are summarized in `docs/ARCHITECTURE.md`); no API keys or credential-shaped literals appear in source or built output.
