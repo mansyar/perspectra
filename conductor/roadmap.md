@@ -1,6 +1,6 @@
 # Conductor Roadmap
 
-<!-- next-rm-id: 12 -->
+<!-- next-rm-id: 13 -->
 
 > Planned and future work. The roadmap stores **intent** — ordering, priority,
 > and dependencies — not live state. `conductor-status` joins every entry whose
@@ -31,6 +31,7 @@
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
 | RM-4 | Open the platform with LTI 1.3 / xAPI / cmi5, external authors and post-OB3 credentials | feature | low | RM-2, RM-3 | — | user |
+| RM-12 | Clarify anonymous mastery state and add persistent reading navigation | feature | low | RM-7 | — | user |
 
 ## Dropped
 
