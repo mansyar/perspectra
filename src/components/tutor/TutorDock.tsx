@@ -15,9 +15,9 @@ interface TutorError {
 }
 
 const PROMPTS = [
-  'What does this structure do?',
-  'How does blood flow here?',
-  'Why is this clinically important?',
+  'What is the main idea here?',
+  'How does this fit into the lesson?',
+  'Why is this important?',
 ];
 
 function label(id: string): string {
@@ -114,11 +114,11 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
         </p>
         <p className="tutor__privacy" data-testid="tutor-privacy">
           Privacy: questions are sent to the tutor service and stored with your session. Do not
-          enter personal or medical information.
+          enter personal or sensitive information.
         </p>
       </div>
 
-      <div className="tutor__chips" aria-label="Suggested landmarks">
+      <div className="tutor__chips" aria-label="Suggested hotspots">
         {hotspots.map((id) => (
           <button
             className="tutor__chip"

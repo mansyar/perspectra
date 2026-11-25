@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
+import { eq } from 'drizzle-orm';
 import { createDatabase } from './db/client';
+import * as schema from './db/schema';
 import type { Env } from './env';
-import { badgeRoutes, type BadgeDeps } from './routes/badge';
+import { badgeRoutes, type BadgeDeps, type LessonTitleSource } from './routes/badge';
 import { masteryRoutes, quizRoutes, type QuizDeps } from './routes/quiz';
 import { createAuth, type AuthPort } from './lib/auth';
 import { learningEventSchema, syncBatchSchema, type LearningEvent } from './lib/events';
@@ -23,6 +25,7 @@ export interface AppDeps {
   chunkRepository?: LessonChunkRepository;
   llm?: LlmPort;
   getChunks?: ChunkSource;
+  getLessonTitle?: LessonTitleSource;
 }
 
 type AppEnv = { Bindings: Env };
@@ -67,10 +70,24 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
         : null);
     const productionChunks: ChunkSource = (lessonId, hotspots) =>
       chunkRepository ? chunkRepository.getChunks(lessonId) : loadLessonChunks(lessonId, hotspots);
-    const resolved = {
+    const getLessonTitle: LessonTitleSource =
+      dependencies?.getLessonTitle ??
+      (async (lessonId) => {
+        if (!bindings.DATABASE_URL) {
+          return null;
+        }
+        const [row] = await databaseFor(bindings, request)
+          .db.select({ title: schema.lesson.title })
+          .from(schema.lesson)
+          .where(eq(schema.lesson.id, lessonId))
+          .limit(1);
+        return row?.title ?? null;
+      });
+    const resolved: AppDeps = {
       auth,
       db,
       getChunks: dependencies?.getChunks ?? productionChunks,
+      getLessonTitle,
       kv,
       llm: dependencies?.llm ?? createLlmAdapter(bindings),
     };
@@ -96,6 +113,7 @@ export function createApp(dependencies?: Partial<AppDeps>): Hono<AppEnv> {
       auth: deps.auth,
       db: deps.db,
       getChunks: deps.getChunks,
+      getLessonTitle: deps.getLessonTitle,
       secret: env.BETTER_AUTH_SECRET ?? '',
     };
   }

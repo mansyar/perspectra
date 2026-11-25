@@ -1,10 +1,14 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Pool } from '@neondatabase/serverless';
 import { drizzle, type NeonDatabase } from 'drizzle-orm/neon-serverless';
+import { parseLessonContent, type LessonContent } from '../lib/lesson-content';
 import * as schema from './schema';
 
-/** Canonical hotspot IDs shared with the MDX manifest and GLB mesh names. */
+const LESSON_DIR = new URL('../../../src/content/lessons/', import.meta.url);
+
+/** Retained for consumers of the original heart-only seed API. */
 export const heartHotspotIds = [
   'left_ventricle',
   'right_ventricle',
@@ -14,19 +18,43 @@ export const heartHotspotIds = [
   'aortic_valve',
 ] as const;
 
-const heartValues = {
-  id: 'heart',
-  title: 'The Human Heart',
-  description: 'A guided tour of cardiac anatomy through six interactive landmarks.',
-  hotspots: [...heartHotspotIds],
-};
+/** Discovers database metadata from the same MDX collection used by the site. */
+export function discoverLessons(directory: URL = LESSON_DIR): LessonContent[] {
+  return readdirSync(directory)
+    .filter((file) => file.endsWith('.mdx'))
+    .toSorted()
+    .map((file) => {
+      const lessonId = file.replace(/\.mdx$/, '');
+      return parseLessonContent(readFileSync(new URL(file, directory), 'utf8'), lessonId);
+    });
+}
 
-/** Idempotent seed for the single lesson in the showcase MVP. */
+/** Additive, idempotent upsert for every discovered lesson. */
+export async function seedLessons(
+  db: NeonDatabase<typeof schema>,
+  lessons: readonly LessonContent[] = discoverLessons(),
+): Promise<void> {
+  for (const lesson of lessons) {
+    const values = {
+      description: lesson.description,
+      hotspots: lesson.hotspots,
+      id: lesson.id,
+      title: lesson.title,
+    };
+    await db
+      .insert(schema.lesson)
+      .values(values)
+      .onConflictDoUpdate({ target: schema.lesson.id, set: values });
+  }
+}
+
+/** Compatibility wrapper for callers that explicitly seed only the original lesson. */
 export async function seedHeart(db: NeonDatabase<typeof schema>): Promise<void> {
-  await db
-    .insert(schema.lesson)
-    .values(heartValues)
-    .onConflictDoUpdate({ target: schema.lesson.id, set: heartValues });
+  const heart = discoverLessons().find((lesson) => lesson.id === 'heart');
+  if (!heart) {
+    throw new Error('Heart lesson content was not found');
+  }
+  await seedLessons(db, [heart]);
 }
 
 /** CLI entry point: only here is DATABASE_URL read and a connection opened. */
@@ -36,8 +64,11 @@ async function main(): Promise<void> {
     throw new Error('DATABASE_URL is required for db:seed');
   }
   const db = drizzle(new Pool({ connectionString }), { schema });
-  await seedHeart(db);
-  process.stdout.write(`Seeded heart (${heartHotspotIds.length} hotspots)\n`);
+  const lessons = discoverLessons();
+  await seedLessons(db, lessons);
+  for (const lesson of lessons) {
+    process.stdout.write(`Seeded ${lesson.id} (${lesson.hotspots.length} hotspots)\n`);
+  }
 }
 
 /** Importing this module for tests must not connect or exit the process. */

@@ -53,10 +53,18 @@ export async function hmacSha256(secret: string, data: string): Promise<string> 
 
 export interface BadgeIssueInput {
   lessonId: string;
+  lessonTitle?: string;
   mastery: number;
   userId: string;
   now?: Date;
   hotspots?: readonly string[];
+}
+
+function achievementName(lessonId: string, lessonTitle?: string): string {
+  const title =
+    lessonTitle?.trim() ||
+    lessonId.replace(/[-_]+/g, ' ').replace(/\b[a-z]/g, (character) => character.toUpperCase());
+  return `${title.replace(/^The\s+/i, '')} Mastery`;
 }
 
 export interface CredentialEnvelope {
@@ -99,7 +107,7 @@ export function createBadgeService(secret: string): BadgeService {
             criteria: { narrative },
             description: `Demonstrated mastery of the ${input.lessonId} lesson concepts in Perspectra.`,
             id: `https://perspectra.example/lessons/${input.lessonId}`,
-            name: input.lessonId === 'heart' ? 'Human Heart Mastery' : `${input.lessonId} mastery`,
+            name: achievementName(input.lessonId, input.lessonTitle),
           },
           id: `urn:uuid:${input.userId}`,
         },

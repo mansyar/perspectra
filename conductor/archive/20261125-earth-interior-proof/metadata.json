@@ -1,0 +1,31 @@
+{
+  "id": "20261125-earth-interior-proof",
+  "title": "Earth Interior Topic Proof",
+  "type": "feature",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": ["20261124-public-deployment"],
+  "created_at": "2026-11-25T13:07:50+11:00",
+  "updated_at": "2026-11-25T22:40:40+11:00",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "feat/20261125-earth-interior-proof",
+  "base_branch": "master",
+  "base_sha": "4b2067b0a4ae657e6339296cbbcaca6bbfb6d322",
+  "progress": {
+    "phases_total": 5,
+    "phases_verified": 5,
+    "tasks_total": 23,
+    "tasks_done": 23
+  },
+  "last_checkpoint": "74afc950e83da5fa9b976bb9d20ff62d53b13722",
+  "review_verdict": "PASS WITH FINDINGS",
+  "review_rounds": 1,
+  "doc_sync": "updated",
+  "pr_url": "https://github.com/mansyar/perspectra/pull/4",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-25T22:40:40+11:00",
+  "archive_path": "conductor/archive/20261125-earth-interior-proof"
+}

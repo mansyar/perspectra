@@ -2,7 +2,7 @@
 
 **Understand anything from every angle.**
 
-Perspectra is a topic-agnostic learning experience: a zero-JavaScript static catalog leads into a navigable 3D scene, layered prose, a course-grounded AI tutor, a real mastery model, and a verifiable Open Badge. The shipped vertical slice uses the human heart as its demo topic, but the renderer, content schema, progress events, and credential flow do not hard-code anatomy.
+Perspectra is a topic-agnostic learning experience: a zero-JavaScript static catalog leads into a navigable 3D scene, layered prose, a course-grounded AI tutor, a real mastery model, and a verifiable Open Badge. The shipped lessons cover the human heart and Earth's interior, while the renderer, content schema, progress events, and credential flow do not hard-code either subject.
 
 ## Why it exists
 
@@ -18,7 +18,7 @@ Everything runs at portfolio scale for **$0–10/month** using free tiers plus a
 
 ## Three-minute demo script
 
-1. **Catalog (0:00–0:20).** Open `/`. One live lesson card, three labeled placeholders, no script tags in the HTML.
+1. **Catalog (0:00–0:20).** Open `/`. Two live lesson cards across Cardiovascular and Earth Science, three labeled placeholders, no script tags in the HTML.
 2. **Lesson shell (0:20–0:50).** Open the heart lesson. The poster fills in until the 3D scene is ready. Scroll or use the landmark list — prose and active hotspot stay in sync.
 3. **Hotspots (0:50–1:20).** Click `Aorta` in the scene. The corresponding prose section highlights and scrolls into view; camera focus moves when the scene is available.
 4. **Tutor (1:20–2:00).** Ask “Why does the left ventricle have thicker walls?” The answer streams with a `[[heart:left_ventricle:overview]]` citation. Click the citation to jump back to the source section. The AI disclosure and privacy note are visible before the first question.
@@ -32,7 +32,7 @@ If WebGPU/WebGL is unavailable or the LLM is down, skip steps 3–5 and read the
 ```
 Browser
 ├── /                         Astro static HTML, zero JS
-├── /lessons/heart/           Astro prose + React islands
+├── /lessons/[slug]/          Astro prose + React islands (heart, earth-interior)
 │   ├── SceneIsland           R3F: WebGPU → WebGL → poster
 │   ├── ProseHotspotBinder    two-way hotspot ↔ prose binding
 │   ├── TutorDock             cited SSE answers, chips, disclosure
@@ -70,7 +70,7 @@ Design constraints worth knowing:
 pnpm install
 pnpm dev                 # Astro dev server
 pnpm verify              # lint, format, types, unit, coverage, integration, build
-pnpm verify:full         # verify + smoke + all Playwright specs
+pnpm verify:full         # verify + smoke + non-perf Playwright, then serial @perf
 pnpm exec wrangler dev   # optional: local Worker with bindings
 ```
 
@@ -79,6 +79,7 @@ Optional focused checks:
 ```bash
 pnpm test:a11y           # @axe-core/playwright audit (@a11y)
 pnpm perf:lighthouse     # Lighthouse budget checks (@perf)
+pnpm test:perf           # @perf only, --workers=1; used by verify:full and CI
 ```
 
 ### Environment variables
@@ -106,31 +107,41 @@ The browser uses same-origin relative API URLs. `pnpm deploy:prepare` requires `
 
 ## Content authoring
 
-1. Write or update `src/content/lessons/<topic>.mdx`. Frontmatter carries the generic scene manifest (model, camera, hotspots). Each hotspot must have a `<div id="..." data-hotspot="...">` section with `data-layer="overview|detail|clinical"` paragraphs.
+1. Write or update `src/content/lessons/<topic>.mdx`. Frontmatter carries the generic scene manifest (model, camera, hotspots). Each hotspot must have a `<div id="..." data-hotspot="...">` section with overview and detail paragraphs plus a topic-appropriate third layer, such as `clinical` for a health lesson or `context` for Earth Science.
 2. Keep every `data-hotspot` ID in sync with the manifest's `hotspots[].id`. `pnpm build` fails on a mismatch (`AC-2`).
-3. Export a GLB whose **named meshes match the hotspot IDs exactly**, plus a manifest-referenced WebP poster under 120 KB. The heart recipe deterministically retains the PNG as its WebP source; its contract is `assets/heart/ASSET_CONTRACT.md`.
-4. Generate pgvector rows for retrieval with:
+3. Export a deterministic GLB whose **named meshes match the hotspot IDs exactly**, keeping it under 1 MB, plus a manifest-referenced WebP poster under 120 KB. The heart and Earth recipes retain their PNG sources; their contracts are `assets/heart/ASSET_CONTRACT.md` and `assets/earth-interior/ASSET_CONTRACT.md`.
+4. Seed every discovered MDX lesson, including its title, description, and hotspot IDs:
+
+    ```bash
+    DATABASE_URL=<your-database-url> pnpm db:seed
+    ```
+
+    The seed uses idempotent upserts. Re-running it updates lesson metadata without deleting existing lessons, embeddings, or progress rows.
+
+5. Discover every lesson, chunk its prose, and preview Gemini document embeddings with:
 
    ```bash
    LLM_PROVIDER=gemini EMBEDDING_MODEL=gemini-embedding-2 LLM_API_KEY=<your-key> pnpm exec node --experimental-strip-types scripts/embed-lessons.ts
    ```
 
-   Set `EMBEDDING_API_KEY` instead to override the key used for embeddings. The script prints NDJSON chunks and embeddings to stdout; it never writes to the database or prints keys.
+   Set `EMBEDDING_API_KEY` instead to override the key used for embeddings. The preview prints NDJSON chunks and embeddings to stdout without writing to the database. Add `--write` with `DATABASE_URL` to upsert lesson metadata and deterministic embedding IDs for all discovered lessons. Repeat runs update existing rows and preserve unrelated data; neither command prints keys.
 
 ### Adding a topic
 
-Adding a topic requires content, assets, and embedding ingest: add MDX frontmatter + prose, add a GLB with matching named meshes and a poster, and run the embed script. Production retrieval, the scene renderer, progress API, mastery model, and verifier stay topic-agnostic.
+Adding a topic requires content, assets, seed, and embedding ingest: add MDX frontmatter + prose, add a GLB with matching named meshes and a poster, run `pnpm db:seed`, then run the embed script with `--write`. Both commands discover all MDX lessons rather than maintaining a subject-specific list. Use a stable topic slug; the catalog formats slugs such as `cardiovascular` and `earth-science` as readable category labels. Production retrieval, the scene renderer, progress API, mastery model, and verifier stay topic-agnostic, so onboarding needs no subject-specific TypeScript.
 
 ## Verification & evidence
 
 - Logic-bearing modules keep 80% line/branch coverage: `src/lib/scene-manifest.ts` in the unit config, plus mastery/retrieval/prompt/quota/badge paths in their suites.
-- `pnpm verify:full` runs the complete chain: lint → format → typecheck → unit → coverage → integration → build → smoke → Playwright (scene, tutor, learning-loop, a11y, perf).
-- Phase evidence lives under `conductor/archive/20261124-showcase-mvp/verification/`.
+- `pnpm verify:full` runs the complete chain: lint → format → typecheck → unit → coverage → integration → build → smoke → non-perf Playwright (scene, tutor, learning-loop, a11y), then `pnpm test:perf` for `@perf` with one worker. `test:e2e` remains the full suite for direct callers and production tests; splitting the default gate keeps Lighthouse audits from contending with other workers without changing thresholds or retries.
+- After deployment, run `E2E_BASE_URL=<public-origin> node scripts/production-smoke.mjs heart` and the same command with `earth-interior` for additive real-service proof through tutor, quiz, mastery/FSRS, and badge verification. Sanitized summaries are written under gitignored `.conductor/evidence/`.
+- `E2E_BASE_URL=<public-origin> pnpm test:production --workers=1` is the reliable serial production command: it includes the production-only `@production-earth` browser test with a unique real session, real tutor/quiz requests, and lesson-scoped mastery checks, while avoiding worker contention with Lighthouse. Thresholds and existing per-test retries are unchanged. The test explicitly skips when `E2E_BASE_URL` is absent; see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+- Track phase evidence lives under `conductor/tracks/<track-id>/verification/`.
 
 ## Accessibility, privacy, and trust
 
 - Target: **WCAG 2.2 AA** with keyboard-reachable hotspots, visible focus indicators, reduced-motion behavior, and a light reading surface on a dark shell.
-- Reduced motion disables camera tweens, heartbeat/flow particles, and non-essential transitions. Prose, quiz, mastery, tutor, and verifier stay fully usable at 360px and above.
+- Reduced motion disables camera tweens, subtle model pulses/particles, and non-essential transitions. Prose, quiz, mastery, tutor, and verifier stay fully usable at 360px and above.
 - **AI disclosure:** the tutor panel states that answers are AI-generated and grounded in the lesson text. **Privacy note:** no keys are shipped to the browser; questions are counted by session and stored server-side only when you are signed in (see the in-product notes for current behavior).
 - Known limits: the 3D canvas is desktop-first; keyboard users get an equivalent set of hotspot buttons. A screen-reader-optimized description of the 3D geometry is future work.
 
@@ -141,6 +152,6 @@ At portfolio scale (a handful of reviewers): Neon free branch, Workers/KV free a
 ## Licensing
 
 - Code: **MIT** (`LICENSE`).
-- Shipped generated assets (heart GLB, poster): **CC0** or **OFL**.
+- Shipped generated assets (heart and Earth GLBs/posters): **CC0** or **OFL**.
 - Z-Anatomy and BodyParts3D are **reference-only** and are **not shipped**; their share-alike terms therefore do not apply to this repository.
 - Third-party runtime dependencies keep their own licenses (Notices are summarized in `docs/ARCHITECTURE.md`); no API keys or credential-shaped literals appear in source or built output.

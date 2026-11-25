@@ -78,9 +78,10 @@ Open `http://localhost:4321/`. Optional: sign in with GitHub, Google, or email/p
 
 ```bash
 pnpm verify        # lint, format, typecheck, unit, coverage, integration, build
-pnpm verify:full   # + smoke and all Playwright specs
+pnpm verify:full   # + smoke, non-perf Playwright, then serial @perf
 pnpm test:a11y     # axe audit
 pnpm perf:lighthouse  # Lighthouse score and budget checks
+pnpm test:perf        # @perf only, single worker (used by verify:full/CI)
 ```
 
 Evidence and per-phase results are in `conductor/tracks/20261124-showcase-mvp/verification/`.

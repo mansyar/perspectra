@@ -5,6 +5,7 @@ import { InMemoryKv } from '../../api/src/lib/kv';
 import { InMemoryProgressRepository } from '../../api/src/lib/progress-repository';
 import { DEFAULT_HOTSPOTS } from '../../api/src/lib/retrieval';
 import { createApp } from '../../api/src/index';
+import { EARTH_LESSON } from '../fixtures/lessons';
 
 const SECRET = 'integration-test-secret';
 
@@ -19,12 +20,16 @@ function authFor(userId: string | null): AuthPort {
   };
 }
 
-function masteredEvents(userId: string): LearningEvent[] {
-  return DEFAULT_HOTSPOTS.flatMap((hotspotId, index) =>
+function masteredEvents(
+  userId: string,
+  lessonId = 'heart',
+  hotspots: readonly string[] = DEFAULT_HOTSPOTS,
+): LearningEvent[] {
+  return hotspots.flatMap((hotspotId, index) =>
     [0, 1].map((attempt) => ({
       hotspotId,
       id: `${userId}:${hotspotId}:${attempt}`,
-      lessonId: 'heart',
+      lessonId,
       payload: { correct: true },
       timestamp: 1_700_000_000_000 + index * 1000 + attempt,
       type: 'quiz_result' as const,
@@ -166,6 +171,73 @@ describe('badge routes', () => {
       credential: `${tampered}.${signature}`,
     });
     expect((await rejected.json()) as { valid: boolean }).toMatchObject({ valid: false });
+  });
+
+  it('issues and verifies a correctly named Earth badge from Earth vocabulary', async () => {
+    const db = new InMemoryProgressRepository();
+    await db.appendEvents(
+      'learner',
+      masteredEvents('learner', EARTH_LESSON.id, EARTH_LESSON.hotspots),
+    );
+    const titleRequests: string[] = [];
+    const app = createApp({
+      auth: authFor('learner'),
+      db,
+      getChunks: (lessonId) =>
+        lessonId === EARTH_LESSON.id
+          ? EARTH_LESSON.hotspots.map((hotspotId) => ({
+              hotspotId,
+              id: `${lessonId}:${hotspotId}:overview`,
+              layer: 'overview',
+              lessonId,
+              text: `Earth's ${hotspotId} is part of its layered interior.`,
+            }))
+          : [],
+      getLessonTitle: (lessonId) => {
+        titleRequests.push(lessonId);
+        return EARTH_LESSON.title;
+      },
+      kv: new InMemoryKv(),
+    });
+
+    const issued = await request(app, '/api/badge/issue', { lessonId: EARTH_LESSON.id });
+    expect(issued.status).toBe(200);
+    const { credential } = (await issued.json()) as { credential: string };
+    const verified = await request(app, '/api/badge/verify', { credential });
+    expect(verified.status).toBe(200);
+    const result = (await verified.json()) as { valid: boolean };
+    expect(result.valid).toBe(true);
+    expect(titleRequests).toEqual([EARTH_LESSON.id]);
+
+    const [payload] = credential.split('.');
+    const decoded = JSON.parse(Buffer.from(payload ?? '', 'base64url').toString()) as {
+      credentialSubject?: {
+        achievement?: {
+          criteria?: { narrative?: string };
+          description?: string;
+          name?: string;
+        };
+      };
+    };
+    const achieved = decoded.credentialSubject?.achievement;
+    expect(achieved?.name).toBe('Inside Earth Mastery');
+    expect(achieved?.description).toContain('earth-interior lesson concepts');
+    expect(achieved?.criteria?.narrative).toContain(EARTH_LESSON.hotspots.join(', '));
+    expect(`${achieved?.name ?? ''} ${achieved?.description ?? ''}`).not.toMatch(
+      /heart|anatomy|clinical/i,
+    );
+  });
+
+  it('does not issue an Earth badge with heart fallback vocabulary', async () => {
+    const app = createApp({
+      auth: authFor('learner'),
+      db: new InMemoryProgressRepository(),
+      getChunks: () => [],
+      kv: new InMemoryKv(),
+    });
+    const response = await request(app, '/api/badge/issue', { lessonId: EARTH_LESSON.id });
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({ error: 'lesson_unavailable' });
   });
 
   it('reports non-heart hotspot IDs when the lesson is not mastered', async () => {

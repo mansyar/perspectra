@@ -4,6 +4,7 @@ import { InMemoryKv } from '../../api/src/lib/kv';
 import type { LlmPort } from '../../api/src/lib/llm';
 import { InMemoryProgressRepository } from '../../api/src/lib/progress-repository';
 import { masteryRoutes, quizRoutes, type QuizDeps } from '../../api/src/routes/quiz';
+import { EARTH_LESSON } from '../fixtures/lessons';
 
 const VALID = {
   answerIndex: 2,
@@ -132,6 +133,91 @@ describe('quiz generation', () => {
     expect(llm.prompts[0]).toContain('planet_core');
     expect(llm.prompts[0]).toContain('The planet core is dense and hot.');
     expect(await response.json()).toMatchObject({ hotspotId: 'planet_core' });
+  });
+
+  it('generates, grades and schedules Earth review from Earth chunks', async () => {
+    const llm = new FakeLlm();
+    llm.response = JSON.stringify({
+      answerIndex: 1,
+      explanation: 'The liquid outer core is mainly iron and nickel.',
+      hotspotId: 'outer_core',
+      id: 'q-outer-core',
+      options: ['Solid rock', 'Liquid iron and nickel', 'Water', 'Silicate minerals'],
+      question: 'What makes up the outer core?',
+      remediationId: 'outer_core',
+    });
+    const deps = depsFor(llm, 'user-earth');
+    deps.getChunks = (lessonId) =>
+      lessonId === EARTH_LESSON.id
+        ? EARTH_LESSON.hotspots.map((hotspotId) => ({
+            hotspotId,
+            id: `${lessonId}:${hotspotId}:overview`,
+            layer: 'overview',
+            lessonId,
+            text:
+              hotspotId === 'outer_core'
+                ? 'The outer core is liquid iron and nickel.'
+                : `The ${hotspotId} is a layer or region inside Earth.`,
+          }))
+        : [];
+    const app = quizRoutes(deps);
+    const generated = await post(app, '/generate', {
+      hotspotId: 'outer_core',
+      lessonId: EARTH_LESSON.id,
+    });
+    expect(generated.status).toBe(200);
+    expect(llm.prompts[0]).toContain('The outer core is liquid iron and nickel.');
+    expect(llm.prompts[0]).not.toMatch(/heart|aorta|anatomy|clinical/i);
+
+    const graded = await post(app, '/grade', { answerIndex: 0, questionId: 'q-outer-core' });
+    expect(graded.status).toBe(200);
+    const result = (await graded.json()) as {
+      correct: boolean;
+      mastery: {
+        dueCards: string[];
+        hotspots: { hotspotId: string }[];
+      };
+      nextHotspot: string | null;
+      remediationId: string;
+    };
+    expect(result).toMatchObject({ correct: false, remediationId: 'outer_core' });
+    expect(result.mastery.hotspots.map((hotspot) => hotspot.hotspotId)).toEqual(
+      EARTH_LESSON.hotspots,
+    );
+    expect(result.mastery.dueCards).toContain('outer_core');
+    expect(EARTH_LESSON.hotspots).toContain(result.nextHotspot ?? '');
+    const events = await deps.db.getEvents('user-earth');
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      hotspotId: 'outer_core',
+      lessonId: EARTH_LESSON.id,
+      payload: { correct: false },
+      type: 'quiz_result',
+    });
+
+    const mastery = await Promise.resolve(
+      masteryRoutes(deps).request(`/?lessonId=${EARTH_LESSON.id}`),
+    );
+    expect(mastery.status).toBe(200);
+    const view = (await mastery.json()) as { hotspots: { hotspotId: string }[] };
+    expect(view.hotspots.map((hotspot) => hotspot.hotspotId)).toEqual(EARTH_LESSON.hotspots);
+  });
+
+  it('does not substitute heart vocabulary when Earth chunks are unavailable', async () => {
+    const llm = new FakeLlm();
+    const deps = depsFor(llm, 'user-earth');
+    deps.getChunks = () => [];
+    const generated = await post(quizRoutes(deps), '/generate', {
+      hotspotId: 'outer_core',
+      lessonId: EARTH_LESSON.id,
+    });
+    expect(generated.status).toBe(400);
+    expect(llm.prompts).toHaveLength(0);
+
+    const mastery = await Promise.resolve(
+      masteryRoutes(deps).request(`/?lessonId=${EARTH_LESSON.id}`),
+    );
+    expect(await mastery.json()).toMatchObject({ dueCards: [], hotspots: [], nextHotspot: null });
   });
 
   it('rejects malformed LLM JSON with a safe 502', async () => {

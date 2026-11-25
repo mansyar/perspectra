@@ -6,6 +6,7 @@ import {
   validateCitations,
 } from '../../api/src/lib/prompt';
 import type { RetrievalResult } from '../../api/src/lib/retrieval';
+import { EARTH_LESSON } from '../fixtures/lessons';
 
 const result: RetrievalResult = {
   chunk: {
@@ -42,6 +43,31 @@ describe('assemblePrompt', () => {
     expect(prompt).toContain('say you do not know');
     expect(prompt).toContain('Active hotspot: aorta');
     expect(prompt).toContain('What does the aorta do?');
+  });
+
+  it('keeps tutor instructions topic-neutral for Earth', () => {
+    const earthChunk: RetrievalResult = {
+      chunk: {
+        hotspotId: 'outer_core',
+        id: 'earth-interior:outer_core:overview',
+        layer: 'overview',
+        lessonId: EARTH_LESSON.id,
+        text: 'The outer core is liquid iron and nickel.',
+      },
+      cosine: 0.9,
+      lexical: 0.4,
+      score: 0.75,
+    };
+    const earthPrompt = assemblePrompt({
+      activeHotspot: 'outer_core',
+      chunks: [earthChunk],
+      history: [],
+      lessonTitle: EARTH_LESSON.title,
+      question: 'What is the outer core made of?',
+    });
+    expect(earthPrompt).toContain(EARTH_LESSON.title);
+    expect(earthPrompt).toContain('earth-interior:outer_core:overview');
+    expect(earthPrompt).not.toMatch(/anatomy|clinical|medical advice/i);
   });
 
   it('never embeds key names', () => {

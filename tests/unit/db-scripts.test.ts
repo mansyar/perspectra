@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import type { NeonDatabase } from 'drizzle-orm/neon-serverless';
 import { describe, expect, it } from 'vitest';
 import * as schema from '../../api/src/db/schema';
-import { heartHotspotIds, seedHeart } from '../../api/src/db/seed';
+import { discoverLessons, heartHotspotIds, seedHeart, seedLessons } from '../../api/src/db/seed';
 
 interface LessonRow {
   id: string;
@@ -60,6 +60,54 @@ describe('database package scripts', () => {
 
   it('pins tsx as an exact dev dependency version', () => {
     expect(pkg.devDependencies.tsx).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});
+
+describe('content-driven lesson seeding', () => {
+  it('discovers heart and Earth metadata from the MDX collection', () => {
+    const lessons = discoverLessons();
+    expect(lessons.map((lesson) => lesson.id)).toEqual(['earth-interior', 'heart']);
+    expect(lessons.find((lesson) => lesson.id === 'earth-interior')).toEqual({
+      description:
+        "A guided tour of Earth's layered interior, from the rigid surface to the solid inner core.",
+      hotspots: [
+        'crust',
+        'upper_mantle',
+        'lower_mantle',
+        'outer_core',
+        'inner_core',
+        'lithosphere',
+      ],
+      id: 'earth-interior',
+      title: 'Inside Earth',
+    });
+  });
+
+  it('upserts every lesson idempotently without removing unrelated rows', async () => {
+    const { db, rows, upserts } = fakeDatabase();
+    const legacy: LessonRow = {
+      hotspots: ['legacy_hotspot'],
+      id: 'legacy',
+      title: 'Existing lesson',
+    };
+    rows.set(legacy.id, legacy);
+
+    await seedLessons(db);
+    await seedLessons(db);
+
+    expect(upserts).toHaveLength(4);
+    expect(upserts.every((upsert) => upsert.target === schema.lesson.id)).toBe(true);
+    expect(rows.size).toBe(3);
+    expect(rows.get('legacy')).toEqual(legacy);
+    expect(rows.get('heart')?.hotspots).toEqual([...heartHotspotIds]);
+    expect(rows.get('earth-interior')?.hotspots).toEqual([
+      'crust',
+      'upper_mantle',
+      'lower_mantle',
+      'outer_core',
+      'inner_core',
+      'lithosphere',
+    ]);
   });
 });
 

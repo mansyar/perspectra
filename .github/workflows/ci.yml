@@ -76,13 +76,13 @@ jobs:
         run: |
           # Lighthouse can fail transiently while chrome-launcher kills Chromium.
           # Retry that single known flake once; any other failure is surfaced as-is.
-          output="$( { pnpm smoke && pnpm test:e2e; } 2>&1 )" && { printf '%s\n' "$output"; exit 0; }
+          output="$( { pnpm smoke && pnpm exec playwright test --grep-invert @perf && pnpm test:perf; } 2>&1 )" && { printf '%s\n' "$output"; exit 0; }
           status=$?
           printf '%s\n' "$output"
           if grep -Fq 'chrome.kill()' <<<"$output" \
             && grep -Eq 'EPERM|EACCES|EBUSY' <<<"$output"; then
             echo '::warning::Known Lighthouse Chromium-cleanup flake; retrying once.'
-            pnpm smoke && pnpm test:e2e
+            pnpm smoke && pnpm exec playwright test --grep-invert @perf && pnpm test:perf
           else
             exit "$status"
           fi

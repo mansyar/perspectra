@@ -7,6 +7,7 @@ import type { LlmPort } from '../../api/src/lib/llm';
 import { InMemoryProgressRepository } from '../../api/src/lib/progress-repository';
 import type { LessonChunk } from '../../api/src/lib/retrieval';
 import type { TutorEvent } from '../../api/src/routes/tutor';
+import { EARTH_LESSON } from '../fixtures/lessons';
 
 const chunks: LessonChunk[] = [
   {
@@ -17,6 +18,18 @@ const chunks: LessonChunk[] = [
     text: 'The aorta carries oxygenated blood from the left ventricle.',
   },
 ];
+
+const earthChunks: LessonChunk[] = EARTH_LESSON.hotspots.map((hotspotId) => ({
+  embedding: [1, 0],
+  hotspotId,
+  id: `${EARTH_LESSON.id}:${hotspotId}:overview`,
+  layer: 'overview',
+  lessonId: EARTH_LESSON.id,
+  text:
+    hotspotId === 'outer_core'
+      ? 'The liquid outer core is mostly iron and nickel.'
+      : `Earth's ${hotspotId} is part of its layered interior.`,
+}));
 
 function chunk(overrides: Partial<LessonChunk> = {}): LessonChunk {
   return {
@@ -226,6 +239,88 @@ describe('tutor route', () => {
     });
     const events = parseSse(await response.text());
     expect(events.at(-1)).toEqual({ citations: ['brain:cortex:overview'], type: 'done' });
+  });
+
+  it('retrieves Earth chunks through production lookup and streams Earth citations', async () => {
+    const repository: LessonChunkRepository = {
+      async getChunks(lessonId: string) {
+        return lessonId === EARTH_LESSON.id ? earthChunks : chunks;
+      },
+    };
+    const llm = llmFor(
+      'The outer core is liquid iron and nickel [[earth-interior:outer_core:overview]].',
+    );
+    const app = createApp({
+      auth: authFor(null),
+      chunkRepository: repository,
+      db: new InMemoryProgressRepository(),
+      kv: new InMemoryKv(),
+      llm,
+    });
+    const response = await post(app, {
+      lessonId: EARTH_LESSON.id,
+      question: 'Why is the outer core liquid?',
+      sessionId: 'earth-retrieval',
+    });
+    const events = parseSse(await response.text());
+    expect(events.at(-1)).toEqual({
+      citations: ['earth-interior:outer_core:overview'],
+      type: 'done',
+    });
+    expect(llm.complete).toHaveBeenCalledOnce();
+    expect(llm.complete.mock.calls[0]?.[0]).toContain(
+      'The liquid outer core is mostly iron and nickel.',
+    );
+    expect(llm.complete.mock.calls[0]?.[0]).not.toMatch(/heart|aorta|anatomy|clinical/i);
+  });
+
+  it('rejects off-topic Earth questions with an Earth static excerpt', async () => {
+    const llm = llmFor('unexpected');
+    const app = createApp({
+      auth: authFor(null),
+      db: new InMemoryProgressRepository(),
+      getChunks: () => earthChunks,
+      kv: new InMemoryKv(),
+      llm,
+    });
+    const events = parseSse(
+      await (
+        await post(app, {
+          lessonId: EARTH_LESSON.id,
+          question: 'Tell me a joke',
+          sessionId: 'earth-off-topic',
+        })
+      ).text(),
+    );
+    expect(events[0]).toMatchObject({ code: 'off_topic', type: 'error' });
+    expect(events[0]?.staticExcerpt).toContain('crust');
+    expect(events[0]?.staticExcerpt).not.toMatch(/heart|aorta/i);
+    expect(llm.complete).not.toHaveBeenCalled();
+    expect(llm.embed).not.toHaveBeenCalled();
+  });
+
+  it('falls back to Earth prose when a tutor answer has an invalid citation', async () => {
+    const llm = llmFor('Unsupported claim [[earth-interior:missing:overview]].');
+    const app = createApp({
+      auth: authFor(null),
+      db: new InMemoryProgressRepository(),
+      getChunks: () => earthChunks,
+      kv: new InMemoryKv(),
+      llm,
+    });
+    const events = parseSse(
+      await (
+        await post(app, {
+          lessonId: EARTH_LESSON.id,
+          question: 'What is the outer core?',
+          sessionId: 'earth-citation',
+        })
+      ).text(),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ code: 'invalid_citation', type: 'error' });
+    expect(events[0]?.staticExcerpt).toContain('crust');
+    expect(events[0]?.staticExcerpt).not.toMatch(/heart|aorta/i);
   });
 
   it('returns an SSE error rather than throwing when the adapter fails', async () => {

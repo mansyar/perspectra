@@ -65,9 +65,11 @@ describe('checked-in CI workflow', () => {
     expect(() => checkWorkflowFile()).not.toThrow();
   });
 
-  it('runs pnpm verify and the smoke/E2E chain', () => {
+  it('runs pnpm verify and the serial smoke/E2E/perf chain', () => {
     expect(source).toContain('pnpm verify');
-    expect(source).toContain('pnpm smoke && pnpm test:e2e');
+    expect(source).toContain(
+      'pnpm smoke && pnpm exec playwright test --grep-invert @perf && pnpm test:perf',
+    );
   });
 
   it('uses pinned setup actions with Node 24 and the pnpm cache', () => {
@@ -93,5 +95,25 @@ describe('checked-in CI workflow', () => {
     expect(source).toContain('chrome.kill()');
     expect(source).toContain('retrying once');
     expect(source.match(/retrying/g)).toHaveLength(2);
+  });
+});
+
+describe('package scripts', () => {
+  const { scripts } = JSON.parse(
+    readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
+  ) as { scripts: Record<string, string> };
+
+  it('keeps test:e2e as the full suite for direct callers', () => {
+    expect(scripts['test:e2e']).toBe('playwright test');
+  });
+
+  it('runs only @perf tests with one worker in test:perf', () => {
+    expect(scripts['test:perf']).toBe('playwright test --grep @perf --workers=1');
+  });
+
+  it('runs non-performance E2E before a serial perf pass in verify:full', () => {
+    expect(scripts['verify:full']).toBe(
+      'pnpm verify && pnpm smoke && pnpm exec playwright test --grep-invert @perf && pnpm test:perf',
+    );
   });
 });
