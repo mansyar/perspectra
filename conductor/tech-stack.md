@@ -29,7 +29,7 @@
 - **Single-origin Cloudflare Workers deployment**: Workers Static Assets serve `dist/`; the Worker handles `/api/*` and `/health`, then falls back to the `ASSETS` binding. **Wrangler 4.167.0**; **@cloudflare/workers-types 5.20261123.1**.
 - Public production origin: `https://perspectra-api.m-ansyarafi.workers.dev`; manual deploy; custom domain and automatic deployment remain deferred.
 - Neon WebSocket `Pool`/Drizzle clients are request-scoped and closed through Hono `executionCtx.waitUntil`; bindings or pools are never reused across Cloudflare requests. Better Auth session schema includes nullable `ipAddress` and `userAgent`.
-- **GitHub Actions** CI on pull requests only: a `verify` job (lint, format, typecheck, Vitest + coverage gate, Astro build) and an `e2e` job (Playwright smoke, E2E, axe and Lighthouse budgets with a build step for `astro preview`).
+- **GitHub Actions** CI on pull requests only: a `verify` job (lint, format, typecheck, Vitest + coverage gate, Astro build) and an `e2e` job (Playwright smoke, non-performance E2E and axe, then serial `@perf` Lighthouse budgets with one worker, with a build step for `astro preview`). `pnpm verify:full` uses the same split; score thresholds and the single Lighthouse retry are unchanged.
 
 ## Tooling
 - **Vitest 5.1.1 + @vitest/coverage-v8 5.1.1** for unit tests; **@playwright/test 1.65.1** for smoke, E2E, axe accessibility and Lighthouse performance specs; **Lighthouse 13.6.0**, **chrome-launcher 1.2.0**, **@axe-core/playwright 4.14.0** for audited evidence. `E2E_BASE_URL` enables the same suite against the deployed workers.dev origin.
@@ -59,8 +59,9 @@
 - **2026-11-24 (Showcase MVP):** corrected the scheduler to `ts-fsrs 6.0.1`; recorded Playwright/Lighthouse/axe as active verification tooling; confirmed the OB3 credential uses an HMAC-SHA-256 `DataIntegrityProof` at portfolio scale (no external trust framework). Product definition and product guidelines required no change.
 - **2026-11-24 (Release readiness):** recorded the two-job PR-only GitHub Actions workflow, real `db:push`/`db:seed` scripts via drizzle-kit and `tsx 4.23.15`, the documented `RATE_LIMIT_KV` placeholder with `RATE_LIMIT_KV_ID` validation, `docs/DEPLOYMENT.md`, the primary-run browser verification gate, and lesson-correct badge narratives for any topic. Product definition and product guidelines required no change.
 - **2026-11-25 (Public deployment):** recorded the live single-origin Workers Static Assets deployment, Gemini-only chat/embeddings (`gemini-3.5-flash-lite`, `gemini-embedding-2` at 1536 dimensions), request-scoped Neon pools, Better Auth session fields, Google/email auth with GitHub deferred, external `E2E_BASE_URL` production tests, and the optimized WebP poster. Product definition and product guidelines required no change.
+- **2026-11-25 (Earth interior proof):** two lessons (heart and Earth interior) now share one generic renderer, content-driven seed/embedding pipeline, topic-agnostic tutor/quiz/mastery/badge logic, and additive production ingestion. Lighthouse verification is split into serial `@perf` runs to avoid CPU contention with parallel E2E workers without changing budgets or retries. Product definition and product guidelines required no change.
 
 ## Open Questions & Assumptions
 - Custom domain and automatic deployment remain deferred; production currently uses workers.dev with manual deploy.
-- R2 and multi-topic authoring tooling are post-MVP; Playwright and Lighthouse are in the MVP verification suite.
+- R2 and heavier multi-topic authoring tooling remain deferred; two topics are live with file-based MDX, procedural assets, and the shared pipeline. Playwright and Lighthouse are in the active verification suite.
 - oxlint does not lint `.astro` templates — only script blocks (accepted limitation).
