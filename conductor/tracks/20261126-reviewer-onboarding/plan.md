@@ -33,7 +33,7 @@
 - **Covers:** FR-4, FR-5, FR-6, AC-4, AC-5, AC-6, NFR-2, NFR-5
 - **Touches:** `src/components/mastery/**`, `src/components/quiz/**`, `src/pages/verify.astro`, `src/pages/index.astro`, `src/styles/**`, `tests/unit/**`, `tests/e2e/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Add mastery auth CTA with lesson return URL** — covers: FR-4, AC-4
 - [ ] **P2.T2: Add quiz auth CTA with lesson return URL** — covers: FR-4, AC-4
