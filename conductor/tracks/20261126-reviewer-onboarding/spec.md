@@ -111,6 +111,9 @@ and the product appears unfinished even though the backend works.
   current origin.
 - **Assumption:** Existing accent color, font pairing, and motion language stay
   unchanged.
+- **Assumption:** The catalog header remains static with a Sign in link to keep
+  the catalog zero-JS; dynamic account/sign-out state is rendered on pages that
+  already load client islands (lesson, verify, sign-in).
 
 ## References
 
