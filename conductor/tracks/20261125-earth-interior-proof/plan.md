@@ -67,13 +67,16 @@
 - **Covers:** FR-8, AC-4, AC-5, AC-6, AC-8, NFR-2, NFR-3, NFR-5, NFR-6, NFR-7
 - **Touches:** `scripts/production-smoke.mjs`, `tests/e2e/earth-loop.spec.ts`, `tests/e2e/performance.spec.ts`, `docs/DEPLOYMENT.md`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full && pnpm test:production`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** `verified` — both lessons live on the public workers.dev origin; additive seed/embed; both 16-check smokes; 33 production Playwright tests; production browser fallbacks and Lighthouse budgets passed.
+- **Checkpoint:** `b5cfd432f5893d053e07e3940f0f3b2a35e59122`
+- **Evidence:** `conductor/tracks/20261125-earth-interior-proof/verification/phase-4.md`, `conductor/tracks/20261125-earth-interior-proof/verification/browser.md`
 
-- [ ] **P4.T1: Generalize the tracked production smoke runner by lesson ID** — covers: FR-8, NFR-5
-- [ ] **P4.T2: Additively seed and embed Earth in production** — covers: AC-4, NFR-5, NFR-6
-- [ ] **P4.T3: Manually deploy and run production E2E and real-service smoke** — covers: AC-4, AC-5, AC-6, AC-8, NFR-7
-- [ ] **P4.T4: Record production browser, console, fallback, and Lighthouse evidence** — covers: FR-8, AC-8, NFR-2, NFR-3
-- [ ] **P4.T5: Make Lighthouse cleanup resilient to Windows EPERM without weakening score assertions** — covers: AC-8, NFR-2, NFR-7
+- [x] **P4.T1: Generalize the tracked production smoke runner by lesson ID** — covers: FR-8, NFR-5
+- [x] **P4.T2: Additively seed and embed Earth in production** — covers: AC-4, NFR-5, NFR-6
+- [x] **P4.T3: Manually deploy and run production E2E and real-service smoke** — covers: AC-4, AC-5, AC-6, AC-8, NFR-7
+- [x] **P4.T4: Record production browser, console, fallback, and Lighthouse evidence** — covers: FR-8, AC-8, NFR-2, NFR-3
+- [x] **P4.T5: Make Lighthouse cleanup resilient to Windows EPERM without weakening score assertions** — covers: AC-8, NFR-2, NFR-7
 
 ## Phase 5: Integrated Proof & Documentation
 
