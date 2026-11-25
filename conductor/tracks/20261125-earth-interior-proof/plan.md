@@ -83,10 +83,11 @@
 - **Goal:** The track closes with complete local/production evidence, clean audits, and reviewer-ready documentation.
 - **Depends on:** Phase 4
 - **Covers:** FR-8, AC-8, AC-9, AC-10, NFR-2, NFR-6, NFR-7
-- **Touches:** `README.md`, `docs/**`, `assets/earth-interior/ASSET_CONTRACT.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
+- **Touches:** `README.md`, `docs/**`, `assets/earth-interior/ASSET_CONTRACT.md`, `package.json`, `.github/workflows/ci.yml`, `tests/unit/ci-contract.test.ts`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full && pnpm test:production`
 - **Status:** in_progress
 
 - [ ] **P5.T1: Run final local and production regression checks** — covers: AC-8, AC-10, NFR-2, NFR-7
 - [ ] **P5.T2: Audit secrets, asset provenance, and topic independence** — covers: AC-7, AC-9, NFR-1, NFR-4, NFR-6
 - [ ] **P5.T3: Consolidate integrated evidence, docs, and demo proof** — covers: FR-8, AC-10
+- [ ] **P5.T4: Isolate Lighthouse budgets from parallel E2E workers without changing thresholds** — covers: AC-8, NFR-2, NFR-7
