@@ -1,5 +1,6 @@
 ---
 import { getCollection, getEntry, render } from 'astro:content';
+import { SiteHeader } from '../../components/layout/SiteHeader';
 import { MasteryPanel } from '../../components/mastery/MasteryPanel';
 import { QuizPanel } from '../../components/quiz/QuizPanel';
 import { ProseHotspotBinder } from '../../components/prose/ProseHotspotBinder';
@@ -48,11 +49,7 @@ const modelSrc = modelAssets[modelKey] ?? manifest.model.src;
     <title>{entry.data.title} — Perspectra</title>
   </head>
   <body>
-    <header class="site-header">
-      <a class="site-header__brand" href="/">
-        Perspectra
-      </a>
-    </header>
+    <SiteHeader client:load current="lessons" returnTo={`/lessons/${entry.id}/`} />
     <main class="page">
       <header class="lesson-header">
         <span class="lesson-header__topic">{entry.data.topic}</span>

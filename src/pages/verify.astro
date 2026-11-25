@@ -1,5 +1,6 @@
 ---
 import { createBadgeService } from '../../api/src/lib/badge';
+import { SiteHeader } from '../components/layout/SiteHeader';
 import '../styles/global.css';
 
 // Static fixtures are public sample data, never deployment credentials.
@@ -24,11 +25,7 @@ const fixtureVerification = await fixtureService.verify(fixture.credential);
     <title>Verify credential — Perspectra</title>
   </head>
   <body>
-    <header class="site-header">
-      <a class="site-header__brand" href="/">
-        Perspectra
-      </a>
-    </header>
+    <SiteHeader client:load current="verify" returnTo="/verify/" />
     <main class="page">
       <h1>Credential verification</h1>
       <form class="verify-form" data-verify-form>
