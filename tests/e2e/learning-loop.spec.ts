@@ -53,6 +53,9 @@ async function mockApis(page: Page, lesson: LearningCase) {
   const badgeLessons: string[] = [];
   const citation = `${lesson.id}:${lesson.quizHotspot}:overview`;
 
+  await page.route('**/api/auth/get-session', async (route) => {
+    await route.fulfill({ json: {}, status: 200 });
+  });
   await page.route('**/api/tutor', async (route) => {
     await route.fulfill({
       body: [
