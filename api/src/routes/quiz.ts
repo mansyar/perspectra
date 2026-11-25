@@ -7,7 +7,12 @@ import { computeMastery, recommendNext, type MasteryView } from '../lib/mastery'
 import type { KvPort } from '../lib/kv';
 import type { LlmPort } from '../lib/llm';
 import type { ProgressRepository } from '../lib/progress-repository';
-import { DEFAULT_HOTSPOTS, HEART_LESSON_MDX, hotspotIdsFromChunks } from '../lib/retrieval';
+import {
+  DEFAULT_HOTSPOTS,
+  HEART_LESSON_MDX,
+  hotspotIdsFromChunks,
+  loadLessonChunks,
+} from '../lib/retrieval';
 import type { ChunkSource } from './tutor';
 
 export interface QuizDeps {
@@ -73,25 +78,18 @@ function hotspotSection(mdx: string, hotspotId: string): string {
 
 /**
  * Source prose and the hotspot vocabulary come from the same injectable chunk
- * source. Direct/dev callers without a source fall back to the heart mirror.
+ * source. Direct/dev callers use the documented retrieval mirror when available.
  */
 async function lessonContext(
   deps: QuizDeps,
   body: z.infer<typeof generateSchema>,
-): Promise<{ hotspots: readonly string[]; source: string }> {
-  if (!deps.getChunks) {
-    return {
-      hotspots: DEFAULT_HOTSPOTS,
-      source: body.hotspotId ? hotspotSection(HEART_LESSON_MDX, body.hotspotId) : HEART_LESSON_MDX,
-    };
-  }
-  const all = await deps.getChunks(body.lessonId);
+): Promise<{ hotspots: readonly string[]; source: string } | null> {
+  const all = deps.getChunks
+    ? await deps.getChunks(body.lessonId)
+    : loadLessonChunks(body.lessonId);
   const hotspots = hotspotIdsFromChunks(all);
   if (hotspots.length === 0) {
-    return {
-      hotspots: DEFAULT_HOTSPOTS,
-      source: body.hotspotId ? hotspotSection(HEART_LESSON_MDX, body.hotspotId) : HEART_LESSON_MDX,
-    };
+    return null;
   }
   const chunks = body.hotspotId ? all.filter((chunk) => chunk.hotspotId === body.hotspotId) : all;
   return {
@@ -146,14 +144,11 @@ function parseGeneration(raw: string, hotspots: readonly string[]): GeneratedQue
 
 /** Mastery vocabulary follows the lesson's chunk source, not the heart defaults. */
 async function hotspotVocabulary(deps: QuizDeps, lessonId: string): Promise<string[]> {
-  if (!deps.getChunks) {
-    return [...DEFAULT_HOTSPOTS];
-  }
   try {
-    const hotspots = hotspotIdsFromChunks(await deps.getChunks(lessonId));
-    return hotspots.length > 0 ? hotspots : [...DEFAULT_HOTSPOTS];
+    const chunks = deps.getChunks ? await deps.getChunks(lessonId) : loadLessonChunks(lessonId);
+    return hotspotIdsFromChunks(chunks);
   } catch {
-    return [...DEFAULT_HOTSPOTS];
+    return [];
   }
 }
 

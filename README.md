@@ -109,17 +109,25 @@ The browser uses same-origin relative API URLs. `pnpm deploy:prepare` requires `
 1. Write or update `src/content/lessons/<topic>.mdx`. Frontmatter carries the generic scene manifest (model, camera, hotspots). Each hotspot must have a `<div id="..." data-hotspot="...">` section with overview and detail paragraphs plus a topic-appropriate third layer, such as `clinical` for a health lesson or `context` for Earth Science.
 2. Keep every `data-hotspot` ID in sync with the manifest's `hotspots[].id`. `pnpm build` fails on a mismatch (`AC-2`).
 3. Export a deterministic GLB whose **named meshes match the hotspot IDs exactly**, keeping it under 1 MB, plus a manifest-referenced WebP poster under 120 KB. The heart and Earth recipes retain their PNG sources; their contracts are `assets/heart/ASSET_CONTRACT.md` and `assets/earth-interior/ASSET_CONTRACT.md`.
-4. Generate pgvector rows for retrieval with:
+4. Seed every discovered MDX lesson, including its title, description, and hotspot IDs:
+
+    ```bash
+    DATABASE_URL=<your-database-url> pnpm db:seed
+    ```
+
+    The seed uses idempotent upserts. Re-running it updates lesson metadata without deleting existing lessons, embeddings, or progress rows.
+
+5. Discover every lesson, chunk its prose, and preview Gemini document embeddings with:
 
    ```bash
    LLM_PROVIDER=gemini EMBEDDING_MODEL=gemini-embedding-2 LLM_API_KEY=<your-key> pnpm exec node --experimental-strip-types scripts/embed-lessons.ts
    ```
 
-   Set `EMBEDDING_API_KEY` instead to override the key used for embeddings. The script prints NDJSON chunks and embeddings to stdout; it never writes to the database or prints keys.
+   Set `EMBEDDING_API_KEY` instead to override the key used for embeddings. The preview prints NDJSON chunks and embeddings to stdout without writing to the database. Add `--write` with `DATABASE_URL` to upsert lesson metadata and deterministic embedding IDs for all discovered lessons. Repeat runs update existing rows and preserve unrelated data; neither command prints keys.
 
 ### Adding a topic
 
-Adding a topic requires content, assets, and embedding ingest: add MDX frontmatter + prose, add a GLB with matching named meshes and a poster, and run the embed script. Use a stable topic slug; the catalog formats slugs such as `cardiovascular` and `earth-science` as readable category labels. Production retrieval, the scene renderer, progress API, mastery model, and verifier stay topic-agnostic, so onboarding needs no subject-specific TypeScript.
+Adding a topic requires content, assets, seed, and embedding ingest: add MDX frontmatter + prose, add a GLB with matching named meshes and a poster, run `pnpm db:seed`, then run the embed script with `--write`. Both commands discover all MDX lessons rather than maintaining a subject-specific list. Use a stable topic slug; the catalog formats slugs such as `cardiovascular` and `earth-science` as readable category labels. Production retrieval, the scene renderer, progress API, mastery model, and verifier stay topic-agnostic, so onboarding needs no subject-specific TypeScript.
 
 ## Verification & evidence
 

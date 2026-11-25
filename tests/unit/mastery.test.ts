@@ -7,6 +7,7 @@ import {
   type MasteryView,
 } from '../../api/src/lib/mastery';
 import { DEFAULT_HOTSPOTS } from '../../api/src/lib/retrieval';
+import { EARTH_LESSON } from '../fixtures/lessons';
 
 const NOW = 1_700_000_000_000;
 
@@ -90,6 +91,26 @@ describe('computeMastery', () => {
     const due = Date.parse(mastery.hotspots[0].dueAt ?? '');
     expect(Number.isFinite(due)).toBe(true);
     expect(due).toBeGreaterThan(NOW);
+  });
+
+  it('computes Earth mastery, FSRS due cards and next-best review', () => {
+    const mastery = computeMastery(
+      [
+        event({
+          hotspotId: 'outer_core',
+          id: 'earth:outer_core:1',
+          lessonId: EARTH_LESSON.id,
+          payload: { correct: true, grade: 'good' },
+        }),
+        event({ id: 'heart:left_ventricle:1' }),
+      ],
+      EARTH_LESSON.hotspots,
+    );
+    expect(mastery.hotspots.map((hotspot) => hotspot.hotspotId)).toEqual(EARTH_LESSON.hotspots);
+    const outerCore = mastery.hotspots.find((hotspot) => hotspot.hotspotId === 'outer_core');
+    expect(outerCore?.correct).toBe(1);
+    expect(Date.parse(outerCore?.dueAt ?? '')).toBeGreaterThan(NOW);
+    expect(recommendNext(mastery, EARTH_LESSON.hotspots)).toBe('crust');
   });
 
   it('schedules a review card much sooner after Again than after Good', () => {

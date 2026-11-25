@@ -37,7 +37,12 @@ export function MasteryPanel({ lessonId, hotspots }: MasteryPanelProps) {
 
   const load = useCallback(async () => {
     try {
-      const response = await fetch(`${apiBase}/api/mastery`, { credentials: 'include' });
+      const response = await fetch(
+        `${apiBase}/api/mastery?lessonId=${encodeURIComponent(lessonId)}`,
+        {
+          credentials: 'include',
+        },
+      );
       if (response.status === 401) {
         setMessage('Sign in to track your mastery.');
         return;
@@ -51,7 +56,7 @@ export function MasteryPanel({ lessonId, hotspots }: MasteryPanelProps) {
     } catch {
       setMessage('Mastery is unavailable right now. The lesson prose is still available.');
     }
-  }, []);
+  }, [lessonId]);
 
   useEffect(() => {
     void load();

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createBadgeService } from '../../api/src/lib/badge';
+import { EARTH_LESSON } from '../fixtures/lessons';
 
 const SECRET = 'unit-test-fixed-secret';
 
@@ -8,6 +9,7 @@ describe('createBadgeService', () => {
     const service = createBadgeService(SECRET);
     const envelope = await service.issue({
       lessonId: 'heart',
+      lessonTitle: 'The Human Heart',
       mastery: 0.97,
       userId: 'user-123',
       now: new Date('2026-11-24T00:00:00.000Z'),
@@ -34,6 +36,35 @@ describe('createBadgeService', () => {
       proofPurpose: 'assertionMethod',
       type: 'DataIntegrityProof',
     });
+  });
+
+  it('uses a generic lesson title and Earth vocabulary for badge achievements', async () => {
+    const service = createBadgeService(SECRET);
+    const { credential } = await service.issue({
+      hotspots: EARTH_LESSON.hotspots,
+      lessonId: 'earth-interior',
+      lessonTitle: 'Inside Earth',
+      mastery: 1,
+      userId: 'user-earth',
+    });
+    const result = await service.verify(credential);
+    expect(result.valid).toBe(true);
+    const achieved = achievement(result);
+    expect(achieved.name).toBe('Inside Earth Mastery');
+    expect(achieved.description).toContain('earth-interior lesson concepts');
+    expect(achieved.criteria?.narrative).toContain(EARTH_LESSON.hotspots.join(', '));
+    const prose = `${achieved.name} ${achieved.description} ${achieved.criteria?.narrative ?? ''}`;
+    expect(prose).not.toMatch(/heart|anatomy|clinical/i);
+  });
+
+  it('humanizes a lesson id when no display title is available', async () => {
+    const service = createBadgeService(SECRET);
+    const { credential } = await service.issue({
+      lessonId: 'earth-interior',
+      mastery: 1,
+      userId: 'user-earth',
+    });
+    expect(achievement(await service.verify(credential)).name).toBe('Earth Interior Mastery');
   });
 
   it('rejects a modified payload without throwing', async () => {
@@ -129,9 +160,16 @@ describe('createBadgeService', () => {
 function achievement(result: { credential?: Record<string, unknown> }): {
   criteria?: { narrative?: string };
   description?: string;
+  name?: string;
 } {
   const subject = result.credential?.credentialSubject as
-    | { achievement?: { criteria?: { narrative?: string }; description?: string } }
+    | {
+        achievement?: {
+          criteria?: { narrative?: string };
+          description?: string;
+          name?: string;
+        };
+      }
     | undefined;
   return subject?.achievement ?? {};
 }
