@@ -13,7 +13,7 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
-| RM-7 | Add persistent sign-in/navigation and inline auth calls to action | feature | high | — | — | user |
+| RM-7 | Add persistent sign-in/navigation and inline auth calls to action | feature | high | — | 20261126-reviewer-onboarding | user |
 | RM-8 | Correct verifier production copy and sample credential styling | bug | high | — | — | user |
 | RM-9 | Implement a sticky tutor dock with reliable hotspot-grounded answers | feature | high | — | — | user |
 
