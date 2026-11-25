@@ -52,7 +52,7 @@
 - **Covers:** FR-7, AC-7, AC-8, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6
 - **Touches:** `tests/e2e/**`, `README.md`, `docs/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Run full local verification and Lighthouse budgets** — covers: AC-7, NFR-1, NFR-6
 - [ ] **P3.T2: Complete primary browser pass on catalog, lesson, `/sign-in`, and `/verify`** — covers: FR-7, AC-7, NFR-2, NFR-5
