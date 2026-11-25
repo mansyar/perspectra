@@ -14,12 +14,15 @@
 - **Covers:** FR-1, FR-4, AC-1, AC-3, NFR-4
 - **Touches:** `src/content/lessons/earth-interior.mdx`, `src/pages/index.astro`, `tests/integration/content-contract.test.ts`, `tests/e2e/catalog.spec.ts`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration tests/integration/content-contract.test.ts && pnpm build && pnpm exec playwright test --grep '@catalog'` (asset readiness is verified by the full chain in Phase 2)
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified; content/catalog checks pass, asset-readiness checks intentionally run in Phase 2
+- **Checkpoint:** `f6524e5`
+- **Evidence:** `conductor/tracks/20261125-earth-interior-proof/verification/phase-1.md`
 
-- [ ] **P1.T1: Author the layered Earth lesson and source references** — covers: FR-1, NFR-4
-- [ ] **P1.T2: Add Earth scene and hotspot contract validation** — covers: FR-1, AC-1
-- [ ] **P1.T3: Generalize catalog copy and category presentation** — covers: FR-4, AC-3
-- [ ] **P1.T4: Record phase evidence** — covers: FR-8
+- [x] **P1.T1: Author the layered Earth lesson and source references** — covers: FR-1, NFR-4
+- [x] **P1.T2: Add Earth scene and hotspot contract validation** — covers: FR-1, AC-1
+- [x] **P1.T3: Generalize catalog copy and category presentation** — covers: FR-4, AC-3
+- [x] **P1.T4: Record phase evidence** — covers: FR-8
 
 ## Phase 2: Detailed 3D Cutaway & Scene Integration
 
