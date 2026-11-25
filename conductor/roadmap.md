@@ -21,7 +21,7 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
-| RM-2 | Add cohort learning, shared progress and team goals without public leaderboards | feature | medium | RM-1 | — | user |
+| RM-2 | Add cohort learning, shared progress and team goals without public leaderboards | feature | medium | — | — | user |
 | RM-3 | Deepen assessment with IRT adaptive tests, richer SRS scheduling and rubric grading | feature | medium | RM-1 | — | user |
 | RM-10 | Reframe the 3D stage with a larger model, interaction hints and calmer motion | feature | medium | — | — | user |
 | RM-11 | Polish the catalog with poster thumbnails, clean coming-soon labels and neutral copy | feature | medium | — | — | user |
