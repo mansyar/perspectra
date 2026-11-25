@@ -13,6 +13,16 @@
   margin: 0 0 0.75rem;
 }
 
+.mastery-panel__auth-cta {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.mastery-panel__auth-cta:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .mastery-panel__grid {
   display: grid;
   gap: 0.5rem;

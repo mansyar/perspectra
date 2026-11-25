@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveNext } from '../../src/lib/auth-navigation';
+import { resolveNext, signInHref } from '../../src/lib/auth-navigation';
 
 const ORIGIN = 'https://perspectra.example';
 
@@ -62,5 +62,27 @@ describe('resolveNext', () => {
 
   it('normalizes empty query and hash delimiters away', () => {
     expect(resolveNext('/lessons/heart?#', ORIGIN)).toBe('/lessons/heart');
+  });
+});
+
+describe('signInHref', () => {
+  it('links a root lesson path', () => {
+    expect(signInHref('/lessons/heart/')).toBe('/sign-in?next=%2Flessons%2Fheart%2F');
+  });
+
+  it('preserves the query and hash of the return URL', () => {
+    expect(signInHref('/lessons/earth-interior/?layer=core#outer-core')).toBe(
+      '/sign-in?next=%2Flessons%2Fearth-interior%2F%3Flayer%3Dcore%23outer-core',
+    );
+  });
+
+  it('encodes reserved characters in the return URL', () => {
+    expect(signInHref('/lessons/heart?next=/verify&x=1#top')).toBe(
+      '/sign-in?next=%2Flessons%2Fheart%3Fnext%3D%2Fverify%26x%3D1%23top',
+    );
+  });
+
+  it.each([undefined, null, ''])('falls back to /sign-in for %s', (raw) => {
+    expect(signInHref(raw)).toBe('/sign-in');
   });
 });

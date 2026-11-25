@@ -56,10 +56,12 @@ const fixtureVerification = await fixtureService.verify(fixture.credential);
       <section class="verify-fixture" aria-label="Offline sample credential">
         <h2>Non-heart sample</h2>
         <p>
-          Static preview has no Worker API. This public fixture displays the signed sample prose
-          only; it is not signature-verified here.
+          This non-heart sample is a public offline fixture. It demonstrates the credential prose
+          but is not verified against the live service. Use the form above to verify a real
+          credential.
         </p>
         <button
+          class="verify-fixture__button"
           data-fixture-button
           data-fixture-credential={fixture.credential}
           data-fixture-parsed={JSON.stringify(fixtureVerification.credential ?? {})}

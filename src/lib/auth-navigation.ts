@@ -57,3 +57,14 @@ export function resolveNext(raw: string | null | undefined, origin: string): str
   }
   return `${pathname}${target.search}${target.hash}` || '/';
 }
+
+/**
+ * Builds a same-origin sign-in link that returns to the given path. Pure by
+ * design so the encoded return URL can be unit-tested without DOM globals.
+ */
+export function signInHref(returnTo: string | null | undefined): string {
+  if (!returnTo) {
+    return '/sign-in';
+  }
+  return `/sign-in?next=${encodeURIComponent(returnTo)}`;
+}

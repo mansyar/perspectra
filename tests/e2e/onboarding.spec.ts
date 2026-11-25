@@ -93,3 +93,106 @@ test(
     }
   },
 );
+
+test(
+  'mocked 401 responses expose mastery and quiz sign-in CTAs',
+  { tag: '@onboarding' },
+  async ({ page }) => {
+    await page.unrouteAll();
+    await page.route('**/api/auth/**', (route) =>
+      route.fulfill({ contentType: 'application/json', status: 404, body: '{}' }),
+    );
+    await page.route(/\/api\/mastery(?:\?.*)?$/, (route) =>
+      route.fulfill({ contentType: 'application/json', status: 401, body: '{}' }),
+    );
+    await page.route('**/api/quiz/grade', (route) =>
+      route.fulfill({ contentType: 'application/json', status: 401, body: '{}' }),
+    );
+    let generateUnauthorized = true;
+    await page.route('**/api/quiz/generate', (route) => {
+      if (generateUnauthorized) {
+        return route.fulfill({ contentType: 'application/json', status: 401, body: '{}' });
+      }
+      return route.fulfill({
+        json: {
+          hotspotId: 'aorta',
+          id: 'onboarding-question',
+          lessonId: 'heart',
+          options: ['Aorta', 'Vena cava'],
+          question: 'Which vessel carries blood out of the left ventricle?',
+          remediationId: 'aorta',
+        },
+      });
+    });
+
+    await page.goto('/lessons/heart');
+
+    const masteryCta = page.locator('[data-auth-cta="mastery"]');
+    await expect(masteryCta).toBeVisible();
+    await expect(masteryCta).toHaveText('Sign in');
+    await expect(masteryCta).toHaveAttribute('href', '/sign-in?next=%2Flessons%2Fheart%2F');
+    await masteryCta.focus();
+    await expect(masteryCta).toBeFocused();
+
+    const quizCta = page.locator('[data-auth-cta="quiz"]');
+    await expect(quizCta).toHaveCount(0);
+    await page.getByTestId('quiz-generate').click();
+    await expect(quizCta).toBeVisible();
+    await expect(quizCta).toHaveText('Sign in');
+    await expect(quizCta).toHaveAttribute('href', '/sign-in?next=%2Flessons%2Fheart%2F');
+
+    generateUnauthorized = false;
+    await page.getByTestId('quiz-generate').click();
+    await expect(page.getByTestId('quiz-option')).toHaveCount(2);
+    await page.getByTestId('quiz-option').first().check();
+    await expect(quizCta).toHaveCount(0);
+    await page.getByTestId('quiz-submit').click();
+    await expect(quizCta).toBeVisible();
+    await expect(quizCta).toHaveAttribute('href', '/sign-in?next=%2Flessons%2Fheart%2F');
+  },
+);
+
+test(
+  'verify page uses truthful offline copy and a secondary sample button',
+  { tag: '@onboarding' },
+  async ({ page }) => {
+    await page.goto('/verify/');
+
+    await expect(page.locator('.verify-fixture')).toContainText('public offline fixture');
+    const text = await page.locator('body').innerText();
+    expect(text).not.toContain('Static preview has no Worker API');
+
+    const button = page.locator('[data-fixture-button]');
+    await expect(button).toBeVisible();
+    await expect(button).toHaveClass(/verify-fixture__button/);
+    await expect(button).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  },
+);
+
+test(
+  'coming-soon labels are separated from the topic on desktop and mobile',
+  { tag: '@onboarding' },
+  async ({ page }) => {
+    await page.goto('/');
+
+    const cards = page.locator('.lesson-card--placeholder');
+    await expect(cards).toHaveCount(3);
+
+    async function expectSeparation(): Promise<void> {
+      for (const card of await cards.all()) {
+        const badge = card.locator('.lesson-card__badge');
+        await expect(badge).toHaveCSS('display', 'block');
+        await expect(badge).toHaveCSS('margin-bottom', '8px');
+        const badgeBox = await badge.boundingBox();
+        const topicBox = await card.locator('.lesson-card__topic').boundingBox();
+        expect((topicBox?.y ?? 0) - ((badgeBox?.y ?? 0) + (badgeBox?.height ?? 0))).toBeGreaterThan(
+          0,
+        );
+      }
+    }
+
+    await expectSeparation();
+    await page.setViewportSize({ width: 360, height: 720 });
+    await expectSeparation();
+  },
+);
