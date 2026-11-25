@@ -31,7 +31,7 @@
 - **Covers:** FR-2, FR-3, AC-1, AC-2, NFR-3, NFR-4
 - **Touches:** `assets/earth-interior/**`, `public/assets/earth-interior/**`, `src/content/lessons/earth-interior.mdx`, `src/components/scene/**`, `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts`, `tests/e2e/earth-scene.spec.ts`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Author the deterministic detailed Blender recipe** — covers: FR-2, NFR-4
 - [ ] **P2.T2: Export and validate the GLB, WebP poster, and asset contract** — covers: FR-2, AC-2
