@@ -58,7 +58,7 @@ into their topic names.
 
 ## Media
 
-![Reviewer onboarding demo](.conductor/media/20261126-reviewer-onboarding/demo.gif)
+![Reviewer onboarding demo](https://github.com/user-attachments/assets/c19358dd-b4d9-4c75-be47-649eb1ed76f1)
 
 ## Review
 

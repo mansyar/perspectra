@@ -13,7 +13,6 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
-| RM-7 | Add persistent sign-in/navigation and inline auth calls to action | feature | high | — | 20261126-reviewer-onboarding | user |
 | RM-8 | Correct verifier production copy and sample credential styling | bug | high | — | — | user |
 | RM-9 | Implement a sticky tutor dock with reliable hotspot-grounded answers | feature | high | — | — | user |
 
@@ -31,7 +30,7 @@
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
 | RM-4 | Open the platform with LTI 1.3 / xAPI / cmi5, external authors and post-OB3 credentials | feature | low | RM-2, RM-3 | — | user |
-| RM-12 | Clarify anonymous mastery state and add persistent reading navigation | feature | low | RM-7 | — | user |
+| RM-12 | Clarify anonymous mastery state and add persistent reading navigation | feature | low | — | — | user |
 
 ## Dropped
 

@@ -2,11 +2,11 @@
   "id": "20261126-reviewer-onboarding",
   "title": "Reviewer Onboarding & Trust",
   "type": "feature",
-  "status": "in_progress",
+  "status": "complete",
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-26T03:08:05+11:00",
-  "updated_at": "2026-11-26T10:50:12+11:00",
+  "updated_at": "2026-11-26T10:55:14+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261126-reviewer-onboarding",
@@ -22,10 +22,10 @@
   "review_verdict": "PASS",
   "review_rounds": 2,
   "doc_sync": "updated",
-  "pr_url": null,
+  "pr_url": "https://github.com/mansyar/perspectra/pull/5",
   "reverted_at": null,
   "revert_commit": null,
   "revert_pr_url": null,
-  "archived_at": null,
-  "archive_path": null
+  "archived_at": "2026-11-26T10:55:14+11:00",
+  "archive_path": "conductor/archive/20261126-reviewer-onboarding"
 }
