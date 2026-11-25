@@ -5,9 +5,9 @@
 - Date: 2026-11-26
 - Branch: `feat/20261126-reviewer-onboarding`
 - Phase base: `b52b271c3f96084e3470210426e6b2092afd0a26`
-- Head at verification: `874f4e98826954dec38c0c66a2e6cd22f8bf565a`
+- Head at verification: `ee3b667f13897784cd0b45dc78616ad5412020c9`
 - Result: **PASS** — local automated gates, primary browser pass, and read-only audit all pass
-- Final checkpoint: `874f4e98826954dec38c0c66a2e6cd22f8bf565a`
+- Final checkpoint: `ee3b667f13897784cd0b45dc78616ad5412020c9`
 
 ## Scope of this result
 
@@ -101,6 +101,7 @@ the primary and are marked PASS below.
 - `conductor/tracks/20261126-reviewer-onboarding/verification/phase-2.md`
 - `conductor/tracks/20261126-reviewer-onboarding/verification/integrated.md` (this file)
 - `conductor/tracks/20261126-reviewer-onboarding/verification/browser.md` (primary browser pass)
+- `conductor/tracks/20261126-reviewer-onboarding/verification/review-fix-r1.md` (F1 fix verification)
 
 ## Deviations
 
@@ -113,7 +114,7 @@ was modified. No dependencies were added.
 
 ## Primary verification
 
-- Final source checkpoint: `874f4e98826954dec38c0c66a2e6cd22f8bf565a`
+- Final source checkpoint: `ee3b667f13897784cd0b45dc78616ad5412020c9`
 - Independent `pnpm verify:full`: first attempt exited 1 only on Lighthouse performance under
   load; the exact rerun exited 0. Authoritative log:
   `C:\Users\Ansyar\AppData\Local\Temp\opencode\verify-phase3-rerun.log`.
@@ -126,6 +127,11 @@ was modified. No dependencies were added.
   `/verify`; no unexpected console errors.
 - Read-only audit: no `sk-`/`AIza`/`ghp_`/`GOCSPX-`/`postgresql://...@...` literals, no
   config or lockfile changes, no heart/earth-specific logic in the new onboarding files.
+- Review fix R1: F1 resolved in `ee3b667f13897784cd0b45dc78616ad5412020c9`; `SignInPanel`
+  now follows `SESSION_CHANGE_EVENT` and a mocked authenticated-state E2E case was added.
+  Executor `pnpm verify:full` exited 0; primary focused `pnpm test:perf` exited 0; primary full
+  reruns hit only environment-driven Lighthouse variance with unchanged thresholds. Browser
+  recheck and details are in `verification/review-fix-r1.md`.
 - Human-only exceptions: live Google/email credential sign-in on the public origin and any
   future deployment approval; neither was performed by this track.
 

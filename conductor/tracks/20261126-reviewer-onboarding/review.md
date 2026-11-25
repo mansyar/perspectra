@@ -3,17 +3,18 @@
 - Track: `20261126-reviewer-onboarding`
 - Type: `feature`
 - Branch: `feat/20261126-reviewer-onboarding`
-- Range: `96920affde115b46a40d4f2398a3079dfea89eea..02a8374eeec0b1143f3482d6084f5695cc1f08af`
+- Range: `96920affde115b46a40d4f2398a3079dfea89eea..e6d495c892a34dad4aff654b420fcba7c6ed4e9c`
 - Date: `2026-11-26T10:08:34+11:00`
-- Verdict: **PASS WITH FINDINGS**
+- Verdict: **PASS**
 
 ## Summary
 
 The onboarding surfaces are implemented as specified: a zero-JS static catalog header, a
 dedicated `/sign-in` page with validated same-origin `next`, anonymous mastery/quiz CTAs,
-truthful verifier copy, and separated coming-soon labels. No Critical or High issue blocks
-the track. One Medium UI-state defect remains: signing out from the shared header on
-`/sign-in/` clears the header but leaves the sign-in panel's stale account block visible.
+truthful verifier copy, and separated coming-soon labels. The single Medium finding from the
+first review (stale account state after header sign-out on `/sign-in/`) was fixed in R1 and
+verified by a mocked authenticated-state E2E case and browser recheck. No Critical or High
+issue blocks the track.
 
 ## Verification
 
@@ -33,7 +34,7 @@ the track. One Medium UI-state defect remains: signing out from the shared heade
 | ID | Status | Evidence |
 | --- | --- | --- |
 | FR-1 | covered | P1.T1; `SiteHeader.tsx`, static catalog header; `@onboarding`/`@catalog` E2E, `browser.md`. |
-| FR-2 | partial | P1.T2/T3; `SignInPanel.tsx`, `auth-client.ts`; E2E/browser form check. See F1 for stale account state. |
+| FR-2 | covered | P1.T2/T3, R1.T1; `SignInPanel.tsx`, `auth-client.ts`; E2E and browser checks, including header sign-out state sync. |
 | FR-3 | covered | P1.T2/T3; `src/lib/auth-navigation.ts`, `tests/unit/auth-navigation.test.ts`. |
 | FR-4 | covered | P2.T1/T2; `MasteryPanel.tsx`, `QuizPanel.tsx`, `signInHref`, `@onboarding` E2E. |
 | FR-5 | covered | P2.T3; `verify.astro`, truthful copy, shared token button, browser. |
@@ -56,7 +57,7 @@ the track. One Medium UI-state defect remains: signing out from the shared heade
 
 ## Findings
 
-### Medium
+### Medium — fixed in R1
 
 - **F1 — stale account state after header sign-out on `/sign-in/`**
   - File: `src/components/layout/SignInPanel.tsx:34-52`
@@ -91,14 +92,16 @@ live credential sign-in (human-only), and production deployment (forbidden by sc
 
 ## Debt
 
-None deferred; F1 is assigned to R1.
+None deferred; F1 was fixed in R1 and confirmed by the final re-review.
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | PASS WITH FINDINGS | 0 | 0 | 1 | 0 | 0 |
+| 2 | PASS | 0 | 0 | 0 | 0 | 1 |
 
 ## Doc sync
 
-pending — post-review sync will reconcile the final verdict and evidence after R1.
+updated — final verdict PASS, range through `e6d495c`, R1 evidence and integrated checkpoint
+`ee3b667` reconciled; product definition and product guidelines required no change.
