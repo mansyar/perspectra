@@ -65,7 +65,7 @@
 - **Goal:** Both lessons are live and verified on the public workers.dev origin without resetting existing data.
 - **Depends on:** Phase 3
 - **Covers:** FR-8, AC-4, AC-5, AC-6, AC-8, NFR-2, NFR-3, NFR-5, NFR-6, NFR-7
-- **Touches:** `scripts/production-smoke.mjs`, `tests/e2e/earth-loop.spec.ts`, `docs/DEPLOYMENT.md`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
+- **Touches:** `scripts/production-smoke.mjs`, `tests/e2e/earth-loop.spec.ts`, `tests/e2e/performance.spec.ts`, `docs/DEPLOYMENT.md`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full && pnpm test:production`
 - **Status:** in_progress
 
@@ -73,6 +73,7 @@
 - [ ] **P4.T2: Additively seed and embed Earth in production** — covers: AC-4, NFR-5, NFR-6
 - [ ] **P4.T3: Manually deploy and run production E2E and real-service smoke** — covers: AC-4, AC-5, AC-6, AC-8, NFR-7
 - [ ] **P4.T4: Record production browser, console, fallback, and Lighthouse evidence** — covers: FR-8, AC-8, NFR-2, NFR-3
+- [ ] **P4.T5: Make Lighthouse cleanup resilient to Windows EPERM without weakening score assertions** — covers: AC-8, NFR-2, NFR-7
 
 ## Phase 5: Integrated Proof & Documentation
 

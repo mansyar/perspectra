@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": ["20261124-public-deployment"],
   "created_at": "2026-11-25T13:07:50+11:00",
-  "updated_at": "2026-11-25T16:18:39+11:00",
+  "updated_at": "2026-11-25T17:09:20+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261125-earth-interior-proof",
@@ -15,7 +15,7 @@
   "progress": {
     "phases_total": 5,
     "phases_verified": 3,
-    "tasks_total": 21,
+    "tasks_total": 22,
     "tasks_done": 14
   },
   "last_checkpoint": "634648ee39181a7060bdb3bd0446d7140516a2f2",
