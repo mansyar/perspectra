@@ -67,7 +67,7 @@
 - **Covers:** FR-8, AC-4, AC-5, AC-6, AC-8, NFR-2, NFR-3, NFR-5, NFR-6, NFR-7
 - **Touches:** `scripts/production-smoke.mjs`, `tests/e2e/earth-loop.spec.ts`, `docs/DEPLOYMENT.md`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full && pnpm test:production`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P4.T1: Generalize the tracked production smoke runner by lesson ID** — covers: FR-8, NFR-5
 - [ ] **P4.T2: Additively seed and embed Earth in production** — covers: AC-4, NFR-5, NFR-6
