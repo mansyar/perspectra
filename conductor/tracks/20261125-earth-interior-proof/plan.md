@@ -13,7 +13,7 @@
 - **Depends on:** Public deployment track
 - **Covers:** FR-1, FR-4, AC-1, AC-3, NFR-4
 - **Touches:** `src/content/lessons/earth-interior.mdx`, `src/pages/index.astro`, `tests/integration/content-contract.test.ts`, `tests/e2e/catalog.spec.ts`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
-- **Verification:** `pnpm verify`
+- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm test && pnpm coverage && pnpm test:integration tests/integration/content-contract.test.ts && pnpm build && pnpm exec playwright test --grep '@catalog'` (asset readiness is verified by the full chain in Phase 2)
 - **Status:** in_progress
 
 - [ ] **P1.T1: Author the layered Earth lesson and source references** — covers: FR-1, NFR-4
