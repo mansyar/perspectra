@@ -15,19 +15,15 @@
 - **Covers:** FR-1, FR-2, FR-3, AC-1, AC-2, AC-3, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5
 - **Touches:** `src/components/layout/**`, `src/lib/auth-navigation.ts`, `src/pages/sign-in.astro`, `src/pages/index.astro`, `src/pages/lessons/[slug].astro`, `src/pages/verify.astro`, `src/styles/global.css`, `tests/unit/**`, `tests/e2e/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified — `pnpm verify` exited 0; shared header, sign-in page, return-URL helper and onboarding tests are in place.
+- **Checkpoint:** `f2442bb9a7edb447ef7ea7e4e92ee7c2e0307a6c`
+- **Evidence:** `conductor/tracks/20261126-reviewer-onboarding/verification/phase-1.md`
 
-- [ ] **P1.T1: Build shared header component** — covers: FR-1, AC-1, NFR-1, NFR-2, NFR-5
-- [ ] **P1.T2: Add `/sign-in` page with email/password and Google buttons** — covers: FR-2, AC-2, NFR-3
-- [ ] **P1.T3: Validate `next` and implement account/sign-out state** — covers: FR-3, AC-3, NFR-3
-- [ ] **P1.T4: Add header and sign-in unit/E2E tests** — covers: FR-1, FR-2, FR-3, AC-1, AC-2, AC-3
-
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/20261126-reviewer-onboarding/verification/phase-1.md
--->
+- [x] **P1.T1: Build shared header component** — covers: FR-1, AC-1, NFR-1, NFR-2, NFR-5
+- [x] **P1.T2: Add `/sign-in` page with email/password and Google buttons** — covers: FR-2, AC-2, NFR-3
+- [x] **P1.T3: Validate `next` and implement account/sign-out state** — covers: FR-3, AC-3, NFR-3
+- [x] **P1.T4: Add header and sign-in unit/E2E tests** — covers: FR-1, FR-2, FR-3, AC-1, AC-2, AC-3
 
 ## Phase 2: Inline CTAs & Trust Copy
 
