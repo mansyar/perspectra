@@ -84,6 +84,9 @@ Review fixes are appended by `conductor-review` as:
 - **Covers:** F1, FR-2
 - **Touches:** `src/components/layout/SignInPanel.tsx`, `tests/e2e/onboarding.spec.ts`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified — F1 fixed; sign-in panel follows header sign-out, E2E regression added, browser recheck passed
+- **Checkpoint:** `ee3b667`
+- **Evidence:** `conductor/tracks/20261126-reviewer-onboarding/verification/review-fix-r1.md`
 
-- [ ] **R1.T1: Sync SignInPanel with SESSION_CHANGE_EVENT and add authenticated-state E2E** — covers: F1, FR-2
+- [x] **R1.T1: Sync SignInPanel with SESSION_CHANGE_EVENT and add authenticated-state E2E** — covers: F1, FR-2
