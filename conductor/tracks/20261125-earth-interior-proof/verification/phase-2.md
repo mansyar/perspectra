@@ -85,7 +85,7 @@ Sizes are recorded in the primary asset contract and independently enforced by
 | Asset | Size | Contract | Result |
 | --- | ---: | --- | --- |
 | Earth GLB | 935,332 bytes | < 1,000,000 bytes | Pass |
-| Earth WebP poster | 23,212 bytes | < 120,000 bytes | Pass |
+| Earth WebP poster | 18,410 bytes | < 120,000 bytes | Pass |
 | Earth retained PNG | n/a | 960×960 source retained | Present |
 | Heart GLB | n/a | < 1,000,000 bytes | Pass |
 | Heart WebP poster | n/a | < 120,000 bytes | Pass |
@@ -121,7 +121,7 @@ The Earth MDX uses camera `[4.2, 2.2, 4.8]`, target `[0, 0, 0]`, FOV 42, and the
 
 Primary asset QA recorded in the Phase 2 brief passed: the cutaway is complete, strata and core are
 visible, the blue/green surface uses smooth vertex colour, and the poster is neither blank, cropped,
-nor corrupt. The committed GLB is 935,332 bytes and the 960×960 WebP poster is 23,212 bytes.
+nor corrupt. The committed GLB is 935,332 bytes and the 960×960 WebP poster is 18,410 bytes.
 
 Automated Playwright additionally confirmed that Earth:
 

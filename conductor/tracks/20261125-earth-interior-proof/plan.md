@@ -29,7 +29,7 @@
 - **Goal:** A detailed semi-realistic Earth cutaway renders through the existing generic scene pipeline with all fallbacks.
 - **Depends on:** Phase 1
 - **Covers:** FR-2, FR-3, AC-1, AC-2, NFR-3, NFR-4
-- **Touches:** `assets/earth-interior/**`, `public/assets/earth-interior/**`, `src/content/lessons/earth-interior.mdx`, `src/components/scene/**`, `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts`, `tests/e2e/earth-scene.spec.ts`, `tests/e2e/performance.spec.ts`, `playwright.config.ts`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
+- **Touches:** `assets/earth-interior/**`, `public/assets/earth-interior/**`, `src/content/lessons/earth-interior.mdx`, `src/components/scene/**`, `tests/integration/glb-manifest.test.ts`, `tests/e2e/scene.spec.ts`, `tests/e2e/earth-loop.spec.ts`, `tests/e2e/performance.spec.ts`, `playwright.config.ts`, `README.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full`
 - **Status:** verified
 - **Result:** verified — detailed Earth cutaway, generic scene integration, desktop/mobile browser pass, and per-lesson Lighthouse budgets.

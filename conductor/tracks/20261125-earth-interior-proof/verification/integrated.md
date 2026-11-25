@@ -153,7 +153,7 @@ quiz UI requests, verifies Earth-scoped mastery, and forbids badge issuance.
 | Check | Result |
 | --- | --- |
 | Earth recipe | `assets/earth-interior/build_earth.py` is deterministic, original procedural geometry with vertex-coloured surfaces; no third-party planet texture is used. |
-| Earth contract | `assets/earth-interior/ASSET_CONTRACT.md` documents six named nodes, camera/anchors, Y-up glTF 2.0, 960×960 poster, GLB < 1,000,000 bytes, and WebP < 120,000 bytes. Supplied asset sizes are 935,332 and 23,212 bytes. |
+| Earth contract | `assets/earth-interior/ASSET_CONTRACT.md` documents six named nodes, camera/anchors, Y-up glTF 2.0, 960×960 poster, GLB < 1,000,000 bytes, and WebP < 120,000 bytes. Git records 935,332-byte GLB and 18,410-byte WebP. |
 | Heart provenance | `assets/heart/build_heart.py` authors synthetic geometry. Z-Anatomy and BodyParts3D remain CC BY-SA reference-only and are not shipped. |
 | Runtime portability | Both topics use the same named-glTF-mesh/MDX-manifest contract; no Earth-specific renderer branch is required. |
 
@@ -162,7 +162,7 @@ quiz UI requests, verifies Earth-scoped mastery, and forbids badge issuance.
 | Check | Result |
 | --- | --- |
 | API TypeScript | Exact `earth`, `earth-interior`, `inner_core`, and `outer_core` searches found no runtime match in `api/`. |
-| Frontend TypeScript and Astro | The same exact searches found no runtime match in `src/*.ts` or `src/*.astro`. |
+| Frontend TypeScript and Astro | The same exact searches found no runtime match in `src/*.ts` or `src/*.astro` logic; neutral catalog intro copy intentionally names the two live lessons (review F1). |
 | Ingestion scripts | The same exact searches found no TypeScript match in `scripts/`. |
 | Generic mechanisms | MDX scene manifests, named glTF meshes, content-driven seed/embed, DB-scoped retrieval, and lesson-derived badge/intent/mastery vocabulary drive both lessons. |
 | Expected occurrences | Lesson MDX, tests, fixtures, docs, and evidence contain Earth vocabulary intentionally. |

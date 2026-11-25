@@ -133,8 +133,9 @@ post-review sync.
 
 ## Doc sync
 
-`pending` — post-review sync will reconcile integrated-evidence size/wording, the plan filename
-drift, and this artifact's Doc sync line.
+`updated` — post-review sync reconciled the recorded WebP size (18,410 bytes), clarified the
+topic-independence wording, corrected the plan E2E filename, and left product definition and
+product guidelines unchanged.
 
 ## History
 
