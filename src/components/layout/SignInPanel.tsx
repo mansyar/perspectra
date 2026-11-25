@@ -36,18 +36,24 @@ export function SignInPanel() {
     setNext(resolveNext(requested, window.location.origin));
 
     let active = true;
-    void lookupSession().then(({ identity: found, unavailable }) => {
-      if (!active) {
-        return;
-      }
-      if (found) {
-        setIdentity(accountLabel(found));
-      } else if (unavailable) {
-        setNotice({ kind: 'alert', text: UNAVAILABLE });
-      }
-    });
+    const refresh = () => {
+      void lookupSession().then(({ identity: found, unavailable }) => {
+        if (!active) {
+          return;
+        }
+        if (found) {
+          setIdentity(accountLabel(found));
+        } else {
+          setIdentity(null);
+          setNotice(unavailable ? { kind: 'alert', text: UNAVAILABLE } : null);
+        }
+      });
+    };
+    refresh();
+    window.addEventListener(SESSION_CHANGE_EVENT, refresh);
     return () => {
       active = false;
+      window.removeEventListener(SESSION_CHANGE_EVENT, refresh);
     };
   }, []);
 

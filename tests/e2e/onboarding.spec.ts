@@ -196,3 +196,40 @@ test(
     await expectSeparation();
   },
 );
+
+test(
+  'header sign-out returns the sign-in panel to the form',
+  { tag: '@onboarding' },
+  async ({ page }) => {
+    await page.unrouteAll();
+    let signedIn = true;
+    await page.route('**/api/auth/get-session', (route) =>
+      route.fulfill({
+        body: signedIn
+          ? JSON.stringify({ user: { email: 'reviewer@example.test', name: 'Reviewer' } })
+          : 'null',
+        contentType: 'application/json',
+        status: 200,
+      }),
+    );
+    await page.route('**/api/auth/sign-out', (route) => {
+      signedIn = false;
+      return route.fulfill({ body: '{}', contentType: 'application/json', status: 200 });
+    });
+
+    await page.goto('/sign-in/');
+
+    const panel = page.locator('[data-sign-in-panel]');
+    await expect(panel).toContainText('Signed in as');
+    await expect(panel).toContainText('Reviewer');
+    await expect(panel.getByRole('link', { name: 'Continue to your lesson' })).toBeVisible();
+
+    await page.locator('header.site-header').getByRole('button', { name: 'Sign out' }).click();
+
+    await expect(panel.getByLabel('Email')).toBeVisible();
+    await expect(panel.getByLabel('Password')).toBeVisible();
+    await expect(panel.locator('[data-google-sign-in]')).toBeVisible();
+    await expect(panel).not.toContainText('Signed in as');
+    await expect(panel).not.toContainText('Continue to your lesson');
+  },
+);
