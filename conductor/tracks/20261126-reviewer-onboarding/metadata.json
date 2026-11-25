@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-26T03:08:05+11:00",
-  "updated_at": "2026-11-26T09:47:08+11:00",
+  "updated_at": "2026-11-26T10:06:02+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261126-reviewer-onboarding",
@@ -14,11 +14,11 @@
   "base_sha": "96920affde115b46a40d4f2398a3079dfea89eea",
   "progress": {
     "phases_total": 3,
-    "phases_verified": 2,
+    "phases_verified": 3,
     "tasks_total": 13,
-    "tasks_done": 9
+    "tasks_done": 13
   },
-  "last_checkpoint": "1a2cea9c30493ea42a4302f6f5f27658b638754c",
+  "last_checkpoint": "874f4e98826954dec38c0c66a2e6cd22f8bf565a",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",

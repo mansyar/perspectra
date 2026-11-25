@@ -52,12 +52,15 @@
 - **Covers:** FR-7, AC-7, AC-8, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6
 - **Touches:** `tests/e2e/**`, `README.md`, `docs/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify:full`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified — local gates, primary browser pass, and read-only audit pass with unchanged thresholds and no scope-guard violation
+- **Checkpoint:** `874f4e9`
+- **Evidence:** `conductor/tracks/20261126-reviewer-onboarding/verification/integrated.md`, `conductor/tracks/20261126-reviewer-onboarding/verification/browser.md`
 
-- [ ] **P3.T1: Run full local verification and Lighthouse budgets** — covers: AC-7, NFR-1, NFR-6
-- [ ] **P3.T2: Complete primary browser pass on catalog, lesson, `/sign-in`, and `/verify`** — covers: FR-7, AC-7, NFR-2, NFR-5
-- [ ] **P3.T3: Audit for secrets, dependencies, and topic-specific logic** — covers: AC-8, NFR-3, NFR-4, NFR-6
-- [ ] **P3.T4: Write integrated verification evidence** — covers: FR-7, AC-7, AC-8
+- [x] **P3.T1: Run full local verification and Lighthouse budgets** — covers: AC-7, NFR-1, NFR-6
+- [x] **P3.T2: Complete primary browser pass on catalog, lesson, `/sign-in`, and `/verify`** — covers: FR-7, AC-7, NFR-2, NFR-5
+- [x] **P3.T3: Audit for secrets, dependencies, and topic-specific logic** — covers: AC-8, NFR-3, NFR-4, NFR-6
+- [x] **P3.T4: Write integrated verification evidence** — covers: FR-7, AC-7, AC-8
 
 <!--
 Review fixes are appended by `conductor-review` as:
