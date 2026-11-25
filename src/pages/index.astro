@@ -7,6 +7,13 @@ const live = lessons
   .filter((lesson) => lesson.data.status === 'live')
   .toSorted((a, b) => a.data.order - b.data.order);
 
+function formatTopic(topic: string): string {
+  return topic
+    .split(/[-_]+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 const placeholders = [
   { title: 'Respiratory system', topic: 'respiratory' },
   { title: 'Renal system', topic: 'renal' },
@@ -19,8 +26,11 @@ const placeholders = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Interactive, topic-agnostic anatomy lessons." />
-    <title>Perspectra — Interactive anatomy lessons</title>
+    <meta
+      name="description"
+      content="Interactive, topic-agnostic lessons for exploring complex subjects in 3D."
+    />
+    <title>Perspectra — Explore subjects in 3D</title>
   </head>
   <body>
     <header class="site-header">
@@ -29,21 +39,21 @@ const placeholders = [
       </a>
     </header>
     <main class="page">
-      <h1>Learn anatomy by exploring it</h1>
+      <h1>Explore complex ideas in 3D</h1>
       <p class="page__intro">
-        Each lesson pairs a navigable 3D scene with layered reading. Start with the heart, or browse
-        the topics we are preparing next.
+        Each lesson pairs a navigable 3D scene with layered reading. Explore the human heart,
+        journey inside Earth, or browse the topics we are preparing next.
       </p>
 
       <section aria-labelledby="live-heading">
         <h2 class="section-title" id="live-heading">
-          Available lesson
+          Available lessons
         </h2>
         <ul class="lesson-grid">
           {live.map((lesson) => (
             <li class="lesson-card">
               <a href={`/lessons/${lesson.id}`}>
-                <span class="lesson-card__topic">{lesson.data.topic}</span>
+                <span class="lesson-card__topic">{formatTopic(lesson.data.topic)}</span>
                 <h3>{lesson.data.title}</h3>
                 <p>{lesson.data.description}</p>
                 <span class="lesson-card__cta">Open lesson</span>
@@ -61,7 +71,7 @@ const placeholders = [
           {placeholders.map((placeholder) => (
             <li class="lesson-card lesson-card--placeholder">
               <span class="lesson-card__badge">Coming soon</span>
-              <span class="lesson-card__topic">{placeholder.topic}</span>
+              <span class="lesson-card__topic">{formatTopic(placeholder.topic)}</span>
               <h3>{placeholder.title}</h3>
             </li>
           ))}

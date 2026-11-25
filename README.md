@@ -2,7 +2,7 @@
 
 **Understand anything from every angle.**
 
-Perspectra is a topic-agnostic learning experience: a zero-JavaScript static catalog leads into a navigable 3D scene, layered prose, a course-grounded AI tutor, a real mastery model, and a verifiable Open Badge. The shipped vertical slice uses the human heart as its demo topic, but the renderer, content schema, progress events, and credential flow do not hard-code anatomy.
+Perspectra is a topic-agnostic learning experience: a zero-JavaScript static catalog leads into a navigable 3D scene, layered prose, a course-grounded AI tutor, a real mastery model, and a verifiable Open Badge. The shipped lessons cover the human heart and Earth's interior, while the renderer, content schema, progress events, and credential flow do not hard-code either subject.
 
 ## Why it exists
 
@@ -18,7 +18,7 @@ Everything runs at portfolio scale for **$0–10/month** using free tiers plus a
 
 ## Three-minute demo script
 
-1. **Catalog (0:00–0:20).** Open `/`. One live lesson card, three labeled placeholders, no script tags in the HTML.
+1. **Catalog (0:00–0:20).** Open `/`. Two live lesson cards across Cardiovascular and Earth Science, three labeled placeholders, no script tags in the HTML.
 2. **Lesson shell (0:20–0:50).** Open the heart lesson. The poster fills in until the 3D scene is ready. Scroll or use the landmark list — prose and active hotspot stay in sync.
 3. **Hotspots (0:50–1:20).** Click `Aorta` in the scene. The corresponding prose section highlights and scrolls into view; camera focus moves when the scene is available.
 4. **Tutor (1:20–2:00).** Ask “Why does the left ventricle have thicker walls?” The answer streams with a `[[heart:left_ventricle:overview]]` citation. Click the citation to jump back to the source section. The AI disclosure and privacy note are visible before the first question.
@@ -106,7 +106,7 @@ The browser uses same-origin relative API URLs. `pnpm deploy:prepare` requires `
 
 ## Content authoring
 
-1. Write or update `src/content/lessons/<topic>.mdx`. Frontmatter carries the generic scene manifest (model, camera, hotspots). Each hotspot must have a `<div id="..." data-hotspot="...">` section with `data-layer="overview|detail|clinical"` paragraphs.
+1. Write or update `src/content/lessons/<topic>.mdx`. Frontmatter carries the generic scene manifest (model, camera, hotspots). Each hotspot must have a `<div id="..." data-hotspot="...">` section with overview and detail paragraphs plus a topic-appropriate third layer, such as `clinical` for a health lesson or `context` for Earth Science.
 2. Keep every `data-hotspot` ID in sync with the manifest's `hotspots[].id`. `pnpm build` fails on a mismatch (`AC-2`).
 3. Export a GLB whose **named meshes match the hotspot IDs exactly**, plus a manifest-referenced WebP poster under 120 KB. The heart recipe deterministically retains the PNG as its WebP source; its contract is `assets/heart/ASSET_CONTRACT.md`.
 4. Generate pgvector rows for retrieval with:
@@ -119,7 +119,7 @@ The browser uses same-origin relative API URLs. `pnpm deploy:prepare` requires `
 
 ### Adding a topic
 
-Adding a topic requires content, assets, and embedding ingest: add MDX frontmatter + prose, add a GLB with matching named meshes and a poster, and run the embed script. Production retrieval, the scene renderer, progress API, mastery model, and verifier stay topic-agnostic.
+Adding a topic requires content, assets, and embedding ingest: add MDX frontmatter + prose, add a GLB with matching named meshes and a poster, and run the embed script. Use a stable topic slug; the catalog formats slugs such as `cardiovascular` and `earth-science` as readable category labels. Production retrieval, the scene renderer, progress API, mastery model, and verifier stay topic-agnostic, so onboarding needs no subject-specific TypeScript.
 
 ## Verification & evidence
 

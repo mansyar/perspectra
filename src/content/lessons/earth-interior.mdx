@@ -1,0 +1,155 @@
+---
+title: Inside Earth
+description: A guided tour of Earth's layered interior, from the rigid surface to the solid inner core.
+topic: earth-science
+status: live
+order: 2
+model:
+  src: /assets/earth-interior/earth.glb
+  poster: /assets/earth-interior/earth-poster.webp
+camera:
+  position: [0, 0, 8]
+  target: [0, 0, 0]
+  fov: 42
+hotspots:
+  - id: crust
+    label: Crust
+    position: [-0.15, 2.55, 0.4]
+  - id: upper_mantle
+    label: Upper mantle
+    position: [1.15, 1.15, 0.8]
+  - id: lower_mantle
+    label: Lower mantle
+    position: [-0.8, -0.45, 1.2]
+  - id: outer_core
+    label: Outer core
+    position: [0.75, -0.1, 1.45]
+  - id: inner_core
+    label: Inner core
+    position: [-0.15, 0.1, 1.6]
+  - id: lithosphere
+    label: Lithosphere
+    position: [-1.8, 1.7, 0.5]
+---
+
+Earth is not a uniform ball of rock. A thin crust surrounds a thick silicate mantle, which in turn
+surrounds a metallic core. The six landmarks below separate those compositional layers from the
+lithosphere, a mechanical layer that crosses the crust–mantle boundary. Each landmark provides an
+overview, a closer detail, and context for how it fits the whole planet.
+
+<div id="crust" data-hotspot="crust">
+  <h2>Crust</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The crust is Earth's thin, rocky outer shell. It is far thinner than
+    the mantle or core, but it is the layer where people live and where most of the planet's
+    accessible rock record is found.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> Oceanic crust is generally thinner and denser than continental crust.
+    Their different compositions and buoyancy help shape the elevations of ocean basins and
+    continents.
+  </p>
+  <p data-layer="context">
+    <strong>Context.</strong> The crust is only one part of the lithosphere. That rigid outer layer
+    also includes the uppermost mantle, so “crust” and “lithosphere” do not describe the same
+    boundary.
+  </p>
+</div>
+
+<div id="upper_mantle" data-hotspot="upper_mantle">
+  <h2>Upper mantle</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The upper mantle lies beneath the crust and extends to roughly 660
+    kilometers deep. It is mostly solid silicate rock, not a global ocean of magma.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> Over geological time, hot mantle rock can flow slowly under sustained
+    stress. This plastic behavior allows convection and helps transfer heat from Earth's interior
+    toward the surface.
+  </p>
+  <p data-layer="context">
+    <strong>Context.</strong> Its uppermost portion belongs to the rigid lithosphere. Below that
+    lies the weaker asthenosphere, which allows tectonic plates to move while the mantle remains
+    mostly solid.
+  </p>
+</div>
+
+<div id="lower_mantle" data-hotspot="lower_mantle">
+  <h2>Lower mantle</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The lower mantle is the thickest of Earth's major interior layers. It
+    lies between the upper mantle and the core-mantle boundary and consists mainly of solid silicate
+    rock under immense pressure.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> Minerals in the lower mantle adopt denser structures as pressure
+    increases with depth. Slow circulation still carries heat, but the rock does not behave like a
+    liquid magma layer.
+  </p>
+  <p data-layer="context">
+    <strong>Context.</strong> The lower mantle connects the relatively accessible upper mantle to
+    the metallic core. Changes in its mineral structure also alter how seismic waves travel through
+    the deep Earth.
+  </p>
+</div>
+
+<div id="outer_core" data-hotspot="outer_core">
+  <h2>Outer core</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The outer core is a layer of liquid iron and nickel surrounding the
+    inner core. It begins beneath the mantle at the core-mantle boundary.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> The liquid metal is extremely hot but remains fluid because pressure
+    there is lower than inside the inner core. Its motion is driven by heat loss and compositional
+    changes as Earth cools.
+  </p>
+  <p data-layer="context">
+    <strong>Context.</strong> Circulating electrically conductive metal in the outer core sustains
+    Earth's magnetic field. Seismic shear waves cannot pass through this liquid layer, one key line
+    of evidence for its state.
+  </p>
+</div>
+
+<div id="inner_core" data-hotspot="inner_core">
+  <h2>Inner core</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The inner core is a solid sphere of iron and nickel at Earth's
+    center. It is solid despite its extraordinary temperature because the pressure is even more
+    extreme.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> As Earth cools, more liquid iron solidifies at the inner core's
+    boundary. The growing crystal structure and its interaction with the outer core can influence
+    the planet's magnetic field.
+  </p>
+  <p data-layer="context">
+    <strong>Context.</strong> Seismic waves reveal a distinct inner-core boundary and show that the
+    center transmits shear waves. Together, those observations support a solid inner core enclosed
+    by a liquid outer core.
+  </p>
+</div>
+
+<div id="lithosphere" data-hotspot="lithosphere">
+  <h2>Lithosphere</h2>
+  <p data-layer="overview">
+    <strong>Overview.</strong> The lithosphere is Earth's rigid outer layer, made of the crust and
+    the uppermost mantle. It is divided into tectonic plates that move relative to one another.
+  </p>
+  <p data-layer="detail">
+    <strong>Detail.</strong> Oceanic and continental lithosphere both include mantle beneath their
+    crust, but they differ in thickness, age, density, and composition. Those differences affect how
+    plates interact at their boundaries.
+  </p>
+  <p data-layer="context">
+    <strong>Context.</strong> “Lithosphere” describes strength and mechanical behavior, not chemical
+    composition. It overlaps the crust and upper mantle rather than forming a separate compositional
+    shell between them.
+  </p>
+</div>
+
+## Sources
+
+- [NASA Science — Earth Facts](https://science.nasa.gov/earth/facts)
+- [USGS — Earth's Interior](https://pubs.usgs.gov/gip/interior)
+- [USGS Thesaurus — Lithosphere](https://apps.usgs.gov/thesaurus/term-simple.php?thcode=2&code=667)
