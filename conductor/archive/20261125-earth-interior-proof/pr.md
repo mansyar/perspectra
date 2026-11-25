@@ -62,7 +62,9 @@ Production origin: `https://perspectra-api.m-ansyarafi.workers.dev` (version `c9
 ## Media
 
 Demo GIF attached to this PR (production catalog → Earth poster → WebGPU cutaway → outer-core
-focus). Hosted URL is refreshed from GitHub after creation.
+focus).
+
+![demo](https://github.com/user-attachments/assets/e190ee9e-e5b3-409b-8c94-f2a883b5c353)
 
 ## Review
 
