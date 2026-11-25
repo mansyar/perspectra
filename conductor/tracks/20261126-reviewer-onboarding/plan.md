@@ -15,7 +15,7 @@
 - **Covers:** FR-1, FR-2, FR-3, AC-1, AC-2, AC-3, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5
 - **Touches:** `src/components/layout/**`, `src/pages/sign-in.astro`, `src/pages/index.astro`, `src/pages/lessons/[slug].astro`, `src/pages/verify.astro`, `src/styles/global.css`, `tests/unit/**`, `tests/e2e/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Build shared header component** — covers: FR-1, AC-1, NFR-1, NFR-2, NFR-5
 - [ ] **P1.T2: Add `/sign-in` page with email/password and Google buttons** — covers: FR-2, AC-2, NFR-3
