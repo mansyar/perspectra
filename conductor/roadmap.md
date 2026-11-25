@@ -1,6 +1,6 @@
 # Conductor Roadmap
 
-<!-- next-rm-id: 10 -->
+<!-- next-rm-id: 11 -->
 
 > Planned and future work. The roadmap stores **intent** — ordering, priority,
 > and dependencies — not live state. `conductor-status` joins every entry whose
@@ -23,6 +23,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | RM-2 | Add cohort learning, shared progress and team goals without public leaderboards | feature | medium | RM-1 | — | user |
 | RM-3 | Deepen assessment with IRT adaptive tests, richer SRS scheduling and rubric grading | feature | medium | RM-1 | — | user |
+| RM-10 | Reframe the 3D stage with a larger model, interaction hints and calmer motion | feature | medium | — | — | user |
 
 ## Later
 
