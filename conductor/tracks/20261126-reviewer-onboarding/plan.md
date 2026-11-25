@@ -13,7 +13,7 @@
   sign-in entry point with a validated return URL.
 - **Depends on:** none
 - **Covers:** FR-1, FR-2, FR-3, AC-1, AC-2, AC-3, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5
-- **Touches:** `src/components/layout/**`, `src/pages/sign-in.astro`, `src/pages/index.astro`, `src/pages/lessons/[slug].astro`, `src/pages/verify.astro`, `src/styles/global.css`, `tests/unit/**`, `tests/e2e/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
+- **Touches:** `src/components/layout/**`, `src/lib/auth-navigation.ts`, `src/pages/sign-in.astro`, `src/pages/index.astro`, `src/pages/lessons/[slug].astro`, `src/pages/verify.astro`, `src/styles/global.css`, `tests/unit/**`, `tests/e2e/**`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
 - **Verification:** `pnpm verify`
 - **Status:** in_progress
 
