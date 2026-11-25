@@ -19,7 +19,7 @@ repository.
 - [ ] GitHub OAuth is explicitly deferred by the user for this release. Its provider code remains
   available, but no GitHub OAuth application, credentials, or callback verification is required.
 - [ ] Repository checked out on the release commit; run `pnpm install --frozen-lockfile`.
-- [ ] `pnpm verify:full` passes locally before deployment.
+- [ ] `pnpm verify:full` passes locally before deployment (non-perf E2E first, then serial `@perf`).
 
 ## 2. Gemini-only environment and secrets
 
@@ -131,7 +131,7 @@ routes.
 
 Run the local release gate before deployment:
 
-- `pnpm verify:full` — lint, format, types, unit, coverage, integration, build, smoke, and Playwright.
+- `pnpm verify:full` — lint, format, types, unit, coverage, integration, build, smoke, non-perf Playwright, then `pnpm test:perf` (serial Lighthouse audits).
 
 Run the tracked full production smoke for each supported lesson against the public origin. It uses
 a unique email/password user created through the real Better Auth endpoints, checks grounded tutor

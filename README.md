@@ -70,7 +70,7 @@ Design constraints worth knowing:
 pnpm install
 pnpm dev                 # Astro dev server
 pnpm verify              # lint, format, types, unit, coverage, integration, build
-pnpm verify:full         # verify + smoke + all Playwright specs
+pnpm verify:full         # verify + smoke + non-perf Playwright, then serial @perf
 pnpm exec wrangler dev   # optional: local Worker with bindings
 ```
 
@@ -79,6 +79,7 @@ Optional focused checks:
 ```bash
 pnpm test:a11y           # @axe-core/playwright audit (@a11y)
 pnpm perf:lighthouse     # Lighthouse budget checks (@perf)
+pnpm test:perf           # @perf only, --workers=1; used by verify:full and CI
 ```
 
 ### Environment variables
@@ -132,7 +133,7 @@ Adding a topic requires content, assets, seed, and embedding ingest: add MDX fro
 ## Verification & evidence
 
 - Logic-bearing modules keep 80% line/branch coverage: `src/lib/scene-manifest.ts` in the unit config, plus mastery/retrieval/prompt/quota/badge paths in their suites.
-- `pnpm verify:full` runs the complete chain: lint → format → typecheck → unit → coverage → integration → build → smoke → Playwright (scene, tutor, learning-loop, a11y, perf).
+- `pnpm verify:full` runs the complete chain: lint → format → typecheck → unit → coverage → integration → build → smoke → non-perf Playwright (scene, tutor, learning-loop, a11y), then `pnpm test:perf` for `@perf` with one worker. `test:e2e` remains the full suite for direct callers and production tests; splitting the default gate keeps Lighthouse audits from contending with other workers without changing thresholds or retries.
 - After deployment, run `E2E_BASE_URL=<public-origin> node scripts/production-smoke.mjs heart` and the same command with `earth-interior` for additive real-service proof through tutor, quiz, mastery/FSRS, and badge verification. Sanitized summaries are written under gitignored `.conductor/evidence/`.
 - `E2E_BASE_URL=<public-origin> pnpm test:production --workers=1` is the reliable serial production command: it includes the production-only `@production-earth` browser test with a unique real session, real tutor/quiz requests, and lesson-scoped mastery checks, while avoiding worker contention with Lighthouse. Thresholds and existing per-test retries are unchanged. The test explicitly skips when `E2E_BASE_URL` is absent; see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 - Track phase evidence lives under `conductor/tracks/<track-id>/verification/`.
