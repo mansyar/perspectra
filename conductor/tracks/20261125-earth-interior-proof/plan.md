@@ -85,7 +85,7 @@
 - **Covers:** FR-8, AC-8, AC-9, AC-10, NFR-2, NFR-6, NFR-7
 - **Touches:** `README.md`, `docs/**`, `assets/earth-interior/ASSET_CONTRACT.md`, `conductor/tracks/20261125-earth-interior-proof/verification/**`
 - **Verification:** `pnpm verify:full && pnpm test:production`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P5.T1: Run final local and production regression checks** — covers: AC-8, AC-10, NFR-2, NFR-7
 - [ ] **P5.T2: Audit secrets, asset provenance, and topic independence** — covers: AC-7, AC-9, NFR-1, NFR-4, NFR-6
