@@ -133,6 +133,8 @@ Adding a topic requires content, assets, seed, and embedding ingest: add MDX fro
 
 - Logic-bearing modules keep 80% line/branch coverage: `src/lib/scene-manifest.ts` in the unit config, plus mastery/retrieval/prompt/quota/badge paths in their suites.
 - `pnpm verify:full` runs the complete chain: lint → format → typecheck → unit → coverage → integration → build → smoke → Playwright (scene, tutor, learning-loop, a11y, perf).
+- After deployment, run `E2E_BASE_URL=<public-origin> node scripts/production-smoke.mjs heart` and the same command with `earth-interior` for additive real-service proof through tutor, quiz, mastery/FSRS, and badge verification. Sanitized summaries are written under gitignored `.conductor/evidence/`.
+- `E2E_BASE_URL=<public-origin> pnpm test:production --workers=1` is the reliable serial production command: it includes the production-only `@production-earth` browser test with a unique real session, real tutor/quiz requests, and lesson-scoped mastery checks, while avoiding worker contention with Lighthouse. Thresholds and existing per-test retries are unchanged. The test explicitly skips when `E2E_BASE_URL` is absent; see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 - Track phase evidence lives under `conductor/tracks/<track-id>/verification/`.
 
 ## Accessibility, privacy, and trust

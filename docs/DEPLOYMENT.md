@@ -88,7 +88,9 @@ non-secret `ASSETS` binding configuration.
 1. [HUMAN ONLY] Export the chosen branch's `DATABASE_URL` in the shell without persisting it in a
    tracked file.
 2. Review and apply the schema with `pnpm db:push`.
-3. Seed the canonical heart lesson and six hotspots with `pnpm db:seed`. The seed is safe to rerun.
+3. Seed every discovered MDX lesson with `pnpm db:seed`, including the Heart and Earth titles,
+   descriptions, and six hotspot IDs each. The additive seed is safe to rerun and preserves existing
+   embeddings and progress rows.
 4. Generate and upsert Gemini document embeddings:
 
    ```bash
@@ -107,10 +109,11 @@ non-secret `ASSETS` binding configuration.
 ## 5. Build and deploy one Worker
 
 1. [HUMAN ONLY] Confirm the Cloudflare login and target account with `pnpm exec wrangler whoami`.
-2. Build the static site with `pnpm build` (output: `dist/`). The heart lesson ships its
-   manifest-referenced 960×960 WebP poster; regenerate it with `assets/heart/build_heart.py` and
-   keep it below 120,000 bytes as enforced by `assets/heart/ASSET_CONTRACT.md` and the integration
-   suite. The retained PNG is the reproducible WebP source, not the delivered LCP image.
+2. Build the static site with `pnpm build` (output: `dist/`). Both the Heart and Earth lessons ship
+   their manifest-referenced 960×960 WebP posters; regenerate them with the deterministic recipes in
+   `assets/heart/` and `assets/earth-interior/`, keeping each poster below 120,000 bytes as enforced
+   by the asset contracts and integration suite. The retained PNGs are reproducible WebP sources,
+   not the delivered LCP images.
 3. Prepare the private config with section 3's `pnpm deploy:prepare` command.
 4. [HUMAN ONLY] Set every secret in section 2 against the generated config.
 5. [HUMAN ONLY] Set `BETTER_AUTH_URL` to the workers.dev origin before the final deployment.
@@ -130,22 +133,49 @@ Run the local release gate before deployment:
 
 - `pnpm verify:full` — lint, format, types, unit, coverage, integration, build, smoke, and Playwright.
 
-Run production E2E and Lighthouse against the public origin without starting a local preview server:
+Run the tracked full production smoke for each supported lesson against the public origin. It uses
+a unique email/password user created through the real Better Auth endpoints, checks grounded tutor
+SSE and citations, generates and grades a real quiz, replays additive progress to the 0.85 mastery
+threshold, and issues, verifies, and tampers with a real badge. It never deletes data or prints
+credentials, cookies, or email addresses.
 
 ```bash
-E2E_BASE_URL=https://perspectra-api.<subdomain>.workers.dev pnpm test:production
+E2E_BASE_URL=https://perspectra-api.<subdomain>.workers.dev node scripts/production-smoke.mjs heart
+E2E_BASE_URL=https://perspectra-api.<subdomain>.workers.dev node scripts/production-smoke.mjs earth-interior
+```
+
+Each run writes a sanitized JSON summary under gitignored `.conductor/evidence/`; set `SMOKE_OUTPUT`
+to another file inside that directory when needed. The lesson ID defaults to `heart`, and any failed
+check exits nonzero.
+
+Run production E2E and Lighthouse against the same origin without starting a local preview server:
+
+Use the serial one-worker command for reliable production verification. Parallel Playwright
+workers can contend with Lighthouse and cause score variance; all thresholds and existing per-test
+retries remain unchanged.
+
+```bash
+E2E_BASE_URL=https://perspectra-api.<subdomain>.workers.dev pnpm test:production --workers=1
 ```
 
 PowerShell equivalent:
 
 ```powershell
 $env:E2E_BASE_URL = 'https://perspectra-api.<subdomain>.workers.dev'
-pnpm test:production
+pnpm test:production --workers=1
 ```
+
+The `@production-earth` E2E test explicitly skips when `E2E_BASE_URL` is absent. With it set, the
+test creates a unique real Better Auth session, attaches its cookie to a browser, checks both
+catalog lessons and all six Earth landmarks, and exercises real tutor and quiz requests through the
+UI. It requires a substantive Earth answer with valid citations and verifies lesson-scoped mastery
+updates; it does not mock Gemini or issue a badge unless the smoke runner has independently proved
+the threshold. Console/page failures are collected, with only a documented favicon 404 allowed.
 
 Manual browser proof **[HUMAN ONLY]** (use the evidence checklist in `conductor/workflow.md`):
 
-1. `/` loads the zero-JavaScript catalog and `/lessons/heart/` renders prose plus six landmarks.
+1. `/` loads the zero-JavaScript catalog; `/lessons/heart/` and `/lessons/earth-interior/` each
+   render prose plus six landmarks.
 2. Hotspot clicks, keyboard focus, and reduced-motion behavior work; the poster remains a usable
    fallback.
 3. `/health` returns the Hono health payload on the same origin. A known `/api/*` route responds as
