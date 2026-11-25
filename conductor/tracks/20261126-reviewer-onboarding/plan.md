@@ -76,3 +76,14 @@ Review fixes are appended by `conductor-review` as:
 
 - [ ] **R1.T1: Resolve <finding ID>** — covers: <finding ID>
 -->
+
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve review finding F1 so the `/sign-in` panel reflects header sign-out immediately.
+- **Depends on:** Phase 3
+- **Covers:** F1, FR-2
+- **Touches:** `src/components/layout/SignInPanel.tsx`, `tests/e2e/onboarding.spec.ts`, `conductor/tracks/20261126-reviewer-onboarding/verification/**`
+- **Verification:** `pnpm verify:full`
+- **Status:** in_progress
+
+- [ ] **R1.T1: Sync SignInPanel with SESSION_CHANGE_EVENT and add authenticated-state E2E** — covers: F1, FR-2
