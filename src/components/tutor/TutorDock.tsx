@@ -33,8 +33,12 @@ function hotspotFromCitation(citation: string, hotspots: readonly string[]): str
 export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
   const sessionId = useRef(crypto.randomUUID());
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [answer, setAnswer] = useState('');
+  const [answerScope, setAnswerScope] = useState<string | null>(null);
   const [citations, setCitations] = useState<string[]>([]);
   const [error, setError] = useState<TutorError | null>(null);
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
@@ -43,6 +47,28 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
 
   useEffect(() => setHydrated(true), []);
 
+  useEffect(() => {
+    if (sheetOpen) {
+      textareaRef.current?.focus();
+    }
+  }, [sheetOpen]);
+
+  useEffect(() => {
+    if (!sheetOpen) {
+      return;
+    }
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        setSheetOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [sheetOpen]);
+
+  const focusLabel = activeHotspot ? label(activeHotspot) : 'Whole lesson';
+
   async function ask(text: string, hotspot: string | null = activeHotspot): Promise<void> {
     const trimmed = text.trim();
     if (!trimmed || streaming) {
@@ -50,6 +76,7 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
     }
     setStreaming(true);
     setAnswer('');
+    setAnswerScope(null);
     setCitations([]);
     setError(null);
     let failed = false;
@@ -60,6 +87,7 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
         answerText += event.text ?? '';
         setAnswer(answerText);
       } else if (event.type === 'done') {
+        setAnswerScope(event.scopeLabel ?? null);
         setCitations(event.citations ?? []);
       } else {
         failed = true;
@@ -103,115 +131,137 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
 
   return (
     <aside
-      className="tutor"
       aria-label="Course tutor"
+      className="tutor"
+      data-sheet-open={sheetOpen ? 'true' : 'false'}
       data-tutor-hydrated={hydrated ? 'true' : 'false'}
     >
-      <div className="tutor__head">
-        <h2>Ask the tutor</h2>
-        <p className="tutor__disclosure" data-testid="tutor-disclosure">
-          AI-generated answers. Always check the cited lesson prose; the tutor can be wrong.
-        </p>
-        <p className="tutor__privacy" data-testid="tutor-privacy">
-          Privacy: questions are sent to the tutor service and stored with your session. Do not
-          enter personal or sensitive information.
-        </p>
-      </div>
-
-      <div className="tutor__chips" aria-label="Suggested hotspots">
-        {hotspots.map((id) => (
-          <button
-            className="tutor__chip"
-            data-hotspot-chip={id}
-            disabled={streaming || !hydrated}
-            key={id}
-            onClick={() => void ask(`Explain ${label(id)}.`, id)}
-            type="button"
-          >
-            {label(id)}
-          </button>
-        ))}
-      </div>
-
-      {activeHotspot && (
-        <p className="tutor__context">
-          Context: <strong>{label(activeHotspot)}</strong>
-        </p>
-      )}
-
-      <form
-        className="tutor__form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void ask(question);
-          setQuestion('');
-        }}
+      <button
+        aria-controls="tutor-sheet"
+        aria-expanded={sheetOpen}
+        className="tutor__toggle"
+        data-testid="tutor-toggle"
+        onClick={() => setSheetOpen((open) => !open)}
+        ref={toggleRef}
+        type="button"
       >
-        <label className="tutor__label" htmlFor="tutor-question">
-          Your question
-        </label>
-        <textarea
-          id="tutor-question"
-          maxLength={1000}
-          onChange={(event) => setQuestion(event.target.value)}
-          placeholder={PROMPTS[0]}
-          rows={3}
-          value={question}
-        />
-        <button
-          className="tutor__send"
-          disabled={streaming || !hydrated || !question.trim()}
-          type="submit"
-        >
-          {streaming ? 'Answering…' : 'Ask'}
-        </button>
-      </form>
+        Ask the tutor
+      </button>
 
-      <div aria-live="polite" className="tutor__answer" data-testid="tutor-answer">
-        {answer && (
-          <p>
-            {answer.split(/(\[\[[a-zA-Z0-9:_-]+\]\])/g).map((piece, index) => {
-              const citation = /^\[\[([a-zA-Z0-9:_-]+)\]\]$/.exec(piece);
-              if (!citation) {
-                return <span key={index}>{piece}</span>;
-              }
-              const hotspot = hotspotFromCitation(citation[1], hotspots);
-              return (
+      <div className="tutor__body" id="tutor-sheet">
+        <div className="tutor__head">
+          <h2>Ask the tutor</h2>
+          <p className="tutor__disclosure" data-testid="tutor-disclosure">
+            AI-generated answers. Always check the cited lesson prose; the tutor can be wrong.
+          </p>
+          <p className="tutor__privacy" data-testid="tutor-privacy">
+            Privacy: questions are sent to the tutor service and stored with your session. Do not
+            enter personal or sensitive information.
+          </p>
+        </div>
+
+        <div className="tutor__chips" aria-label="Suggested hotspots">
+          {hotspots.map((id) => (
+            <button
+              className="tutor__chip"
+              data-hotspot-chip={id}
+              disabled={streaming || !hydrated}
+              key={id}
+              onClick={() => {
+                focusHotspot(id);
+                void ask(`Explain ${label(id)}.`, id);
+              }}
+              type="button"
+            >
+              {label(id)}
+            </button>
+          ))}
+        </div>
+
+        <p className="tutor__context" data-testid="tutor-context">
+          Context: <strong>{focusLabel}</strong>
+        </p>
+
+        <form
+          className="tutor__form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void ask(question);
+            setQuestion('');
+          }}
+        >
+          <label className="tutor__label" htmlFor="tutor-question">
+            Your question
+          </label>
+          <textarea
+            id="tutor-question"
+            maxLength={1000}
+            onChange={(event) => setQuestion(event.target.value)}
+            placeholder={PROMPTS[0]}
+            ref={textareaRef}
+            rows={3}
+            value={question}
+          />
+          <button
+            className="tutor__send"
+            disabled={streaming || !hydrated || !question.trim()}
+            type="submit"
+          >
+            {streaming ? 'Answering…' : 'Ask'}
+          </button>
+        </form>
+
+        <div aria-live="polite" className="tutor__answer" data-testid="tutor-answer">
+          {answerScope && (
+            <p className="tutor__scope" data-testid="tutor-scope">
+              Grounded in {answerScope}
+            </p>
+          )}
+          {answer && (
+            <p>
+              {answer.split(/(\[\[[a-zA-Z0-9:_-]+\]\])/g).map((piece, index) => {
+                const citation = /^\[\[([a-zA-Z0-9:_-]+)\]\]$/.exec(piece);
+                if (!citation) {
+                  return <span key={index}>{piece}</span>;
+                }
+                const hotspot = hotspotFromCitation(citation[1], hotspots);
+                return (
+                  <button
+                    className="tutor__citation"
+                    data-citation={citation[1]}
+                    key={index}
+                    onClick={() => focusHotspot(hotspot)}
+                    type="button"
+                  >
+                    {label(hotspot)}
+                  </button>
+                );
+              })}
+            </p>
+          )}
+          {citations.length > 0 && (
+            <p className="tutor__sources">
+              Sources:{' '}
+              {citations.map((citation, index) => (
                 <button
                   className="tutor__citation"
-                  data-citation={citation[1]}
-                  key={index}
-                  onClick={() => focusHotspot(hotspot)}
+                  data-citation={citation}
+                  key={`${citation}-${index}`}
+                  onClick={() => focusHotspot(hotspotFromCitation(citation, hotspots))}
                   type="button"
                 >
-                  {label(hotspot)}
+                  {label(hotspotFromCitation(citation, hotspots))}
                 </button>
-              );
-            })}
-          </p>
-        )}
-        {citations.length > 0 && (
-          <p className="tutor__sources">
-            Sources:{' '}
-            {citations.map((citation, index) => (
-              <button
-                className="tutor__citation"
-                data-citation={citation}
-                key={`${citation}-${index}`}
-                onClick={() => focusHotspot(hotspotFromCitation(citation, hotspots))}
-                type="button"
-              >
-                {label(hotspotFromCitation(citation, hotspots))}
-              </button>
-            ))}
-          </p>
-        )}
-        {error && (
-          <div className="tutor__error" role="status">
-            <p>{error.message}</p>
-            {error.staticExcerpt && <blockquote>{error.staticExcerpt}</blockquote>}
-          </div>
-        )}
+              ))}
+            </p>
+          )}
+          {error && (
+            <div className="tutor__error" role="status">
+              <p>{error.message}</p>
+              {error.staticExcerpt && <blockquote>{error.staticExcerpt}</blockquote>}
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   );

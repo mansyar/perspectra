@@ -3,8 +3,25 @@ import { expect, test, type Page } from '@playwright/test';
 const SSE = [
   `data: ${JSON.stringify({ type: 'delta', text: 'The aorta carries oxygenated blood. ' })}\n\n`,
   `data: ${JSON.stringify({ type: 'delta', text: '[[heart:aorta:overview]]' })}\n\n`,
-  `data: ${JSON.stringify({ type: 'done', citations: ['heart:aorta:overview'] })}\n\n`,
+  `data: ${JSON.stringify({
+    citations: ['heart:aorta:overview'],
+    scopeLabel: 'Aorta',
+    type: 'done',
+  })}\n\n`,
 ].join('');
+
+const ERROR_SSE = `data: ${JSON.stringify({
+  code: 'no_context',
+  message: 'No answer from this hotspot.',
+  scopeLabel: 'Aorta',
+  staticExcerpt: 'The aorta carries oxygenated blood.',
+  type: 'error',
+})}\n\n`;
+
+interface TutorRequest {
+  activeHotspot?: string | null;
+  history?: { content: string; role: string }[];
+}
 
 async function mockTutor(page: Page, capture?: (body: string) => void): Promise<void> {
   await page.unrouteAll();
@@ -35,10 +52,53 @@ test('chip click sends the hotspot id in the request body', { tag: '@tutor' }, a
     sent = body;
   });
   await expect(page.locator('.tutor')).toHaveAttribute('data-tutor-hydrated', 'true');
+  await expect(page.getByTestId('tutor-context')).toBeVisible();
   await page.locator('[data-hotspot-chip="aorta"]').click();
   await expect.poll(() => sent).toContain('"activeHotspot":"aorta"');
   expect(JSON.parse(sent)).toMatchObject({ lessonId: 'heart', question: 'Explain Aorta.' });
+  await expect(page.getByTestId('tutor-context')).toContainText('Aorta');
+  await expect(page.getByTestId('tutor-scope')).toContainText('Aorta');
 });
+
+test(
+  'does not claim grounding on an error response that carries a scope label',
+  { tag: '@tutor' },
+  async ({ page }) => {
+    await page.unrouteAll();
+    await page.route('**/api/tutor', async (route) => {
+      await route.fulfill({ body: ERROR_SSE, contentType: 'text/event-stream', status: 200 });
+    });
+    await expect(page.locator('.tutor')).toHaveAttribute('data-tutor-hydrated', 'true');
+    await page.getByRole('textbox', { name: 'Your question' }).fill('What about the aorta?');
+    await page.getByRole('button', { name: 'Ask', exact: true }).click();
+    await expect(page.getByTestId('tutor-answer')).toContainText('No answer from this hotspot.');
+    await expect(page.getByTestId('tutor-answer')).toContainText(
+      'The aorta carries oxygenated blood.',
+    );
+    await expect(page.getByTestId('tutor-scope')).toHaveCount(0);
+  },
+);
+
+test(
+  'new questions follow the latest focus while keeping history',
+  { tag: '@tutor' },
+  async ({ page }) => {
+    const requests: TutorRequest[] = [];
+    await mockTutor(page, (body) => {
+      requests.push(JSON.parse(body) as TutorRequest);
+    });
+    await expect(page.locator('.tutor')).toHaveAttribute('data-tutor-hydrated', 'true');
+    await page.locator('[data-hotspot-chip="aorta"]').click();
+    await expect.poll(() => requests.length).toBe(1);
+    await page.locator('[data-hotspot-chip="mitral_valve"]').click();
+    await expect.poll(() => requests.length).toBe(2);
+    await page.getByRole('textbox', { name: 'Your question' }).fill('How does it work?');
+    await page.getByRole('button', { name: 'Ask', exact: true }).click();
+    await expect.poll(() => requests.length).toBe(3);
+    expect(requests[2]?.activeHotspot).toBe('mitral_valve');
+    expect(requests[2]?.history?.length).toBeGreaterThan(0);
+  },
+);
 
 test(
   'citation click scrolls prose and updates active hotspot',
@@ -53,3 +113,64 @@ test(
     await expect(page.locator('[data-hotspot="aorta"]')).toBeInViewport();
   },
 );
+
+for (const viewport of [
+  { height: 800, width: 1280 },
+  { height: 768, width: 1024 },
+]) {
+  test.describe(`sticky dock at ${viewport.width}x${viewport.height}`, () => {
+    test.use({ viewport });
+
+    test(
+      'keeps question, focus label and answer in view after scrolling the prose',
+      { tag: '@tutor' },
+      async ({ page }) => {
+        await expect(page.locator('.tutor')).toHaveAttribute('data-tutor-hydrated', 'true');
+        await page.locator('[data-hotspot-chip="aorta"]').click();
+        await expect(page.getByTestId('tutor-answer')).toContainText('oxygenated blood');
+        await expect(page.getByTestId('tutor-context')).toContainText('Aorta');
+
+        const dockBox = await page.locator('.tutor').boundingBox();
+        const proseBox = await page.locator('.prose').boundingBox();
+        expect(dockBox).not.toBeNull();
+        expect(proseBox).not.toBeNull();
+        expect(dockBox?.x ?? 0).toBeGreaterThanOrEqual((proseBox?.x ?? 0) + (proseBox?.width ?? 0));
+
+        await page.locator('.prose > div').last().scrollIntoViewIfNeeded();
+        await expect(page.getByRole('textbox', { name: 'Your question' })).toBeInViewport();
+        await expect(page.getByTestId('tutor-context')).toBeInViewport();
+        await expect(page.getByTestId('tutor-answer')).toBeInViewport();
+      },
+    );
+  });
+}
+
+test.describe('mobile tutor sheet at 390x844', () => {
+  test.use({ viewport: { height: 844, width: 390 } });
+
+  test(
+    'collapses behind Ask, opens a sheet and closes on Escape with keyboard focus',
+    { tag: '@tutor' },
+    async ({ page }) => {
+      const toggle = page.getByTestId('tutor-toggle');
+      const sheet = page.locator('.tutor__body');
+      const textarea = page.getByRole('textbox', { name: 'Your question' });
+
+      await expect(toggle).toBeVisible();
+      await expect(sheet).toBeHidden();
+
+      await toggle.click();
+      await expect(sheet).toBeVisible();
+      await expect(textarea).toBeFocused();
+      await expect(textarea).toBeInViewport();
+
+      await page.keyboard.press('Escape');
+      await expect(sheet).toBeHidden();
+      await expect(toggle).toBeFocused();
+
+      await page.keyboard.press('Enter');
+      await expect(sheet).toBeVisible();
+      await expect(textarea).toBeFocused();
+    },
+  );
+});

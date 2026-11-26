@@ -5,12 +5,13 @@ import type { AuthPort } from '../lib/auth';
 import { classifyIntent } from '../lib/intent';
 import type { KvPort } from '../lib/kv';
 import type { LlmPort } from '../lib/llm';
-import { assemblePrompt, stripCitations, validateCitations } from '../lib/prompt';
+import { assemblePrompt, citationScope, stripCitations, validateCitations } from '../lib/prompt';
 import { checkQuota } from '../lib/quota';
 import {
   hotspotIdsFromChunks,
   loadLessonChunks,
   retrieveChunks,
+  scopeChunks,
   type LessonChunk,
 } from '../lib/retrieval';
 
@@ -20,6 +21,7 @@ export interface TutorEvent {
   citations?: string[];
   code?: string;
   message?: string;
+  scopeLabel?: string;
   staticExcerpt?: string;
 }
 
@@ -84,8 +86,13 @@ function excerpt(chunks: readonly LessonChunk[]): string {
   return first ? stripCitations(first.text).slice(0, 260) : GENERIC_EXCERPT;
 }
 
-function errorEvent(code: string, message: string, staticExcerpt: string): TutorEvent {
-  return { code, message, staticExcerpt, type: 'error' };
+function errorEvent(
+  code: string,
+  message: string,
+  staticExcerpt: string,
+  scopeLabel?: string,
+): TutorEvent {
+  return { code, message, scopeLabel, staticExcerpt, type: 'error' };
 }
 
 function deltaEvents(answer: string): TutorEvent[] {
@@ -129,29 +136,39 @@ export function tutorRoutes(deps: TutorDeps | TutorDepsResolver): Hono<{ Binding
   app.post('/', async (c) => {
     const resolved = typeof deps === 'function' ? deps(c.env, c.req.raw) : deps;
     let staticExcerpt = GENERIC_EXCERPT;
+    let scopeLabel: string | undefined;
+    const fail = (code: string, message: string): TutorEvent =>
+      errorEvent(code, message, staticExcerpt, scopeLabel);
 
     try {
       const parsed = tutorRequestSchema.safeParse(await c.req.json());
       if (!parsed.success) {
-        return sseResponse([
-          errorEvent('invalid_request', 'That question could not be read.', staticExcerpt),
-        ]);
+        return sseResponse([fail('invalid_request', 'That question could not be read.')]);
       }
       const body = parsed.data;
 
       const getChunks: ChunkSource = resolved.getChunks ?? loadLessonChunks;
       const chunks = await getChunks(body.lessonId);
       staticExcerpt = excerpt(chunks);
+      const scope = scopeChunks(chunks, body.activeHotspot);
+      scopeLabel = scope.label;
+      if (scope.missingFocus) {
+        return sseResponse([
+          fail(
+            'no_context',
+            'No lesson passage is available for that focus. The full lesson prose is below.',
+          ),
+        ]);
+      }
 
       const identity = await resolved.auth.getSession(c.req.raw);
       const sessionId = identity?.userId ?? body.sessionId ?? crypto.randomUUID();
 
       if (classifyIntent(body.question, termsForLesson(body.lessonId, chunks)) === 'off_topic') {
         return sseResponse([
-          errorEvent(
+          fail(
             'off_topic',
             'That question is outside this lesson. Ask about the topics covered here instead.',
-            staticExcerpt,
           ),
         ]);
       }
@@ -164,18 +181,12 @@ export function tutorRoutes(deps: TutorDeps | TutorDepsResolver): Hono<{ Binding
         estimatedTokens,
       );
       if (!quota.allowed) {
-        return sseResponse([
-          errorEvent(quota.reason ?? 'quota', quota.message ?? 'Limit reached.', staticExcerpt),
-        ]);
+        return sseResponse([fail(quota.reason ?? 'quota', quota.message ?? 'Limit reached.')]);
       }
 
       if (!resolved.llm) {
         return sseResponse([
-          errorEvent(
-            'tutor_unavailable',
-            'The tutor is not configured. The lesson prose is available.',
-            staticExcerpt,
-          ),
+          fail('tutor_unavailable', 'The tutor is not configured. The lesson prose is available.'),
         ]);
       }
 
@@ -184,11 +195,9 @@ export function tutorRoutes(deps: TutorDeps | TutorDepsResolver): Hono<{ Binding
         .embed([body.question])
         .then((rows) => rows[0] ?? [])
         .catch(() => []);
-      const retrieved = retrieveChunks(chunks, body.question, queryEmbedding);
+      const retrieved = retrieveChunks(scope.chunks, body.question, queryEmbedding);
       if (retrieved.length === 0) {
-        return sseResponse([
-          errorEvent('no_context', 'No lesson passage matches that question.', staticExcerpt),
-        ]);
+        return sseResponse([fail('no_context', 'No lesson passage matches that question.')]);
       }
 
       const prompt = assemblePrompt({
@@ -201,30 +210,32 @@ export function tutorRoutes(deps: TutorDeps | TutorDepsResolver): Hono<{ Binding
 
       // Validate before stream: an ungrounded answer is never emitted.
       const answer = await resolved.llm.complete(prompt);
-      const validation = validateCitations(
-        answer,
-        new Set(retrieved.map((result) => result.chunk.id)),
-      );
+      const validation = validateCitations(answer, citationScope(retrieved));
       if (!validation.valid) {
         return sseResponse([
-          errorEvent(
+          fail(
             'invalid_citation',
             'The tutor could not ground that answer in the lesson. The prose below is reliable.',
-            staticExcerpt,
           ),
         ]);
       }
 
       return sseResponse(
-        [...deltaEvents(answer), { citations: validation.citations, type: 'done' as const }],
+        [
+          ...deltaEvents(answer),
+          {
+            citations: validation.citations,
+            scopeLabel,
+            type: 'done' as const,
+          },
+        ],
         true,
       );
     } catch {
       return sseResponse([
-        errorEvent(
+        fail(
           'tutor_unavailable',
           'The tutor is temporarily unavailable. The lesson prose remains available.',
-          staticExcerpt,
         ),
       ]);
     }

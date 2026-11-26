@@ -2,6 +2,7 @@
  * Course retrieval: chunk the MDX prose, then rank chunks with a hybrid of
  * pgvector cosine similarity and dependency-free BM25-like lexical overlap.
  */
+import { LESSON_CHUNKS } from '../data/lesson-chunks';
 
 export interface LessonChunk {
   id: string;
@@ -180,14 +181,59 @@ export function buildChunks(
   return chunks;
 }
 
-/** Server-side chunk loader for the Worker path (no node:fs in a Worker). */
+/**
+ * Server-side chunk loader for the Worker path (no node:fs in a Worker).
+ * Chunks come from the build-time manifest of authored MDX, keyed by lesson ID.
+ */
 export function loadLessonChunks(lessonId: string, hotspots?: readonly string[]): LessonChunk[] {
-  return lessonId === 'heart' ? buildChunks(HEART_LESSON_MDX, lessonId, hotspots) : [];
+  const chunks = LESSON_CHUNKS[lessonId];
+  if (chunks === undefined) {
+    return [];
+  }
+  if (hotspots === undefined) {
+    return [...chunks];
+  }
+  const allowed = new Set(hotspots);
+  return chunks.filter((chunk) => allowed.has(chunk.hotspotId));
 }
 
 /** Hotspot vocabulary actually present in a set of chunks. */
 export function hotspotIdsFromChunks(chunks: readonly LessonChunk[]): string[] {
   return [...new Set(chunks.map((chunk) => chunk.hotspotId))];
+}
+
+export const WHOLE_LESSON_SCOPE = 'Whole lesson';
+
+export interface ScopedChunks {
+  chunks: LessonChunk[];
+  /** Short label the dock can display alongside the answer. */
+  label: string;
+  /** A focus was requested but the lesson has no chunks for it. */
+  missingFocus: boolean;
+}
+
+function hotspotLabel(hotspotId: string): string {
+  return hotspotId.replaceAll('_', ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+/**
+ * Narrows candidates to the requested focus before ranking and prompt assembly.
+ * A requested focus with no chunks never falls back to the whole lesson.
+ */
+export function scopeChunks(
+  chunks: readonly LessonChunk[],
+  activeHotspot: string | null | undefined,
+): ScopedChunks {
+  const focus = activeHotspot?.trim();
+  if (!focus) {
+    return { chunks: [...chunks], label: WHOLE_LESSON_SCOPE, missingFocus: false };
+  }
+  const focused = chunks.filter((chunk) => chunk.hotspotId === focus);
+  return {
+    chunks: focused,
+    label: hotspotLabel(focus),
+    missingFocus: focused.length === 0,
+  };
 }
 
 export function cosine(a: readonly number[], b: readonly number[]): number {
