@@ -91,7 +91,6 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
         setCitations(event.citations ?? []);
       } else {
         failed = true;
-        setAnswerScope(event.scopeLabel ?? null);
         setError({
           code: event.code ?? 'error',
           message: event.message ?? 'The tutor could not answer that question.',
