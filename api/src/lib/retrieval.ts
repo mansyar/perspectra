@@ -202,6 +202,40 @@ export function hotspotIdsFromChunks(chunks: readonly LessonChunk[]): string[] {
   return [...new Set(chunks.map((chunk) => chunk.hotspotId))];
 }
 
+export const WHOLE_LESSON_SCOPE = 'Whole lesson';
+
+export interface ScopedChunks {
+  chunks: LessonChunk[];
+  /** Short label the dock can display alongside the answer. */
+  label: string;
+  /** A focus was requested but the lesson has no chunks for it. */
+  missingFocus: boolean;
+}
+
+function hotspotLabel(hotspotId: string): string {
+  return hotspotId.replaceAll('_', ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+/**
+ * Narrows candidates to the requested focus before ranking and prompt assembly.
+ * A requested focus with no chunks never falls back to the whole lesson.
+ */
+export function scopeChunks(
+  chunks: readonly LessonChunk[],
+  activeHotspot: string | null | undefined,
+): ScopedChunks {
+  const focus = activeHotspot?.trim();
+  if (!focus) {
+    return { chunks: [...chunks], label: WHOLE_LESSON_SCOPE, missingFocus: false };
+  }
+  const focused = chunks.filter((chunk) => chunk.hotspotId === focus);
+  return {
+    chunks: focused,
+    label: hotspotLabel(focus),
+    missingFocus: focused.length === 0,
+  };
+}
+
 export function cosine(a: readonly number[], b: readonly number[]): number {
   if (a.length === 0 || a.length !== b.length) {
     return 0;

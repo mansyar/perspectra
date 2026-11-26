@@ -7,6 +7,8 @@ import {
   lexicalScore,
   loadLessonChunks,
   retrieveChunks,
+  scopeChunks,
+  WHOLE_LESSON_SCOPE,
   type LessonChunk,
 } from '../../api/src/lib/retrieval';
 
@@ -180,5 +182,45 @@ describe('hotspotIdsFromChunks', () => {
         chunk({ hotspotId: 'crust', id: 'planets:crust:overview' }),
       ]),
     ).toEqual(['planet_core', 'crust']);
+  });
+});
+
+describe('scopeChunks', () => {
+  const lessonChunks = [
+    chunk(),
+    chunk({
+      hotspotId: 'mitral_valve',
+      id: 'heart:mitral_valve:overview',
+      text: 'The mitral valve prevents backflow.',
+    }),
+  ];
+
+  it('narrows candidates to the focused hotspot before ranking', () => {
+    const scope = scopeChunks(lessonChunks, 'aorta');
+    expect(scope.chunks.map((entry) => entry.id)).toEqual(['heart:aorta:overview']);
+    expect(scope.label).toBe('Aorta');
+    expect(scope.missingFocus).toBe(false);
+    expect(
+      retrieveChunks(scope.chunks, 'aorta or mitral', []).every(
+        (result) => result.chunk.hotspotId === 'aorta',
+      ),
+    ).toBe(true);
+  });
+
+  it('uses lesson-wide chunks with a label when no focus is selected', () => {
+    const scope = scopeChunks(lessonChunks, null);
+    expect(scope.chunks.map((entry) => entry.id)).toEqual([
+      'heart:aorta:overview',
+      'heart:mitral_valve:overview',
+    ]);
+    expect(scope.label).toBe(WHOLE_LESSON_SCOPE);
+    expect(scope.missingFocus).toBe(false);
+  });
+
+  it('reports a missing focus instead of falling back to lesson-wide chunks', () => {
+    const scope = scopeChunks(lessonChunks, 'unknown_hotspot');
+    expect(scope.chunks).toEqual([]);
+    expect(scope.label).toBe('Unknown Hotspot');
+    expect(scope.missingFocus).toBe(true);
   });
 });
