@@ -101,7 +101,7 @@ The primary appends after acceptance:
 - **Covers:** F1 (FR-8)
 - **Touches:** `src/components/tutor/TutorDock.tsx`, `tests/e2e/tutor.spec.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **R1.T1: Suppress the grounding label on error paths** — covers: F1
   - [ ] **R1.T1.1:** Only set/render `answerScope` for a successful answer, not for error events.
