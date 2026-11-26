@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { signInHref } from '../../lib/auth-navigation';
 import { focusHotspot } from '../../lib/hotspot-store';
 import './mastery.css';
 
@@ -34,8 +35,10 @@ function label(id: string): string {
 export function MasteryPanel({ lessonId, hotspots }: MasteryPanelProps) {
   const [view, setView] = useState<MasteryResponse | null>(null);
   const [message, setMessage] = useState('Loading mastery…');
+  const [authRequired, setAuthRequired] = useState(false);
 
   const load = useCallback(async () => {
+    setAuthRequired(false);
     try {
       const response = await fetch(
         `${apiBase}/api/mastery?lessonId=${encodeURIComponent(lessonId)}`,
@@ -44,7 +47,8 @@ export function MasteryPanel({ lessonId, hotspots }: MasteryPanelProps) {
         },
       );
       if (response.status === 401) {
-        setMessage('Sign in to track your mastery.');
+        setMessage('Sign in to save your mastery.');
+        setAuthRequired(true);
         return;
       }
       if (!response.ok) {
@@ -82,7 +86,23 @@ export function MasteryPanel({ lessonId, hotspots }: MasteryPanelProps) {
       data-lesson={lessonId}
     >
       <h2>Mastery</h2>
-      {message ? <p role="status">{message}</p> : null}
+      {message ? (
+        <p role="status">
+          {message}
+          {authRequired ? (
+            <>
+              {' '}
+              <a
+                className="mastery-panel__auth-cta"
+                data-auth-cta="mastery"
+                href={signInHref(`/lessons/${lessonId}/`)}
+              >
+                Sign in
+              </a>
+            </>
+          ) : null}
+        </p>
+      ) : null}
       <div className="mastery-panel__grid">
         {cells.map((cell) => (
           <button

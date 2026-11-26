@@ -1,0 +1,24 @@
+---
+import { SignInPanel } from '../components/layout/SignInPanel';
+import { SiteHeader } from '../components/layout/SiteHeader';
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Sign in to save your Perspectra lesson progress." />
+    <title>Sign in — Perspectra</title>
+  </head>
+  <body>
+    <SiteHeader client:load current="sign-in" returnTo="/" />
+    <main class="page">
+      <SignInPanel client:load />
+    </main>
+    <footer class="site-footer">
+      <p>Open educational content. Code under MIT; shipped assets are CC0 or OFL.</p>
+    </footer>
+  </body>
+</html>

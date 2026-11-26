@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MASTERY_REFRESH_EVENT } from '../mastery/MasteryPanel';
+import { signInHref } from '../../lib/auth-navigation';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
 import './quiz.css';
 
@@ -32,6 +33,7 @@ export function QuizPanel({ lessonId }: QuizPanelProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<GradeResult | null>(null);
   const [message, setMessage] = useState('');
+  const [authRequired, setAuthRequired] = useState(false);
   const [busy, setBusy] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -42,6 +44,7 @@ export function QuizPanel({ lessonId }: QuizPanelProps) {
   async function generate(): Promise<void> {
     setBusy(true);
     setMessage('');
+    setAuthRequired(false);
     setResult(null);
     setQuestion(null);
     setSelected(null);
@@ -57,6 +60,7 @@ export function QuizPanel({ lessonId }: QuizPanelProps) {
       });
       if (response.status === 401) {
         setMessage('Sign in to check your understanding.');
+        setAuthRequired(true);
         return;
       }
       if (!response.ok) {
@@ -77,6 +81,7 @@ export function QuizPanel({ lessonId }: QuizPanelProps) {
     }
     setBusy(true);
     setMessage('');
+    setAuthRequired(false);
     try {
       const response = await fetch(`${apiBase}/api/quiz/grade`, {
         credentials: 'include',
@@ -86,6 +91,7 @@ export function QuizPanel({ lessonId }: QuizPanelProps) {
       });
       if (response.status === 401) {
         setMessage('Sign in to check your understanding.');
+        setAuthRequired(true);
         return;
       }
       if (!response.ok) {
@@ -116,7 +122,23 @@ export function QuizPanel({ lessonId }: QuizPanelProps) {
       >
         {question ? 'New question' : 'Check understanding'}
       </button>
-      {message ? <p role="status">{message}</p> : null}
+      {message ? (
+        <p role="status">
+          {message}
+          {authRequired ? (
+            <>
+              {' '}
+              <a
+                className="quiz-panel__auth-cta"
+                data-auth-cta="quiz"
+                href={signInHref(`/lessons/${lessonId}/`)}
+              >
+                Sign in
+              </a>
+            </>
+          ) : null}
+        </p>
+      ) : null}
       {question ? (
         <fieldset className="quiz-panel__question" disabled={busy}>
           <legend>{question.question}</legend>

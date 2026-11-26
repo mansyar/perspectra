@@ -1,5 +1,6 @@
 ---
 import { createBadgeService } from '../../api/src/lib/badge';
+import { SiteHeader } from '../components/layout/SiteHeader';
 import '../styles/global.css';
 
 // Static fixtures are public sample data, never deployment credentials.
@@ -24,11 +25,7 @@ const fixtureVerification = await fixtureService.verify(fixture.credential);
     <title>Verify credential — Perspectra</title>
   </head>
   <body>
-    <header class="site-header">
-      <a class="site-header__brand" href="/">
-        Perspectra
-      </a>
-    </header>
+    <SiteHeader client:load current="verify" returnTo="/verify/" />
     <main class="page">
       <h1>Credential verification</h1>
       <form class="verify-form" data-verify-form>
@@ -59,10 +56,12 @@ const fixtureVerification = await fixtureService.verify(fixture.credential);
       <section class="verify-fixture" aria-label="Offline sample credential">
         <h2>Non-heart sample</h2>
         <p>
-          Static preview has no Worker API. This public fixture displays the signed sample prose
-          only; it is not signature-verified here.
+          This non-heart sample is a public offline fixture. It demonstrates the credential prose
+          but is not verified against the live service. Use the form above to verify a real
+          credential.
         </p>
         <button
+          class="verify-fixture__button"
           data-fixture-button
           data-fixture-credential={fixture.credential}
           data-fixture-parsed={JSON.stringify(fixtureVerification.credential ?? {})}

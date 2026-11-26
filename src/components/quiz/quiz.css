@@ -13,6 +13,16 @@
   margin: 0 0 0.75rem;
 }
 
+.quiz-panel__auth-cta {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.quiz-panel__auth-cta:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .quiz-panel button {
   background: var(--accent);
   border: 1px solid var(--accent);
