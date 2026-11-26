@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   assemblePrompt,
+  citationScope,
   CITATION_PATTERN,
   stripCitations,
   validateCitations,
@@ -94,6 +95,35 @@ describe('assemblePrompt', () => {
       question: 'What next?',
     });
     expect(noHistory).toContain('CONVERSATION SO FAR\n(none)');
+  });
+});
+
+describe('citationScope', () => {
+  const crossHotspotId = 'heart:mitral_valve:overview';
+
+  it('derives the prompt allowlist and the validation set from one scoped result', () => {
+    const scoped = [result];
+    const allowedIds = citationScope(scoped);
+    const scopedPrompt = assemblePrompt({
+      activeHotspot: 'aorta',
+      chunks: scoped,
+      history: [],
+      lessonTitle: 'The Human Heart',
+      question: 'What does the aorta do?',
+    });
+    const crossAnswer = `Blood flows [[${crossHotspotId}]].`;
+
+    expect(scopedPrompt).toContain(`Allowed chunk IDs: ${[...allowedIds].join(', ')}`);
+    expect(scopedPrompt).not.toContain(crossHotspotId);
+    expect(validateCitations(crossAnswer, allowedIds)).toMatchObject({
+      reason: 'unknown_citation',
+      valid: false,
+    });
+  });
+
+  it('accepts a citation from the scoped result only', () => {
+    const answer = 'Blood flows [[heart:aorta:overview]].';
+    expect(validateCitations(answer, citationScope([result]))).toMatchObject({ valid: true });
   });
 });
 

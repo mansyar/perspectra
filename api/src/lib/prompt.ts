@@ -1,5 +1,10 @@
 import type { RetrievalResult } from './retrieval';
 
+/** Single source of truth for the allowlist shown to the LLM and used by the gate. */
+export function citationScope(chunks: readonly RetrievalResult[]): Set<string> {
+  return new Set(chunks.map((result) => result.chunk.id));
+}
+
 export interface PromptInput {
   lessonTitle: string;
   activeHotspot: string | null;
@@ -13,6 +18,7 @@ export interface PromptInput {
  * independently; no keys, URLs or credentials are ever part of the prompt.
  */
 export function assemblePrompt(input: PromptInput): string {
+  const allowedIds = citationScope(input.chunks);
   const sources = input.chunks
     .map(
       (result) =>
@@ -37,7 +43,7 @@ export function assemblePrompt(input: PromptInput): string {
     'ADAPTIVE VARIABLES',
     `Active hotspot: ${input.activeHotspot ?? 'none selected'}`,
     'Mastery: not yet modelled (placeholder for the mastery layer)',
-    `Allowed chunk IDs: ${input.chunks.map((result) => result.chunk.id).join(', ')}`,
+    `Allowed chunk IDs: ${[...allowedIds].join(', ')}`,
     '',
     'POST-INTERACTION CONTRACT',
     'Keep the answer under 200 words and end after the cited explanation.',
