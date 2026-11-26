@@ -33,6 +33,13 @@
 - Same iframe resized to 1024×768: `.tutor` remained `fixed` at `{top:64,left:640.67,width:336}`; with `scrollY=1200` the rect was unchanged and the question box stayed in view. Clicking `[data-hotspot-chip="aorta"]` changed the context to `Context: Aorta`.
 - Evidence screenshot (private, uncommitted): `.conductor/media/20261126-tutor-grounding-dock/review-dock.jpeg` shows the collapsed control visible at 1000px.
 
+## Post-fix pass R1 (2026-11-26, primary)
+
+- Reloaded `http://127.0.0.1:4322/lessons/heart` at 1000×700 after Phase R1.
+- Opened the sheet with `Ask the tutor`, filled `#tutor-question` through the browser form control and submitted with `Ask`.
+- Static dev has no Worker: the answer/error region read `The tutor could not be reached. The lesson prose is still available.`
+- `[data-testid=tutor-scope]` count was 0 before and after the failed request, so no false "Grounded in …" claim appeared on the error path (F1 / FR-8 / AC-8). Prose remained rendered.
+
 ## Result
 
-AC-4, AC-5, AC-6 and FR-8 were observed in the primary browser at Phase 3 and again at review. No console errors beyond the expected static-dev 404s for `/api/mastery?lessonId=heart` and `/api/auth/get-session`. No live credential sign-in or production verification was attempted.
+AC-4, AC-5, AC-6 and FR-8 were observed in the primary browser at Phase 3, again at review, and again after the R1 fix. No console errors beyond the expected static-dev 404s for `/api/mastery?lessonId=heart` and `/api/auth/get-session`. No live credential sign-in or production verification was attempted.

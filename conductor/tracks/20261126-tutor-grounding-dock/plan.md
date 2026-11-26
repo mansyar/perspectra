@@ -101,10 +101,13 @@ The primary appends after acceptance:
 - **Covers:** F1 (FR-8)
 - **Touches:** `src/components/tutor/TutorDock.tsx`, `tests/e2e/tutor.spec.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 356a252
+- **Evidence:** conductor/tracks/20261126-tutor-grounding-dock/verification/phase-R1.md
 
-- [ ] **R1.T1: Suppress the grounding label on error paths** — covers: F1
-  - [ ] **R1.T1.1:** Only set/render `answerScope` for a successful answer, not for error events.
-  - [ ] **R1.T1.2:** Add an E2E assertion that an error response shows no `[data-testid=tutor-scope]` label while the static excerpt remains visible.
+- [x] **R1.T1: Suppress the grounding label on error paths** — covers: F1
+  - [x] **R1.T1.1:** Only set/render `answerScope` for a successful answer, not for error events.
+  - [x] **R1.T1.2:** Add an E2E assertion that an error response shows no `[data-testid=tutor-scope]` label while the static excerpt remains visible.
 
-**Primary browser pass:** required after this fix round. Evidence: `conductor/tracks/20261126-tutor-grounding-dock/verification/browser.md`.
+**Primary browser pass:** completed after this fix round. Evidence: `conductor/tracks/20261126-tutor-grounding-dock/verification/browser.md`, section "Post-fix pass R1".
