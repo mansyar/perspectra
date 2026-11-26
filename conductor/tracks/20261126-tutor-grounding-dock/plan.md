@@ -40,7 +40,7 @@ The primary appends after acceptance:
 - **Covers:** FR-1, FR-2, FR-3, FR-8, NFR-4, AC-1, AC-2, AC-3, AC-8
 - **Touches:** `api/src/routes/tutor.ts`, `api/src/lib/retrieval.ts`, `api/src/lib/prompt.ts`, `tests/unit/retrieval.test.ts`, `tests/unit/prompt.test.ts`, `tests/integration/tutor.test.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Scope retrieval to the active hotspot** — covers: FR-1, FR-2
   - [ ] **P2.T1.1:** Filter by `hotspotId` before ranking when the request has a valid hotspot.
