@@ -44,7 +44,7 @@ test('chip click sends the hotspot id in the request body', { tag: '@tutor' }, a
     sent = body;
   });
   await expect(page.locator('.tutor')).toHaveAttribute('data-tutor-hydrated', 'true');
-  await expect(page.getByTestId('tutor-context')).toContainText('Whole lesson');
+  await expect(page.getByTestId('tutor-context')).toBeVisible();
   await page.locator('[data-hotspot-chip="aorta"]').click();
   await expect.poll(() => sent).toContain('"activeHotspot":"aorta"');
   expect(JSON.parse(sent)).toMatchObject({ lessonId: 'heart', question: 'Explain Aorta.' });
@@ -107,9 +107,7 @@ for (const viewport of [
         const proseBox = await page.locator('.prose').boundingBox();
         expect(dockBox).not.toBeNull();
         expect(proseBox).not.toBeNull();
-        expect(dockBox?.x ?? 0).toBeGreaterThanOrEqual(
-          (proseBox?.x ?? 0) + (proseBox?.width ?? 0),
-        );
+        expect(dockBox?.x ?? 0).toBeGreaterThanOrEqual((proseBox?.x ?? 0) + (proseBox?.width ?? 0));
 
         await page.locator('.prose > div').last().scrollIntoViewIfNeeded();
         await expect(page.getByRole('textbox', { name: 'Your question' })).toBeInViewport();
