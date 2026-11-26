@@ -138,7 +138,14 @@
   margin: var(--space-sm) 0 0;
 }
 
-@media (min-width: 1400px) {
+/* The centred page cannot clear a fixed dock on its own at laptop widths. */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  main.page {
+    padding-right: calc(var(--space-lg) + 21rem + var(--space-sm));
+  }
+}
+
+@media (min-width: 1024px) {
   .tutor {
     max-height: calc(100vh - 4rem);
     overflow-y: auto;
