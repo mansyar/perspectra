@@ -13,7 +13,6 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
-| RM-9 | Implement a sticky tutor dock with reliable hotspot-grounded answers | feature | high | — | 20261126-tutor-grounding-dock | user |
 
 ## Next
 
