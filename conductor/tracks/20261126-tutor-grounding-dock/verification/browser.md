@@ -26,6 +26,13 @@
 - The collapsed `Ask the tutor` control was present; activating it opened the sheet and focused `#tutor-question`.
 - Escape closed the sheet and returned focus to the toggle.
 
+## Review pass (2026-11-26, primary)
+
+- Fresh tab at 1000×700: `Ask the tutor` opened the sheet (`data-sheet-open=true`, body `display:block`, `#tutor-question` focused); `browser.press Escape` closed it (`data-sheet-open=false`, body `display:none`) and returned focus to `[data-testid=tutor-toggle]`.
+- Fresh same-origin iframe at 1280×800: `matchMedia('(min-width:1024px)')` matched, `.tutor` was `position:fixed` with rect `{top:64,left:896.67,width:336}`, `#tutor-question` fully in viewport, context `Context: Left Ventricle`.
+- Same iframe resized to 1024×768: `.tutor` remained `fixed` at `{top:64,left:640.67,width:336}`; with `scrollY=1200` the rect was unchanged and the question box stayed in view. Clicking `[data-hotspot-chip="aorta"]` changed the context to `Context: Aorta`.
+- Evidence screenshot (private, uncommitted): `.conductor/media/20261126-tutor-grounding-dock/review-dock.jpeg` shows the collapsed control visible at 1000px.
+
 ## Result
 
-AC-4, AC-5, AC-6 and FR-8 were observed in the primary browser. No console errors beyond the expected static-dev 404s for `/api/mastery?lessonId=heart` and `/api/auth/get-session`. No live credential sign-in or production verification was attempted.
+AC-4, AC-5, AC-6 and FR-8 were observed in the primary browser at Phase 3 and again at review. No console errors beyond the expected static-dev 404s for `/api/mastery?lessonId=heart` and `/api/auth/get-session`. No live credential sign-in or production verification was attempted.
