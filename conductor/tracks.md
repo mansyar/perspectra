@@ -5,3 +5,4 @@
 - [x] **Track: Public deployment** - [20261124-public-deployment](./archive/20261124-public-deployment/index.md) - chore - high
 - [x] **Track: Earth Interior Topic Proof** — [20261125-earth-interior-proof](./archive/20261125-earth-interior-proof/index.md) — feature — high
 - [x] **Track: Reviewer Onboarding & Trust** — [20261126-reviewer-onboarding](./archive/20261126-reviewer-onboarding/index.md) — feature — high
+- [ ] **Track: Implement a sticky tutor dock with reliable hotspot-grounded answers** — [20261126-tutor-grounding-dock](./tracks/20261126-tutor-grounding-dock/index.md) — feature — high
