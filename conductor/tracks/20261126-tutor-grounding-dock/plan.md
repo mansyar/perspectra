@@ -40,16 +40,19 @@ The primary appends after acceptance:
 - **Covers:** FR-1, FR-2, FR-3, FR-8, NFR-4, AC-1, AC-2, AC-3, AC-8
 - **Touches:** `api/src/routes/tutor.ts`, `api/src/lib/retrieval.ts`, `api/src/lib/prompt.ts`, `tests/unit/retrieval.test.ts`, `tests/unit/prompt.test.ts`, `tests/integration/tutor.test.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** afae0c2
+- **Evidence:** conductor/tracks/20261126-tutor-grounding-dock/verification/phase-2.md
 
-- [ ] **P2.T1: Scope retrieval to the active hotspot** — covers: FR-1, FR-2
-  - [ ] **P2.T1.1:** Filter by `hotspotId` before ranking when the request has a valid hotspot.
-  - [ ] **P2.T1.2:** Return `no_context` plus static excerpt when the focused hotspot has no chunks; use lesson-wide retrieval when no focus is selected.
-- [ ] **P2.T2: Align prompt and citation validation** — covers: FR-3
-  - [ ] **P2.T2.1:** Build "Allowed chunk IDs" and the validation set from the same scoped result.
-  - [ ] **P2.T2.2:** Reject cross-hotspot citations before any answer delta streams.
-- [ ] **P2.T3: Preserve failure paths** — covers: FR-8
-  - [ ] **P2.T3.1:** Keep quota, off-topic, unavailable and invalid-citation responses on the existing error + static-excerpt path.
+- [x] **P2.T1: Scope retrieval to the active hotspot** — covers: FR-1, FR-2
+  - [x] **P2.T1.1:** Filter by `hotspotId` before ranking when the request has a valid hotspot.
+  - [x] **P2.T1.2:** Return `no_context` plus static excerpt when the focused hotspot has no chunks; use lesson-wide retrieval when no focus is selected.
+- [x] **P2.T2: Align prompt and citation validation** — covers: FR-3
+  - [x] **P2.T2.1:** Build "Allowed chunk IDs" and the validation set from the same scoped result.
+  - [x] **P2.T2.2:** Reject cross-hotspot citations before any answer delta streams.
+- [x] **P2.T3: Preserve failure paths** — covers: FR-8
+  - [x] **P2.T3.1:** Keep quota, off-topic, unavailable and invalid-citation responses on the existing error + static-excerpt path.
 
 <!--
 The primary appends after acceptance:
