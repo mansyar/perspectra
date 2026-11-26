@@ -2,6 +2,7 @@
  * Course retrieval: chunk the MDX prose, then rank chunks with a hybrid of
  * pgvector cosine similarity and dependency-free BM25-like lexical overlap.
  */
+import { LESSON_CHUNKS } from '../data/lesson-chunks';
 
 export interface LessonChunk {
   id: string;
@@ -180,9 +181,20 @@ export function buildChunks(
   return chunks;
 }
 
-/** Server-side chunk loader for the Worker path (no node:fs in a Worker). */
+/**
+ * Server-side chunk loader for the Worker path (no node:fs in a Worker).
+ * Chunks come from the build-time manifest of authored MDX, keyed by lesson ID.
+ */
 export function loadLessonChunks(lessonId: string, hotspots?: readonly string[]): LessonChunk[] {
-  return lessonId === 'heart' ? buildChunks(HEART_LESSON_MDX, lessonId, hotspots) : [];
+  const chunks = LESSON_CHUNKS[lessonId];
+  if (chunks === undefined) {
+    return [];
+  }
+  if (hotspots === undefined) {
+    return [...chunks];
+  }
+  const allowed = new Set(hotspots);
+  return chunks.filter((chunk) => allowed.has(chunk.hotspotId));
 }
 
 /** Hotspot vocabulary actually present in a set of chunks. */
