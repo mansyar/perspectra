@@ -54,3 +54,14 @@ None. All changes are confined to the phase Touches.
 - `HEART_LESSON_MDX` and `DEFAULT_HOTSPOTS` remain exported from `api/src/lib/retrieval.ts` as legacy fallbacks used by `api/src/routes/quiz.ts`, `api/src/lib/mastery.ts` and existing tests. Removing them would require edits outside Touches and is left for a later phase; they are not used by the generic chunk loader.
 - The generated manifest deliberately quotes strings containing ASCII apostrophes with double quotes so `oxfmt` check stays clean under the repository's single-quote default.
 - Code commits: `c5cd8e7` (P1.T1), `2406ea5` (P1.T2). This evidence file is committed separately and does not change the verified code state.
+
+## Primary verification
+
+- Date: 2026-11-26
+- Command: `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration`
+- First attempt: exit 1 — `oxfmt --check .` printed "All matched files use the correct format." for 113 files, then `oxfmt` exited 5 (known flake). No formatting changes were made.
+- Second attempt: exit 0 — lint reported only five pre-existing warnings in `src/lib/offline-queue.ts` and one in `tests/integration/worker-assets.test.ts`; format, typecheck and build clean; 22 unit files / 216 tests passed; coverage gate met (retrieval.ts 100% lines); 7 integration files / 66 tests passed.
+- Working tree after subagent commits: clean.
+- `git diff --name-only ba10541..HEAD`: `api/src/data/lesson-chunks.ts`, `api/src/lib/retrieval.ts`, `conductor/tracks/20261126-tutor-grounding-dock/verification/phase-1.md`, `scripts/generate-lesson-chunks.ts`, `tests/unit/retrieval.test.ts` — all within Phase 1 Touches; no unreported files.
+- Acceptance criteria AC-1 through AC-9 not owned by this phase (AC-7 checked above); AC-7 satisfied by unit tests enumerating every authored MDX file.
+- Result: verified. Task commits retained rather than squashed because the active goal forbids reset; no merge, user, or unreported commit was present in the range.

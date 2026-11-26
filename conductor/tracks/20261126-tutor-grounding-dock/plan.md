@@ -14,14 +14,17 @@
 - **Covers:** FR-7, NFR-6, AC-7
 - **Touches:** `api/src/lib/retrieval.ts`, `api/src/data/`, `scripts/`, `tests/unit/retrieval.test.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** a7ccbb5
+- **Evidence:** conductor/tracks/20261126-tutor-grounding-dock/verification/phase-1.md
 
-- [ ] **P1.T1: Generate chunks from authored MDX** — covers: FR-7
-  - [ ] **P1.T1.1:** Add a build-time generator that reads the lesson content collection and emits a lesson→chunk manifest.
-  - [ ] **P1.T1.2:** Replace the heart-only mirror with a generic chunk loader keyed by `lessonId`.
-  - [ ] **P1.T1.3:** Preserve deterministic `lesson:hotspot:layer` chunk IDs and existing capping behaviour.
-- [ ] **P1.T2: Prove topic-agnostic chunks** — covers: AC-7
-  - [ ] **P1.T2.1:** Unit-test non-empty chunks for every authored lesson with IDs derived from content.
+- [x] **P1.T1: Generate chunks from authored MDX** — covers: FR-7
+  - [x] **P1.T1.1:** Add a build-time generator that reads the lesson content collection and emits a lesson→chunk manifest.
+  - [x] **P1.T1.2:** Replace the heart-only mirror with a generic chunk loader keyed by `lessonId`.
+  - [x] **P1.T1.3:** Preserve deterministic `lesson:hotspot:layer` chunk IDs and existing capping behaviour.
+- [x] **P1.T2: Prove topic-agnostic chunks** — covers: AC-7
+  - [x] **P1.T2.1:** Unit-test non-empty chunks for every authored lesson with IDs derived from content.
 
 <!--
 The primary appends after acceptance:
