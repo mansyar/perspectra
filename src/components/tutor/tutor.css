@@ -156,3 +156,62 @@
     z-index: 5;
   }
 }
+
+.tutor__toggle {
+  display: none;
+}
+
+@media (max-width: 1023.98px) {
+  .tutor {
+    align-items: stretch;
+    background: transparent;
+    border: 0;
+    bottom: var(--space-md);
+    box-shadow: none;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--space-sm);
+    left: var(--space-md);
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    right: var(--space-md);
+    z-index: 10;
+  }
+
+  .tutor__toggle {
+    align-self: flex-start;
+    background: var(--accent);
+    border: 0;
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+    color: var(--accent-contrast);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-weight: 700;
+    padding: 0.6rem 1rem;
+    transition: background-color var(--motion-fast) ease;
+  }
+
+  .tutor__toggle:focus-visible {
+    outline-color: var(--focus);
+  }
+
+  .tutor__body {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    color: var(--fg-shell);
+    display: none;
+    max-height: min(75vh, 40rem);
+    overflow-y: auto;
+    padding: var(--space-md);
+    width: 100%;
+  }
+
+  .tutor[data-sheet-open='true'] .tutor__body {
+    display: block;
+  }
+}
