@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   buildChunks,
@@ -57,10 +58,46 @@ describe('buildChunks', () => {
     expect(chunks).toHaveLength(1);
     expect(chunks[0].text.length).toBeLessThanOrEqual(3600);
   });
+});
 
-  it('keeps the local fallback loader limited to the built-in heart mirror', () => {
-    expect(loadLessonChunks('heart').length).toBeGreaterThan(0);
-    expect(loadLessonChunks('brain')).toEqual([]);
+describe('authored lesson chunk source', () => {
+  const lessonDir = new URL('../../src/content/lessons/', import.meta.url);
+  const files = readdirSync(lessonDir)
+    .filter((file) => file.endsWith('.mdx'))
+    .toSorted();
+
+  it('returns non-empty, content-derived chunks for every authored lesson', () => {
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const lessonId = file.replace(/\.mdx$/, '');
+      const mdx = readFileSync(new URL(file, lessonDir), 'utf8');
+      const expected = buildChunks(mdx, lessonId);
+      const chunks = loadLessonChunks(lessonId);
+
+      expect(chunks.length).toBeGreaterThan(0);
+      expect(chunks.map((entry) => entry.id)).toEqual(expected.map((entry) => entry.id));
+      expect(chunks.map((entry) => entry.text)).toEqual(expected.map((entry) => entry.text));
+      for (const entry of chunks) {
+        expect(entry.lessonId).toBe(lessonId);
+        expect(entry.id).toBe(`${lessonId}:${entry.hotspotId}:${entry.layer}`);
+        expect(entry.text.length).toBeGreaterThan(0);
+        expect(entry.text.length).toBeLessThanOrEqual(3600);
+      }
+    }
+  });
+
+  it('filters loaded chunks by hotspot IDs derived from the lesson MDX', () => {
+    const lessonId = files[0].replace(/\.mdx$/, '');
+    const hotspotId = buildChunks(readFileSync(new URL(files[0], lessonDir), 'utf8'), lessonId)[0]
+      .hotspotId;
+    const chunks = loadLessonChunks(lessonId, [hotspotId]);
+
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks.every((entry) => entry.hotspotId === hotspotId)).toBe(true);
+  });
+
+  it('returns no chunks for a lesson that is not authored', () => {
+    expect(loadLessonChunks('not_an_authored_lesson')).toEqual([]);
   });
 });
 
