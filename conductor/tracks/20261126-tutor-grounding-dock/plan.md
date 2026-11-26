@@ -14,7 +14,7 @@
 - **Covers:** FR-7, NFR-6, AC-7
 - **Touches:** `api/src/lib/retrieval.ts`, `api/src/data/`, `scripts/`, `tests/unit/retrieval.test.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Generate chunks from authored MDX** — covers: FR-7
   - [ ] **P1.T1.1:** Add a build-time generator that reads the lesson content collection and emits a lesson→chunk manifest.
