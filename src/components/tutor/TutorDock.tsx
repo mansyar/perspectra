@@ -38,6 +38,7 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
   const [hydrated, setHydrated] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [answer, setAnswer] = useState('');
+  const [answerScope, setAnswerScope] = useState<string | null>(null);
   const [citations, setCitations] = useState<string[]>([]);
   const [error, setError] = useState<TutorError | null>(null);
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
@@ -66,6 +67,8 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [sheetOpen]);
 
+  const focusLabel = activeHotspot ? label(activeHotspot) : 'Whole lesson';
+
   async function ask(text: string, hotspot: string | null = activeHotspot): Promise<void> {
     const trimmed = text.trim();
     if (!trimmed || streaming) {
@@ -73,6 +76,7 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
     }
     setStreaming(true);
     setAnswer('');
+    setAnswerScope(null);
     setCitations([]);
     setError(null);
     let failed = false;
@@ -83,9 +87,11 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
         answerText += event.text ?? '';
         setAnswer(answerText);
       } else if (event.type === 'done') {
+        setAnswerScope(event.scopeLabel ?? null);
         setCitations(event.citations ?? []);
       } else {
         failed = true;
+        setAnswerScope(event.scopeLabel ?? null);
         setError({
           code: event.code ?? 'error',
           message: event.message ?? 'The tutor could not answer that question.',
@@ -162,7 +168,10 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
               data-hotspot-chip={id}
               disabled={streaming || !hydrated}
               key={id}
-              onClick={() => void ask(`Explain ${label(id)}.`, id)}
+              onClick={() => {
+                focusHotspot(id);
+                void ask(`Explain ${label(id)}.`, id);
+              }}
               type="button"
             >
               {label(id)}
@@ -170,11 +179,9 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
           ))}
         </div>
 
-        {activeHotspot && (
-          <p className="tutor__context">
-            Context: <strong>{label(activeHotspot)}</strong>
-          </p>
-        )}
+        <p className="tutor__context" data-testid="tutor-context">
+          Context: <strong>{focusLabel}</strong>
+        </p>
 
         <form
           className="tutor__form"
@@ -206,6 +213,11 @@ export function TutorDock({ lessonId, hotspots }: TutorDockProps) {
         </form>
 
         <div aria-live="polite" className="tutor__answer" data-testid="tutor-answer">
+          {answerScope && (
+            <p className="tutor__scope" data-testid="tutor-scope">
+              Grounded in {answerScope}
+            </p>
+          )}
           {answer && (
             <p>
               {answer.split(/(\[\[[a-zA-Z0-9:_-]+\]\])/g).map((piece, index) => {

@@ -8,6 +8,7 @@ export interface TutorEvent {
   citations?: string[];
   code?: string;
   message?: string;
+  scopeLabel?: string;
   staticExcerpt?: string;
 }
 
