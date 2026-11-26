@@ -68,17 +68,17 @@ The primary appends after acceptance:
 - **Covers:** FR-4, FR-5, FR-6, FR-9, NFR-2, NFR-3, NFR-5, AC-4, AC-5, AC-6
 - **Touches:** `src/components/tutor/TutorDock.tsx`, `src/components/tutor/tutor.css`, `src/lib/hotspot-store.ts`, `tests/e2e/tutor.spec.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Sticky desktop dock** — covers: FR-4
-  - [ ] **P3.T1.1:** Make the dock persist through lesson scroll from 1024px up without covering prose or hotspots.
-- [ ] **P3.T2: Collapsible mobile bottom sheet** — covers: FR-5
-  - [ ] **P3.T2.1:** Add collapsed Ask control, sheet expansion, Escape-to-close and focus management below 1024px.
-- [ ] **P3.T3: Focus binding and chip scoping** — covers: FR-6, FR-9
-  - [ ] **P3.T3.1:** Update the context label from the hotspot store and scope each new question to the current focus while keeping history.
-  - [ ] **P3.T3.2:** Ensure chip questions carry their explicit hotspot and citations refocus that hotspot.
-- [ ] **P3.T4: Viewport E2E coverage** — covers: AC-4, AC-5, AC-6
-  - [ ] **P3.T4.1:** Add Playwright checks at 1280×800, 1024×768 and 390×844 for dock visibility and sheet behaviour.
+- [x] **P3.T1: Sticky desktop dock** — covers: FR-4
+  - [x] **P3.T1.1:** Make the dock persist through lesson scroll from 1024px up without covering prose or hotspots.
+- [x] **P3.T2: Collapsible mobile bottom sheet** — covers: FR-5
+  - [x] **P3.T2.1:** Add collapsed Ask control, sheet expansion, Escape-to-close and focus management below 1024px.
+- [x] **P3.T3: Focus binding and chip scoping** — covers: FR-6, FR-9
+  - [x] **P3.T3.1:** Update the context label from the hotspot store and scope each new question to the current focus while keeping history.
+  - [x] **P3.T3.2:** Ensure chip questions carry their explicit hotspot and citations refocus that hotspot.
+- [x] **P3.T4: Viewport E2E coverage** — covers: AC-4, AC-5, AC-6
+  - [x] **P3.T4.1:** Add Playwright checks at 1280×800, 1024×768 and 390×844 for dock visibility and sheet behaviour.
 
 **Primary browser pass:** required for this UI-bearing phase and mandatory at review and after every fix round, per workflow. Evidence: `conductor/tracks/20261126-tutor-grounding-dock/verification/browser.md`.
 
@@ -88,3 +88,8 @@ The primary appends after acceptance:
 **Checkpoint:** <short-sha>
 **Evidence:** conductor/tracks/20261126-tutor-grounding-dock/verification/phase-3.md
 -->
+
+**Result:** verified
+**Checkpoint:** d60fb4d
+**Evidence:** conductor/tracks/20261126-tutor-grounding-dock/verification/phase-3.md
+**Browser evidence:** conductor/tracks/20261126-tutor-grounding-dock/verification/browser.md

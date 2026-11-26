@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-26T13:59:33+11:00",
-  "updated_at": "2026-11-26T14:40:00+11:00",
+  "updated_at": "2026-11-26T15:00:00+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261126-tutor-grounding-dock",
@@ -14,11 +14,11 @@
   "base_sha": "31002092862d9477c5ed53393121fdf1ce3dc967",
   "progress": {
     "phases_total": 3,
-    "phases_verified": 2,
+    "phases_verified": 3,
     "tasks_total": 9,
-    "tasks_done": 5
+    "tasks_done": 9
   },
-  "last_checkpoint": "afae0c2",
+  "last_checkpoint": "d60fb4d",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",
