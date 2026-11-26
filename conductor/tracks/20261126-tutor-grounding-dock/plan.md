@@ -93,3 +93,18 @@ The primary appends after acceptance:
 **Checkpoint:** d60fb4d
 **Evidence:** conductor/tracks/20261126-tutor-grounding-dock/verification/phase-3.md
 **Browser evidence:** conductor/tracks/20261126-tutor-grounding-dock/verification/browser.md
+
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve review finding F1 — do not show a grounding claim on an error/no-context response.
+- **Depends on:** Phase 3
+- **Covers:** F1 (FR-8)
+- **Touches:** `src/components/tutor/TutorDock.tsx`, `tests/e2e/tutor.spec.ts`
+- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
+- **Status:** pending
+
+- [ ] **R1.T1: Suppress the grounding label on error paths** — covers: F1
+  - [ ] **R1.T1.1:** Only set/render `answerScope` for a successful answer, not for error events.
+  - [ ] **R1.T1.2:** Add an E2E assertion that an error response shows no `[data-testid=tutor-scope]` label while the static excerpt remains visible.
+
+**Primary browser pass:** required after this fix round. Evidence: `conductor/tracks/20261126-tutor-grounding-dock/verification/browser.md`.
