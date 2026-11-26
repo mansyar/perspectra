@@ -68,7 +68,7 @@ The primary appends after acceptance:
 - **Covers:** FR-4, FR-5, FR-6, FR-9, NFR-2, NFR-3, NFR-5, AC-4, AC-5, AC-6
 - **Touches:** `src/components/tutor/TutorDock.tsx`, `src/components/tutor/tutor.css`, `src/lib/hotspot-store.ts`, `tests/e2e/tutor.spec.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Sticky desktop dock** — covers: FR-4
   - [ ] **P3.T1.1:** Make the dock persist through lesson scroll from 1024px up without covering prose or hotspots.
