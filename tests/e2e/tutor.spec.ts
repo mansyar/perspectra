@@ -10,6 +10,14 @@ const SSE = [
   })}\n\n`,
 ].join('');
 
+const ERROR_SSE = `data: ${JSON.stringify({
+  code: 'no_context',
+  message: 'No answer from this hotspot.',
+  scopeLabel: 'Aorta',
+  staticExcerpt: 'The aorta carries oxygenated blood.',
+  type: 'error',
+})}\n\n`;
+
 interface TutorRequest {
   activeHotspot?: string | null;
   history?: { content: string; role: string }[];
@@ -51,6 +59,25 @@ test('chip click sends the hotspot id in the request body', { tag: '@tutor' }, a
   await expect(page.getByTestId('tutor-context')).toContainText('Aorta');
   await expect(page.getByTestId('tutor-scope')).toContainText('Aorta');
 });
+
+test(
+  'does not claim grounding on an error response that carries a scope label',
+  { tag: '@tutor' },
+  async ({ page }) => {
+    await page.unrouteAll();
+    await page.route('**/api/tutor', async (route) => {
+      await route.fulfill({ body: ERROR_SSE, contentType: 'text/event-stream', status: 200 });
+    });
+    await expect(page.locator('.tutor')).toHaveAttribute('data-tutor-hydrated', 'true');
+    await page.getByRole('textbox', { name: 'Your question' }).fill('What about the aorta?');
+    await page.getByRole('button', { name: 'Ask', exact: true }).click();
+    await expect(page.getByTestId('tutor-answer')).toContainText('No answer from this hotspot.');
+    await expect(page.getByTestId('tutor-answer')).toContainText(
+      'The aorta carries oxygenated blood.',
+    );
+    await expect(page.getByTestId('tutor-scope')).toHaveCount(0);
+  },
+);
 
 test(
   'new questions follow the latest focus while keeping history',
