@@ -111,7 +111,7 @@ The primary appends after acceptance:
 - **Covers:** AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-8, AC-9, NFR-2, NFR-3, NFR-4, NFR-6
 - **Touches:** `tests/integration/glb-manifest.test.ts`, `tests/integration/content-contract.test.ts`, `tests/e2e/scene.spec.ts`, `tests/e2e/a11y.spec.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e && pnpm test:a11y`
-- **Status:** pending
+- **Status:** in_progress
 - **Primary evidence:** Final browser pass at 1024×768, 1280×800, and 390×844 for both lessons, plus review-time and post-fix passes.
 
 - [ ] **P4.T1: Strengthen framing and asset contract tests** — covers: AC-1, AC-2, AC-5, AC-7
