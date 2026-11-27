@@ -2,27 +2,25 @@
 
 **Track:** `20261127-scene-stage-reframing`  
 **Date:** 2026-11-27  
-**Head:** `54394b8`  
+**Head:** `2f54fd2`  
 **Result:** Pass
 
 ## Commands
 
 ```bash
-pnpm verify && pnpm smoke && pnpm exec playwright test --workers=1
-pnpm test:a11y
+pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e && pnpm test:a11y
+node .conductor/evidence/phase-3-browser.mjs
 ```
 
 ## Result
 
-- `pnpm verify`: passed — lint (five pre-existing warnings only), format, typecheck, build (5 pages), 23 unit files / 242 tests, coverage gate, and 7 integration files / 90 tests.
-- `pnpm smoke`: passed — 2 tests.
-- `pnpm exec playwright test --workers=1`: passed — 70 passed, 1 skipped (`@production-earth`, external origin), exit 0.
-- `pnpm test:a11y`: passed — 7 tests.
-- Lighthouse budgets unchanged and met in the serial run: catalog `100/96/100/100`, Heart `100/96/98/100`, Earth `100/96/98/100`.
+- Exact configured chain: passed with exit 0 — lint (five pre-existing warnings only), format (114 files), typecheck, build (5 pages), 23 unit files / 242 tests, coverage gate, 7 integration files / 96 tests, smoke 2 tests, E2E 70 passed / 1 external-origin skipped, and a11y 7 tests.
+- `node .conductor/evidence/phase-3-browser.mjs`: passed — 8 primary browser checks across both lessons at desktop/mobile and reduced motion, with no page errors.
+- Lighthouse budgets unchanged and met: catalog `100/96/100/100`, Heart `100/96/99/100`, Earth `100/96/98/100`.
 
 ## Verification notes
 
-The first fresh chained attempt passed `pnpm verify` and smoke, then the serial Playwright process was interrupted after 17 tests by the environment (`Command was killed: the process daemon stopped`). A fresh standalone serial run completed all 70 tests successfully with exit 0. Earlier parallel E2E attempts reproduced the documented CPU-contention Lighthouse flake and one unrelated mobile-tutor hydration flake; no thresholds, retries, configuration, or assertions were changed. The complete serial suite and dedicated accessibility suite are green.
+Earlier attempts reproduced the documented CPU-contention Lighthouse flake, an unrelated mobile-tutor hydration flake, a stale Astro preview lock, and the known false `oxfmt` exit-5 result after reporting all files formatted. The R1 formatting defect found on the first final run was fixed in `024ad13`; a direct format check exited 0, the stale preview was stopped, and the exact chain then passed end to end. No thresholds, retries, configuration, or assertions were changed.
 
 ## Coverage
 
@@ -30,4 +28,4 @@ The first fresh chained attempt passed `pnpm verify` and smoke, then the serial 
 - NFR-1–NFR-7
 - AC-1–AC-9
 
-Primary browser evidence remains in `verification/browser.md`. Phase-specific evidence is in `verification/phase-1.md` through `verification/phase-4.md`.
+Primary browser evidence remains in `verification/browser.md`. Phase-specific evidence is in `verification/phase-1.md` through `verification/phase-4.md`; review-fix evidence is in `verification/phase-R1.md`.
