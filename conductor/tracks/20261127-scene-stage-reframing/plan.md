@@ -46,20 +46,24 @@ The primary appends after acceptance:
 - **Covers:** FR-1, FR-6, FR-9, NFR-5, AC-1, AC-7
 - **Touches:** `assets/heart/**`, `assets/earth-interior/**`, `public/assets/heart/**`, `public/assets/earth-interior/**`, `src/content/lessons/heart.mdx`, `src/content/lessons/earth-interior.mdx`, `tests/integration/glb-manifest.test.ts`, `tests/integration/content-contract.test.ts`
 - **Verification:** `blender --background --python assets/heart/build_heart.py && blender --background --python assets/earth-interior/build_earth.py && pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Tune camera-first framing per lesson** — covers: FR-1, FR-8, FR-9, AC-1
-  - [ ] Use measured GLB bounds to choose closer camera/target/FOV values for both lessons.
-  - [ ] Keep the whole intended model visible at rest and for every hotspot, including mobile-safe ratios.
-  - [ ] Align Blender poster cameras with the final MDX cameras and update both asset contracts.
-- [ ] **P2.T2: Refine materials, lighting, and hotspot clips** — covers: FR-3, FR-4, FR-6, AC-4
-  - [ ] Improve existing geometry/materials/lighting without replacing model sources or adding topics.
-  - [ ] Author brief, purposeful hotspot-triggered clips only where they clarify the focused structure.
-  - [ ] Export named clips that match manifest declarations; prohibit ambient looping clips.
-- [ ] **P2.T3: Regenerate and gate all shipped outputs** — covers: FR-6, FR-9, NFR-5, AC-7
-  - [ ] Regenerate both GLBs plus PNG/WebP posters from the updated recipes.
-  - [ ] Inspect real poster renders for framing, clipping, lighting consistency, and visual improvement.
-  - [ ] Extend integration tests for GLB size, six named hotspot meshes, animation references, poster size/type, and safe framing.
+- [x] **P2.T1: Tune camera-first framing per lesson** - covers: FR-1, FR-8, FR-9, AC-1
+  - [x] Use measured GLB bounds to choose closer camera/target/FOV values for both lessons.
+  - [x] Keep the whole intended model visible at rest and for every hotspot, including mobile-safe ratios.
+  - [x] Align Blender poster cameras with the final MDX cameras and update both asset contracts.
+- [x] **P2.T2: Refine materials, lighting, and hotspot clips** - covers: FR-3, FR-4, FR-6, AC-4
+  - [x] Improve existing geometry/materials/lighting without replacing model sources or adding topics.
+  - [x] Author brief, purposeful hotspot-triggered clips only where they clarify the focused structure.
+  - [x] Export named clips that match manifest declarations; prohibit ambient looping clips.
+- [x] **P2.T3: Regenerate and gate all shipped outputs** - covers: FR-6, FR-9, NFR-5, AC-7
+  - [x] Regenerate both GLBs plus PNG/WebP posters from the updated recipes.
+  - [x] Inspect real poster renders for framing, clipping, lighting consistency, and visual improvement.
+  - [x] Extend integration tests for GLB size, six named hotspot meshes, animation references, poster size/type, and safe framing.
+
+**Result:** verified
+**Checkpoint:** e15e1be
+**Evidence:** conductor/tracks/20261127-scene-stage-reframing/verification/phase-2.md
 
 <!--
 The primary appends after acceptance:

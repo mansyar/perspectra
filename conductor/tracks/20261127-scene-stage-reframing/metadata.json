@@ -6,7 +6,7 @@
   "priority": "medium",
   "depends_on": [],
   "created_at": "2026-11-27T14:54:06+11:00",
-  "updated_at": "2026-11-27T16:52:00+11:00",
+  "updated_at": "2026-11-27T17:12:00+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261127-scene-stage-reframing",
@@ -14,11 +14,11 @@
   "base_sha": "b336abd1e5873de5153e76c800c922d37c7414e7",
   "progress": {
     "phases_total": 4,
-    "phases_verified": 1,
+    "phases_verified": 2,
     "tasks_total": 14,
-    "tasks_done": 3
+    "tasks_done": 6
   },
-  "last_checkpoint": "1888bc5",
+  "last_checkpoint": "e15e1be",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",
