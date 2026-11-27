@@ -20,7 +20,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | RM-2 | Add cohort learning, shared progress and team goals without public leaderboards | feature | medium | — | — | user |
 | RM-3 | Deepen assessment with IRT adaptive tests, richer SRS scheduling and rubric grading | feature | medium | — | — | user |
-| RM-10 | Reframe the 3D stage with a larger model, interaction hints and calmer motion | feature | medium | — | — | user |
+| RM-10 | Reframe the 3D stage with a larger model, interaction hints and calmer motion | feature | medium | — | 20261127-scene-stage-reframing | user |
 | RM-11 | Polish the catalog with poster thumbnails and neutral hero copy | feature | medium | — | — | user |
 
 ## Later
