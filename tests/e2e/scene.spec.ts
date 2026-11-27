@@ -1,4 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
+
+const VIEWPORTS = [
+  { label: '1024x768', width: 1024, height: 768 },
+  { label: '1280x800', width: 1280, height: 800 },
+  { label: '390x844', width: 390, height: 844 },
+] as const;
 
 const LESSONS = [
   {
@@ -35,9 +41,65 @@ const LESSONS = [
   },
 ];
 
+type Lesson = (typeof LESSONS)[number];
+
 async function openLesson(page: import('@playwright/test').Page, path: string): Promise<void> {
   await page.goto(path);
   await expect(page.locator('.scene-island')).toHaveAttribute('data-scene-hydrated', 'true');
+}
+
+async function boxOf(locator: Locator, label: string) {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error(`Missing bounding box: ${label}`);
+  return box;
+}
+
+/** Baseline-relative because prose binding may preselect a landmark on load. */
+async function assertClipReplay(
+  page: import('@playwright/test').Page,
+  lesson: Lesson,
+): Promise<void> {
+  await page.locator('.scene-island__start').click();
+  const island = page.locator('.scene-island');
+  await expect(island).toHaveAttribute('data-scene-ready', 'true', { timeout: 20_000 });
+  const initialClip = await island.getAttribute('data-animation-clip');
+  const initialRun = Number(await island.getAttribute('data-animation-run'));
+
+  await page.locator(`[data-hotspot-button="${lesson.focusId}"]`).click();
+  await expect(island).toHaveAttribute('data-active-hotspot', lesson.focusId);
+  await expect
+    .poll(async () => {
+      return Number(await island.getAttribute('data-animation-run')) > initialRun;
+    })
+    .toBe(true);
+  const firstRun = Number(await island.getAttribute('data-animation-run'));
+  const firstClip = await island.getAttribute('data-animation-clip');
+  expect(firstClip).not.toBe('');
+  expect(firstClip).not.toBe(initialClip);
+  await expect
+    .poll(async () => {
+      return Number(await island.getAttribute('data-animation-run'));
+    })
+    .toBe(firstRun);
+
+  await page.locator(`[data-hotspot-button="${lesson.proseId}"]`).click();
+  await expect(island).toHaveAttribute('data-active-hotspot', lesson.proseId);
+  await expect
+    .poll(async () => {
+      return (await island.getAttribute('data-animation-clip')) !== firstClip;
+    })
+    .toBe(true);
+  const secondRun = Number(await island.getAttribute('data-animation-run'));
+  expect(secondRun).toBeGreaterThan(firstRun);
+
+  await page.locator(`[data-hotspot-button="${lesson.focusId}"]`).click();
+  await expect(island).toHaveAttribute('data-active-hotspot', lesson.focusId);
+  await expect
+    .poll(async () => {
+      return Number(await island.getAttribute('data-animation-run')) > secondRun;
+    })
+    .toBe(true);
+  await expect(island).toHaveAttribute('data-animation-clip', firstClip ?? '');
 }
 
 for (const lesson of LESSONS) {
@@ -119,47 +181,7 @@ for (const lesson of LESSONS) {
 
     test('focusing hotspots replays their declared clip on return', async ({ page }) => {
       await openLesson(page, lesson.path);
-      await page.locator('.scene-island__start').click();
-      const island = page.locator('.scene-island');
-      await expect(island).toHaveAttribute('data-scene-ready', 'true', { timeout: 20_000 });
-      const initialClip = await island.getAttribute('data-animation-clip');
-      const initialRun = Number(await island.getAttribute('data-animation-run'));
-
-      await page.locator(`[data-hotspot-button="${lesson.focusId}"]`).click();
-      await expect(island).toHaveAttribute('data-active-hotspot', lesson.focusId);
-      await expect
-        .poll(async () => {
-          return Number(await island.getAttribute('data-animation-run')) > initialRun;
-        })
-        .toBe(true);
-      const firstRun = Number(await island.getAttribute('data-animation-run'));
-      const firstClip = await island.getAttribute('data-animation-clip');
-      expect(firstClip).not.toBe('');
-      expect(firstClip).not.toBe(initialClip);
-      await expect
-        .poll(async () => {
-          return Number(await island.getAttribute('data-animation-run'));
-        })
-        .toBe(firstRun);
-
-      await page.locator(`[data-hotspot-button="${lesson.proseId}"]`).click();
-      await expect(island).toHaveAttribute('data-active-hotspot', lesson.proseId);
-      await expect
-        .poll(async () => {
-          return (await island.getAttribute('data-animation-clip')) !== firstClip;
-        })
-        .toBe(true);
-      const secondRun = Number(await island.getAttribute('data-animation-run'));
-      expect(secondRun).toBeGreaterThan(firstRun);
-
-      await page.locator(`[data-hotspot-button="${lesson.focusId}"]`).click();
-      await expect(island).toHaveAttribute('data-active-hotspot', lesson.focusId);
-      await expect
-        .poll(async () => {
-          return Number(await island.getAttribute('data-animation-run')) > secondRun;
-        })
-        .toBe(true);
-      await expect(island).toHaveAttribute('data-animation-clip', firstClip ?? '');
+      await assertClipReplay(page, lesson);
     });
 
     test('scene click highlights and scrolls prose', async ({ page }) => {
@@ -272,6 +294,69 @@ for (const lesson of LESSONS) {
       await expect(page.locator('.scene-island')).toHaveAttribute('data-scene-ready', 'true');
       await expect(page.locator('.scene-island canvas')).toBeVisible();
     });
+  });
+}
+
+for (const viewport of VIEWPORTS) {
+  test.describe(`viewport ${viewport.label}`, () => {
+    test.use({ viewport: { width: viewport.width, height: viewport.height } });
+
+    for (const lesson of LESSONS) {
+      test.describe(lesson.name, () => {
+        test('keeps the stage, poster and guidance inside the viewport', async ({ page }) => {
+          await openLesson(page, lesson.path);
+          const stage = page.locator('.scene-island');
+          await expect(stage).toBeVisible();
+          const islandBox = await boxOf(stage, 'scene island');
+          expect(islandBox.x).toBeGreaterThanOrEqual(-1);
+          expect(islandBox.x + islandBox.width).toBeLessThanOrEqual(viewport.width + 1);
+          const overflow = await page.evaluate(
+            () => document.documentElement.scrollWidth - window.innerWidth,
+          );
+          expect(overflow).toBeLessThanOrEqual(1);
+
+          const stageBox = await boxOf(page.locator('.scene-island__viewport'), 'stage');
+          expect(stageBox.width).toBeGreaterThan(280);
+          expect(stageBox.height).toBeGreaterThan(280);
+          await expect(page.locator('.scene-island__poster')).toBeVisible();
+
+          const guidance = page.getByTestId('scene-guidance');
+          await expect(guidance).toBeVisible();
+          const guidanceBox = await boxOf(guidance, 'guidance');
+          expect(guidanceBox.width).toBeGreaterThan(0);
+          expect(guidanceBox.x + guidanceBox.width).toBeLessThanOrEqual(viewport.width + 1);
+
+          for (const id of lesson.hotspotIds) {
+            const button = page.locator(`[data-hotspot-button="${id}"]`);
+            await expect(button).toBeVisible();
+            const buttonBox = await boxOf(button, id);
+            expect(buttonBox.width).toBeGreaterThanOrEqual(24);
+            expect(buttonBox.height).toBeGreaterThanOrEqual(24);
+            expect(buttonBox.x).toBeGreaterThanOrEqual(-1);
+            expect(buttonBox.x + buttonBox.width).toBeLessThanOrEqual(viewport.width + 1);
+          }
+        });
+
+        test('replays declared clips after a focus change', async ({ page }) => {
+          await openLesson(page, lesson.path);
+          await assertClipReplay(page, lesson);
+          await expect(page.locator(`[data-hotspot="${lesson.focusId}"]`)).toHaveClass(/is-active/);
+        });
+
+        test('reduced motion keeps the stage static', async ({ page }) => {
+          await page.emulateMedia({ reducedMotion: 'reduce' });
+          await openLesson(page, lesson.path);
+          await page.locator('.scene-island__start').click();
+          const island = page.locator('.scene-island');
+          await expect(island).toHaveAttribute('data-scene-ready', 'true', { timeout: 20_000 });
+          await expect(island).toHaveAttribute('data-motion', 'reduced');
+          await page.locator(`[data-hotspot-button="${lesson.reducedMotionId}"]`).click();
+          await expect(island).toHaveAttribute('data-active-hotspot', lesson.reducedMotionId);
+          await expect(island).toHaveAttribute('data-animation-clip', '');
+          await expect(island).toHaveAttribute('data-animation-run', '0');
+        });
+      });
+    }
   });
 }
 
