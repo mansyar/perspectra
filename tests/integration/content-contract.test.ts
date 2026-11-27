@@ -9,7 +9,12 @@ import {
 const FULL_ANIMATION_LESSONS = new Set(['heart', 'earth-interior']);
 
 function lessonId(path: string): string {
-  return path.split('/').at(-1)?.replace(/\.mdx$/, '') ?? path;
+  return (
+    path
+      .split('/')
+      .at(-1)
+      ?.replace(/\.mdx$/, '') ?? path
+  );
 }
 
 const mdxFiles = import.meta.glob('../../src/content/lessons/*.mdx', {

@@ -511,10 +511,7 @@ describe('live lesson GLB ↔ manifest contracts', () => {
 describe('declared animation validation', () => {
   const hotspots = ['first', 'second'];
   const declarations: LessonAnimations = {
-    clips: [
-      { id: 'gentle_pulse', name: 'SyntheticPulse', duration: 0.5 },
-      { id: 'settle' },
-    ],
+    clips: [{ id: 'gentle_pulse', name: 'SyntheticPulse', duration: 0.5 }, { id: 'settle' }],
     triggers: [
       { hotspot: 'first', clip: 'gentle_pulse' },
       { hotspot: 'second', clip: 'settle' },
@@ -525,9 +522,7 @@ describe('declared animation validation', () => {
     const block =
       '  clips:\n    - id: settle\n  triggers:\n    - hotspot: first\n      clip: settle\n';
     expect(parseDeclaredAnimations(block).clips).toEqual([{ id: 'settle' }]);
-    expect(parseDeclaredAnimations(block).triggers).toEqual([
-      { hotspot: 'first', clip: 'settle' },
-    ]);
+    expect(parseDeclaredAnimations(block).triggers).toEqual([{ hotspot: 'first', clip: 'settle' }]);
   });
 
   it('accepts lessons without animation metadata', () => {
