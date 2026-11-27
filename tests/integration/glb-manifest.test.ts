@@ -1,6 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { focusPose, viewHeight, type Vec3 } from '../../src/components/scene/framing';
+import {
+  VIEWPORT_ASPECTS,
+  focusPose,
+  projectedBounds,
+  viewHeight,
+  type Bounds,
+  type Vec3,
+} from '../../src/components/scene/framing';
 
 const mdxFiles = import.meta.glob('../../src/content/lessons/*.mdx', {
   query: '?raw',
@@ -23,11 +30,6 @@ interface GlbDocument {
   nodes?: GlbNode[];
   meshes?: { primitives?: { attributes?: { POSITION?: number } }[] }[];
   accessors?: GlbAccessor[];
-}
-
-interface Bounds {
-  max: Vec3;
-  min: Vec3;
 }
 
 interface LessonAsset {
@@ -182,43 +184,6 @@ function centre(box: Bounds): Vec3 {
   return [0, 1, 2].map((axis) => (box.min[axis] + box.max[axis]) / 2) as unknown as Vec3;
 }
 
-function dot(left: Vec3, right: Vec3): number {
-  return left[0] * right[0] + left[1] * right[1] + left[2] * right[2];
-}
-
-function cross(left: Vec3, right: Vec3): Vec3 {
-  return [
-    left[1] * right[2] - left[2] * right[1],
-    left[2] * right[0] - left[0] * right[2],
-    left[0] * right[1] - left[1] * right[0],
-  ];
-}
-
-function normalize(vector: Vec3): Vec3 {
-  const size = Math.hypot(...vector);
-  return [vector[0] / size, vector[1] / size, vector[2] / size];
-}
-
-/** Largest absolute vertical NDC coordinate among the model's eight bounding-box corners. */
-function maxVerticalNdc(camera: Vec3, target: Vec3, fov: number, box: Bounds): number {
-  const forward = normalize([target[0] - camera[0], target[1] - camera[1], target[2] - camera[2]]);
-  const right = normalize(cross(forward, [0, 1, 0]));
-  const up = cross(right, forward);
-  const tanHalf = Math.tan((fov * Math.PI) / 360);
-  let largest = 0;
-  for (const x of [box.min[0], box.max[0]]) {
-    for (const y of [box.min[1], box.max[1]]) {
-      for (const z of [box.min[2], box.max[2]]) {
-        const vector: Vec3 = [x - camera[0], y - camera[1], z - camera[2]];
-        const depth = dot(vector, forward);
-        expect(depth).toBeGreaterThan(0);
-        largest = Math.max(largest, Math.abs(dot(vector, up) / (depth * tanHalf)));
-      }
-    }
-  }
-  return largest;
-}
-
 describe('live lesson GLB ↔ manifest contracts', () => {
   it('discovers live lesson assets to validate', () => {
     expect(lessons.length).toBeGreaterThan(0);
@@ -292,9 +257,15 @@ describe('live lesson GLB ↔ manifest contracts', () => {
       expect(
         viewHeight(lesson.camera, lesson.target, lesson.fov) / modelHeight,
       ).toBeGreaterThanOrEqual(1.2);
-      expect(maxVerticalNdc(lesson.camera, lesson.target, lesson.fov, bounds)).toBeLessThanOrEqual(
-        1,
-      );
+      expect(
+        projectedBounds(
+          lesson.camera,
+          lesson.target,
+          lesson.fov,
+          VIEWPORT_ASPECTS.fourByThree,
+          bounds,
+        ).vertical,
+      ).toBeLessThanOrEqual(1);
 
       for (const [id, hotspot] of lesson.positions) {
         const pose = focusPose(lesson.camera, lesson.target, hotspot);
@@ -303,7 +274,13 @@ describe('live lesson GLB ↔ manifest contracts', () => {
           `view height for ${id}`,
         ).toBeGreaterThanOrEqual(1.2);
         expect(
-          maxVerticalNdc(pose.camera, pose.target, lesson.fov, bounds),
+          projectedBounds(
+            pose.camera,
+            pose.target,
+            lesson.fov,
+            VIEWPORT_ASPECTS.fourByThree,
+            bounds,
+          ).vertical,
           `vertical framing for ${id}`,
         ).toBeLessThanOrEqual(1);
       }
