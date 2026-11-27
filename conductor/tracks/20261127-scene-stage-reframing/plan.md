@@ -79,32 +79,30 @@ The primary appends after acceptance:
 - **Covers:** FR-2, FR-3, FR-4, FR-5, FR-7, FR-8, FR-9, NFR-1, NFR-2, NFR-3, NFR-4, NFR-7, AC-2, AC-3, AC-4, AC-5, AC-6
 - **Touches:** `src/components/scene/SceneIsland.tsx`, `src/components/scene/HeartScene.tsx`, `src/components/scene/framing.ts`, `src/components/scene/scene.css`, `src/styles/lesson.css`, `tests/e2e/scene.spec.ts`, `tests/e2e/a11y.spec.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
-- **Status:** in_progress
-- **Primary evidence:** `verification/browser.md` after this phase; browser verification is not delegated to the phase subagent.
+- **Status:** verified
+- **Primary evidence:** `verification/phase-3.md`; primary browser evidence in `verification/browser.md` is not delegated to the phase subagent.
 
-- [ ] **P3.T1: Add inline guided interaction guidance** — covers: FR-2, FR-7, AC-3
-  - [ ] Explain selecting a landmark/highlighted structure and scrolling to its prose; do not mention drag/orbit.
-  - [ ] Associate guidance with the scene controls for assistive technology and preserve visible keyboard focus.
-- [ ] **P3.T2: Apply responsive camera-first framing** — covers: FR-1, FR-8, AC-1, AC-2
-  - [ ] Adapt camera distance/framing to viewport aspect without scaling the model to fake fit.
-  - [ ] Preserve desktop presence and safe mobile bounds while keeping hotspot controls and prose usable.
-- [ ] **P3.T3: Remove idle breathing and soften ambient motion** — covers: FR-3, NFR-2, NFR-3, AC-4
-  - [ ] Remove continuous group-scale breathing and reduce camera/particle intensity or speed.
-  - [ ] Keep motion optional, interruptible, and subordinate to reading and hotspot focus.
-- [ ] **P3.T4: Play manifest-driven hotspot animations** — covers: FR-4, NFR-1, AC-4, AC-5
-  - [ ] Map active hotspot changes to declared GLTF clips using shared generic code.
-  - [ ] Replay on refocus, stop/reset on interruption or reduced motion, and dispose mixer/actions cleanly.
-- [ ] **P3.T5: Preserve guided focus and fallback semantics** — covers: FR-5, FR-7, FR-9, NFR-2, NFR-4, AC-6
-  - [ ] Keep hotspot/prose/tutor focus synchronization unchanged and do not add orbit controls.
-  - [ ] Ensure WebGL matches framing, while reduced-motion and final poster modes remain static and complete.
-  - [ ] Add deterministic E2E assertions for guidance, focus, animation state, and fallback behavior.
+- [x] **P3.T1: Add inline guided interaction guidance** — covers: FR-2, FR-7, AC-3
+  - [x] Explain selecting a landmark/highlighted structure and scrolling to its prose; do not mention drag/orbit.
+  - [x] Associate guidance with the scene controls for assistive technology and preserve visible keyboard focus.
+- [x] **P3.T2: Apply responsive camera-first framing** — covers: FR-1, FR-8, AC-1, AC-2
+  - [x] Adapt camera distance/framing to viewport aspect without scaling the model to fake fit.
+  - [x] Preserve desktop presence and safe mobile bounds while keeping hotspot controls and prose usable.
+- [x] **P3.T3: Remove idle breathing and soften ambient motion** — covers: FR-3, NFR-2, NFR-3, AC-4
+  - [x] Remove continuous group-scale breathing and reduce camera/particle intensity or speed.
+  - [x] Keep motion optional, interruptible, and subordinate to reading and hotspot focus.
+- [x] **P3.T4: Play manifest-driven hotspot animations** — covers: FR-4, NFR-1, AC-4, AC-5
+  - [x] Map active hotspot changes to declared GLTF clips using shared generic code.
+  - [x] Replay on refocus, stop/reset on interruption or reduced motion, and dispose mixer/actions cleanly.
+- [x] **P3.T5: Preserve guided focus and fallback semantics** — covers: FR-5, FR-7, FR-9, NFR-2, NFR-4, AC-6
+  - [x] Keep hotspot/prose/tutor focus synchronization unchanged and do not add orbit controls.
+  - [x] Ensure WebGL matches framing, while reduced-motion and final poster modes remain static and complete.
+  - [x] Add deterministic E2E assertions for guidance, focus, animation state, and fallback behavior.
 
-<!--
-The primary appends after acceptance:
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** f65f940
 **Evidence:** conductor/tracks/20261127-scene-stage-reframing/verification/phase-3.md
--->
+**Browser evidence:** conductor/tracks/20261127-scene-stage-reframing/verification/browser.md
 
 ## Phase 4: Viewport and renderer acceptance coverage
 
