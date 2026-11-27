@@ -6,7 +6,7 @@
   "priority": "medium",
   "depends_on": [],
   "created_at": "2026-11-27T14:54:06+11:00",
-  "updated_at": "2026-11-27T18:44:34+11:00",
+  "updated_at": "2026-11-27T19:04:17+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/20261127-scene-stage-reframing",
@@ -16,9 +16,9 @@
     "phases_total": 4,
     "phases_verified": 4,
     "tasks_total": 15,
-    "tasks_done": 14
+    "tasks_done": 15
   },
-  "last_checkpoint": "8e28478",
+  "last_checkpoint": "024ad13",
   "review_verdict": "BLOCK",
   "review_rounds": 1,
   "doc_sync": "pending",

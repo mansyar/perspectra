@@ -50,3 +50,15 @@ The same primary Playwright script was rerun against the integrated build. All 8
 - Focused screenshots were refreshed in `.conductor/media/20261127-scene-stage-reframing/` for PR media.
 
 Result: pass. This is the mandatory primary review-time browser pass; no in-app browser pass is claimed.
+
+## Post-fix pass R1 (2026-11-27, primary)
+
+The same primary Playwright script was rerun after F1's formatting commit `024ad13` and the full configured verification chain. It returned `result: pass` with 8 checks:
+
+- Heart and Earth Interior passed at 1280×800, 1024×768 and 390×844 after explicit WebGL opt-in.
+- Canvas bounds stayed inside each viewport: 550×412.5 on desktop and 356×356 on mobile.
+- `pulmonary_flow` and `outer_core_convection` replayed after focus changes.
+- Reduced-motion checks left `data-animation-run="0"` on both lessons.
+- No page errors occurred.
+
+Result: pass. This is the mandatory primary post-fix browser pass; no in-app browser pass is claimed.

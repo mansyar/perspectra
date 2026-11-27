@@ -137,13 +137,16 @@ The primary appends after acceptance:
 - **Covers:** FR-4, NFR-1, AC-5
 - **Touches:** `tests/integration/content-contract.test.ts`, `tests/integration/glb-manifest.test.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e && pnpm test:a11y`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 024ad13
+- **Evidence:** `verification/phase-R1.md`; primary browser evidence: `verification/browser.md`
 
-- [ ] **R1.T1: Keep animation test contracts optional and partial-safe** — covers: FR-4, NFR-1, AC-5
-  - [ ] Remove unconditional six-clip/every-hotspot requirements from shared live-lesson assertions.
-  - [ ] Validate declared clip IDs/names/durations and trigger references without requiring complete coverage.
-  - [ ] Add regression coverage for omitted animations and a valid subset of hotspot triggers; keep current Heart/Earth outputs strictly checked.
-  - [ ] Run configured checks and record evidence; primary owns browser verification.
+- [x] **R1.T1: Keep animation test contracts optional and partial-safe** — covers: FR-4, NFR-1, AC-5
+  - [x] Remove unconditional six-clip/every-hotspot requirements from shared live-lesson assertions.
+  - [x] Validate declared clip IDs/names/durations and trigger references without requiring complete coverage.
+  - [x] Add regression coverage for omitted animations and a valid subset of hotspot triggers; keep current Heart/Earth outputs strictly checked.
+  - [x] Run configured checks and record evidence; primary owns browser verification.
 
 ## Verification notes
 
