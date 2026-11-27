@@ -79,7 +79,7 @@ The primary appends after acceptance:
 - **Covers:** FR-2, FR-3, FR-4, FR-5, FR-7, FR-8, FR-9, NFR-1, NFR-2, NFR-3, NFR-4, NFR-7, AC-2, AC-3, AC-4, AC-5, AC-6
 - **Touches:** `src/components/scene/SceneIsland.tsx`, `src/components/scene/HeartScene.tsx`, `src/components/scene/framing.ts`, `src/components/scene/scene.css`, `src/styles/lesson.css`, `tests/e2e/scene.spec.ts`, `tests/e2e/a11y.spec.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
-- **Status:** pending
+- **Status:** in_progress
 - **Primary evidence:** `verification/browser.md` after this phase; browser verification is not delegated to the phase subagent.
 
 - [ ] **P3.T1: Add inline guided interaction guidance** — covers: FR-2, FR-7, AC-3
