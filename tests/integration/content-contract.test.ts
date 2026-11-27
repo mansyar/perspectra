@@ -56,6 +56,22 @@ function parseHotspots(frontmatter: string) {
   }));
 }
 
+function items(sectionLines: string[]): Record<string, string>[] {
+  const result: Record<string, string>[] = [];
+  for (const line of sectionLines) {
+    const item = /^[ \t]+-[ \t]+([a-z_]+):[ \t]*(.+?)[ \t]*$/.exec(line);
+    if (item) {
+      result.push({ [item[1]]: item[2] });
+      continue;
+    }
+    const field = /^[ \t]+([a-z_]+):[ \t]*(.+?)[ \t]*$/.exec(line);
+    if (field && result.length > 0) {
+      result[result.length - 1][field[1]] = field[2];
+    }
+  }
+  return result;
+}
+
 /** Reads the optional `animations:` frontmatter block without a YAML dependency. */
 function parseAnimations(frontmatter: string): unknown | undefined {
   const lines = frontmatter.split(/\r?\n/);
@@ -77,22 +93,6 @@ function parseAnimations(frontmatter: string): unknown | undefined {
       (line, index) => index > at && /^[ \t]+[a-z_]+:[ \t]*$/.test(line),
     );
     return block.slice(at + 1, stop === -1 ? undefined : stop);
-  }
-
-  function items(sectionLines: string[]): Record<string, string>[] {
-    const result: Record<string, string>[] = [];
-    for (const line of sectionLines) {
-      const item = /^[ \t]+-[ \t]+([a-z_]+):[ \t]*(.+?)[ \t]*$/.exec(line);
-      if (item) {
-        result.push({ [item[1]]: item[2] });
-        continue;
-      }
-      const field = /^[ \t]+([a-z_]+):[ \t]*(.+?)[ \t]*$/.exec(line);
-      if (field && result.length > 0) {
-        result[result.length - 1][field[1]] = field[2];
-      }
-    }
-    return result;
   }
 
   return {
@@ -207,9 +207,8 @@ describe('lesson content contracts', () => {
   });
 });
 
-describe('frontmatter animation metadata', () => {
-  function syntheticLesson(animations: string): string {
-    return `---
+function syntheticLesson(animations: string): string {
+  return `---
 title: Synthetic lesson
 description: A synthetic lesson for contract checks
 topic: synthetic
@@ -233,8 +232,9 @@ ${animations}---
 <div id="first" data-hotspot="first"></div>
 <div id="second" data-hotspot="second"></div>
 `;
-  }
+}
 
+describe('frontmatter animation metadata', () => {
   const validAnimations = `animations:
   clips:
     - id: gentle_pulse

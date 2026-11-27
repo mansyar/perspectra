@@ -19,6 +19,10 @@ const manifest: SceneManifest = {
   ],
 };
 
+function withAnimations(animations: NonNullable<SceneManifest['animations']>): SceneManifest {
+  return { ...structuredClone(manifest), animations };
+}
+
 describe('sceneManifestSchema', () => {
   it('accepts the generic heart manifest', () => {
     expect(sceneManifestSchema.parse(manifest)).toEqual(manifest);
@@ -66,16 +70,9 @@ describe('sceneManifestSchema', () => {
 });
 
 describe('sceneManifestSchema animation metadata', () => {
-  function withAnimations(animations: NonNullable<SceneManifest['animations']>): SceneManifest {
-    return { ...structuredClone(manifest), animations };
-  }
-
   it('accepts valid clips and hotspot triggers', () => {
     const animated = withAnimations({
-      clips: [
-        { id: 'pulse', name: 'HeartPulse', duration: 0.6 },
-        { id: 'flow' },
-      ],
+      clips: [{ id: 'pulse', name: 'HeartPulse', duration: 0.6 }, { id: 'flow' }],
       triggers: [
         { hotspot: 'left_ventricle', clip: 'pulse' },
         { hotspot: 'aorta', clip: 'flow' },
@@ -141,7 +138,10 @@ describe('sceneManifestSchema animation metadata', () => {
     });
     expect(() => sceneManifestSchema.parse(badId)).toThrow();
 
-    const emptyClips = withAnimations({ clips: [], triggers: [{ hotspot: 'aorta', clip: 'pulse' }] });
+    const emptyClips = withAnimations({
+      clips: [],
+      triggers: [{ hotspot: 'aorta', clip: 'pulse' }],
+    });
     expect(() => sceneManifestSchema.parse(emptyClips)).toThrow();
 
     const emptyTriggers = withAnimations({ clips: [{ id: 'pulse' }], triggers: [] });
