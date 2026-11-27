@@ -5,10 +5,12 @@
 **Date:** 2026-11-27
 **Branch:** `feat/20261127-scene-stage-reframing`
 **Base:** `30a6d1b0794036d92c71c92389e44de45694fce1`
-**Head:** `6694c06ac9fe88ebc3c941c9968dd9421304e8dc`
-**Result:** All checks that could run under subagent shell permissions pass. Two required commands
-were denied by the shell permission layer (the full `&&` chain and `pnpm test:integration`);
-they are listed below and in the phase report blockers.
+**Head:** `1888bc564ab12448581fe5cb91afecf614184e89`
+**Result:** verified
+
+The subagent's individually permitted checks passed. The primary subsequently ran the two
+commands denied by the subagent shell (the full verification chain and `pnpm test:integration`);
+both passed end-to-end.
 
 ## Commands
 
@@ -20,8 +22,8 @@ they are listed below and in the phase report blockers.
 | `pnpm build` | Pass — 5 static pages built; pre-existing Vite chunk-size warning | 0 |
 | `pnpm test` | Pass — 23 files, 242 tests | 0 |
 | `pnpm coverage` | Pass — 242 tests; statements 98.76%, branches 93.33%, functions 98.05%, lines 99.2% | 0 |
-| `pnpm test:integration` | **DENIED** — `Permission denied: shell` | n/a |
-| `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration` | **DENIED** — shell forbids `&&` chains | n/a |
+| `pnpm test:integration` | Pass — 7 files, 79 tests | 0 |
+| `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration` | Pass — primary end-to-end rerun | 0 |
 | `pnpm fmt` (diagnostic, not a required check) | Printed "Finished in 303ms on 114 files" then exited 5 (known oxfmt exit-code flake); `pnpm fmt:check` confirms formatting | 5 |
 
 ## Acceptance criteria
@@ -99,10 +101,26 @@ is the phase evidence file and the permitted `.conductor/evidence/` artifact.
 
 ## Notes
 
-- The full verification chain cannot be executed by a subagent because shell forbids `&&`; each
-  command was therefore run individually.
-- `pnpm test:integration` is denied by the shell permission layer; the primary should run it and
-  hand back the output. Unit tests exercise the same content-contract and GLB framing helpers.
+- The subagent shell denied the chained verification command and `pnpm test:integration`; the
+  primary ran both successfully with exit 0. The subagent then returned a final `verified`
+  report with no blockers.
+- The primary independently confirmed the changed files stayed within Phase 1 `Touches` plus the
+  evidence file, inspected the schema/framing/test diffs, and reran the complete phase command.
 - `pnpm fmt` exits 5 despite reporting success (known oxfmt flake); `pnpm fmt:check` passes.
 - Baseline was measured with a temporary in-test measurement harness that wrote the JSON artifact;
   the harness was removed before the final test run (242 tests).
+
+## Primary verification
+
+- **Date:** 2026-11-27
+- **Branch:** `feat/20261127-scene-stage-reframing`
+- **Head inspected:** `1888bc564ab12448581fe5cb91afecf614184e89`
+- **Command:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration`
+- **Exit code:** 0
+- **Summary:** lint passed with only five pre-existing warnings; formatting and typecheck passed;
+  build produced 5 pages; unit suite passed 23 files / 242 tests; coverage gate passed;
+  integration suite passed 7 files / 79 tests.
+- **Diff check:** Phase changes are confined to the six Phase 1 `Touches` files plus this evidence
+  file. `.conductor/evidence/phase-1-baseline.json` is a permitted private evidence artifact.
+- **Acceptance:** AC-5 manifest behavior and AC-1/AC-2 aspect-aware framing groundwork are covered;
+  no GLB, poster, runtime scene, config, threshold, secret, or deployment file changed.

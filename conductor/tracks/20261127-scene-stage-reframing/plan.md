@@ -14,19 +14,23 @@
 - **Covers:** FR-4, FR-8, NFR-1, NFR-5, AC-5
 - **Touches:** `src/lib/scene-manifest.ts`, `src/components/scene/framing.ts`, `tests/unit/manifest-schema.test.ts`, `tests/unit/framing.test.ts`, `tests/integration/content-contract.test.ts`, `tests/integration/glb-manifest.test.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Define the hotspot-animation manifest contract** — covers: FR-4, NFR-1, AC-5
-  - [ ] Add optional hotspot-to-clip declarations with stable IDs and positive optional durations.
-  - [ ] Reject unknown hotspot IDs, duplicate clips/triggers, and malformed declarations while keeping animation-less lessons valid.
-  - [ ] Add unit and content-contract tests for valid, invalid, and absent animation metadata.
-- [ ] **P1.T2: Add aspect-aware framing utilities** — covers: FR-8, AC-1, AC-2
-  - [ ] Extend shared framing math to evaluate horizontal and vertical bounds at 4:3, 1:1, and desktop aspect ratios.
-  - [ ] Preserve existing `focusPose` behavior and whole-model margin guarantees.
-  - [ ] Add deterministic unit tests using synthetic model bounds and target viewport ratios.
-- [ ] **P1.T3: Record the current framing baseline** — covers: AC-1
-  - [ ] Measure both shipped GLBs at rest and across every hotspot.
-  - [ ] Record camera distance, view/model ratios, projected bounds, and poster observations in `verification/phase-1.md`.
+- [x] **P1.T1: Define the hotspot-animation manifest contract** — covers: FR-4, NFR-1, AC-5
+  - [x] Add optional hotspot-to-clip declarations with stable IDs and positive optional durations.
+  - [x] Reject unknown hotspot IDs, duplicate clips/triggers, and malformed declarations while keeping animation-less lessons valid.
+  - [x] Add unit and content-contract tests for valid, invalid, and absent animation metadata.
+- [x] **P1.T2: Add aspect-aware framing utilities** — covers: FR-8, AC-1, AC-2
+  - [x] Extend shared framing math to evaluate horizontal and vertical bounds at 4:3, 1:1, and desktop aspect ratios.
+  - [x] Preserve existing `focusPose` behavior and whole-model margin guarantees.
+  - [x] Add deterministic unit tests using synthetic model bounds and target viewport ratios.
+- [x] **P1.T3: Record the current framing baseline** — covers: AC-1
+  - [x] Measure both shipped GLBs at rest and across every hotspot.
+  - [x] Record camera distance, view/model ratios, projected bounds, and poster observations in `verification/phase-1.md`.
+
+**Result:** verified
+**Checkpoint:** 1888bc5
+**Evidence:** conductor/tracks/20261127-scene-stage-reframing/verification/phase-1.md
 
 <!--
 The primary appends after acceptance:
