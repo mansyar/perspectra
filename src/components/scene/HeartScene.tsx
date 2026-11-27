@@ -9,6 +9,7 @@ import type { RendererTier } from './renderer-support';
 
 const ACTIVE_EMISSIVE = 0x4de0c8;
 const ACTIVE_EMISSIVE_INTENSITY = 0.22;
+const CAMERA_EASE_RATE = 1.4;
 const PARTICLE_COUNT = 72;
 const POSITION_SCALE = 1;
 
@@ -66,7 +67,7 @@ function createFlowParticles(manifest: SceneManifest): FlowParticles {
 
   for (let index = 0; index < PARTICLE_COUNT; index++) {
     offsets.push((index / PARTICLE_COUNT) * 2);
-    speeds.push(0.06 + (index % 5) * 0.012);
+    speeds.push(0.025 + (index % 5) * 0.005);
     const point = curves[index % 2].getPointAt(offsets[index] % 1);
     positions[index * 3] = point.x;
     positions[index * 3 + 1] = point.y;
@@ -80,8 +81,8 @@ function createFlowParticles(manifest: SceneManifest): FlowParticles {
     new THREE.PointsMaterial({
       color: 0x9fe8dd,
       depthWrite: false,
-      opacity: 0.75,
-      size: 0.028,
+      opacity: 0.6,
+      size: 0.024,
       transparent: true,
     }),
   );
@@ -106,7 +107,6 @@ function SceneReady({ onReady }: { onReady: () => void }) {
 function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneContentsProps) {
   const { scene } = useGLTF(modelSrc);
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
-  const group = useRef<THREE.Group>(null);
   const lookAt = useRef(new THREE.Vector3(...manifest.camera.target));
   const savedEmissive = useRef(new Map<string, SavedEmissive>());
 
@@ -198,10 +198,6 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
       return;
     }
 
-    if (group.current) {
-      group.current.scale.setScalar(1 + Math.sin(state.elapsed * 2.6) * 0.012);
-    }
-
     flow.points.visible = true;
     const desired = positionsById.get(activeHotspot ?? '') ?? null;
     const pose = responsivePose(
@@ -213,7 +209,7 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
     );
     const cameraGoal = new THREE.Vector3(...pose.camera);
     const focusTarget = new THREE.Vector3(...pose.target);
-    const alpha = 1 - Math.exp(-delta * 2.8);
+    const alpha = 1 - Math.exp(-delta * CAMERA_EASE_RATE);
     state.camera.position.lerp(cameraGoal, alpha);
     lookAt.current.lerp(focusTarget, alpha);
     state.camera.lookAt(lookAt.current);
@@ -239,7 +235,7 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
   }
 
   return (
-    <group ref={group}>
+    <group>
       <SceneReady onReady={onReady} />
       <primitive object={scene} onClick={handleClick} />
       <primitive object={flow.points} />
