@@ -34,9 +34,15 @@ authoritative source.
 | `aortic_valve` | Aortic root valve |
 
 - Total GLB size < 1 MB; target < 100 draw calls.
-- No cameras, lights, animations, external textures, Draco, or KTX2 required.
+- No cameras, lights, external textures, Draco, or KTX2 required.
+- Six named one-shot animations, each driven by exactly one hotspot trigger:
+  `LeftVentricleContract`, `RightVentricleContract`, `AorticArchPulse`,
+  `PulmonaryFlow`, `MitralLeaflets`, `AorticValveLeaflets`. The renderer must
+  play them only on trigger, never as an ambient loop.
 - Style: semi-realistic low-poly; pink/red myocardium, purple right ventricle,
   red aorta, blue pulmonary artery, warm valve tissue.
+- Scene camera: `[0, 0.15, 6.9]`, target `[0, 0.15, 0]`, FOV 38°. The poster
+  camera matches it after Blender Z-up to glTF Y-up conversion (lens 52.3 mm).
 - Poster: 960×960 WebP, dark cinematic background, same camera framing as the scene.
 - The PNG is retained as the deterministic source for Blender's native WebP export.
 - The delivered `heart-poster.webp` must be < 120,000 bytes so it remains eligible for the LCP image.

@@ -8,9 +8,9 @@ model:
   src: /assets/heart/heart.glb
   poster: /assets/heart/heart-poster.webp
 camera:
-  position: [0, 0.35, 7]
-  target: [0, 0.45, 0]
-  fov: 42
+  position: [0, 0.15, 6.9]
+  target: [0, 0.15, 0]
+  fov: 38
 hotspots:
   - id: left_ventricle
     label: Left ventricle
@@ -30,6 +30,39 @@ hotspots:
   - id: aortic_valve
     label: Aortic valve
     position: [-0.20, 0.86, 0]
+animations:
+  clips:
+    - id: left_ventricle_contract
+      name: LeftVentricleContract
+      duration: 0.5
+    - id: right_ventricle_contract
+      name: RightVentricleContract
+      duration: 0.5
+    - id: aortic_arch_pulse
+      name: AorticArchPulse
+      duration: 0.5
+    - id: pulmonary_flow
+      name: PulmonaryFlow
+      duration: 0.5
+    - id: mitral_leaflets
+      name: MitralLeaflets
+      duration: 0.5
+    - id: aortic_valve_leaflets
+      name: AorticValveLeaflets
+      duration: 0.5
+  triggers:
+    - hotspot: left_ventricle
+      clip: left_ventricle_contract
+    - hotspot: right_ventricle
+      clip: right_ventricle_contract
+    - hotspot: aorta
+      clip: aortic_arch_pulse
+    - hotspot: pulmonary_artery
+      clip: pulmonary_flow
+    - hotspot: mitral_valve
+      clip: mitral_leaflets
+    - hotspot: aortic_valve
+      clip: aortic_valve_leaflets
 ---
 
 The heart is a four-chambered pump that moves blood through two circuits at once. The
