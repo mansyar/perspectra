@@ -2,7 +2,8 @@
 
 **Track:** `20261127-scene-stage-reframing`  
 **Date:** 2026-11-27  
-**Head:** `2f54fd2`  
+**Head:** `2f54fd2`
+
 **Result:** Pass
 
 ## Commands
