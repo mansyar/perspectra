@@ -44,9 +44,12 @@ interface GlbDocument {
 }
 
 interface LessonAnimations {
-  clips: { id: string; name: string; duration: number }[];
+  clips: { id: string; name?: string; duration?: number }[];
   triggers: { hotspot: string; clip: string }[];
 }
+
+/** Lessons whose manifests explicitly author a clip and trigger for every hotspot. */
+const FULL_ANIMATION_LESSONS = new Set(['heart', 'earth-interior']);
 
 interface LessonAsset {
   id: string;
@@ -60,6 +63,68 @@ interface LessonAsset {
   animations: LessonAnimations | null;
   glbBytes: Uint8Array;
   posterBytes: Uint8Array;
+}
+
+/** Reads declared clips/triggers from an `animations:` block without a YAML dependency. */
+function parseDeclaredAnimations(block: string): LessonAnimations {
+  const lines = block.split(/\r?\n/);
+
+  function sectionLines(name: string): string[] {
+    const start = lines.findIndex((line) => new RegExp(`^[ \\t]+${name}:[ \\t]*$`).test(line));
+    if (start === -1) {
+      return [];
+    }
+    const stop = lines.findIndex(
+      (line, index) => index > start && /^[ \t]+[a-z_]+:[ \t]*$/.test(line),
+    );
+    return lines.slice(start + 1, stop === -1 ? undefined : stop);
+  }
+
+  const clips = sectionLines('clips')
+    .join('\n')
+    .split(/^[ \t]+-[ \t]+id:[ \t]*/m)
+    .slice(1)
+    .map((entry) => {
+      const id = /^(\S+)/.exec(entry)?.[1] ?? '';
+      const name = /^[ \t]+name:[ \t]*(\S+)/m.exec(entry)?.[1];
+      const duration = /^[ \t]+duration:[ \t]*([\d.]+)/m.exec(entry)?.[1];
+      return {
+        id,
+        ...(name === undefined ? {} : { name }),
+        ...(duration === undefined ? {} : { duration: Number(duration) }),
+      };
+    });
+  const triggers = sectionLines('triggers')
+    .join('\n')
+    .split(/^[ \t]+-[ \t]+hotspot:[ \t]*/m)
+    .slice(1)
+    .map((entry) => ({
+      hotspot: /^(\S+)/.exec(entry)?.[1] ?? '',
+      clip: /^[ \t]+clip:[ \t]*(\S+)/m.exec(entry)?.[1] ?? '',
+    }));
+  return { clips, triggers };
+}
+
+/** Validates declared references without requiring animations or full hotspot coverage. */
+function validateDeclaredTriggers(hotspotIds: string[], animations: LessonAnimations | null): void {
+  if (!animations) {
+    return;
+  }
+  const clips = new Set(animations.clips.map((clip) => clip.id));
+  const hotspots = new Set(hotspotIds);
+  const triggered = new Set<string>();
+  for (const trigger of animations.triggers) {
+    if (!hotspots.has(trigger.hotspot)) {
+      throw new Error(`Trigger references unknown hotspot "${trigger.hotspot}"`);
+    }
+    if (!clips.has(trigger.clip)) {
+      throw new Error(`Trigger references unknown clip "${trigger.clip}"`);
+    }
+    if (triggered.has(trigger.hotspot)) {
+      throw new Error(`Duplicate trigger for hotspot "${trigger.hotspot}"`);
+    }
+    triggered.add(trigger.hotspot);
+  }
 }
 
 function requiredMatch(pattern: RegExp, text: string, context: string): RegExpExecArray {
@@ -125,18 +190,7 @@ function parseLesson(path: string, source: string): LessonAsset | null {
   )[1];
   const animationsBlock = /^animations:[ \t]*\r?\n([\s\S]*?)(?=(?![\s\S]))/m.exec(frontmatter)?.[1];
   const animations: LessonAnimations | null = animationsBlock
-    ? {
-        clips: Array.from(
-          animationsBlock.matchAll(
-            /^[ \t]+- id:\s*(\S+)\s*\r?\n[ \t]+name:\s*(\S+)\s*\r?\n[ \t]+duration:\s*([\d.]+)/gm,
-          ),
-          (match) => ({ id: match[1], name: match[2], duration: Number(match[3]) }),
-        ),
-        triggers: Array.from(
-          animationsBlock.matchAll(/^[ \t]+- hotspot:\s*(\S+)\s*\r?\n[ \t]+clip:\s*(\S+)/gm),
-          (match) => ({ hotspot: match[1], clip: match[2] }),
-        ),
-      }
+    ? parseDeclaredAnimations(animationsBlock)
     : null;
   const id = path
     .split('/')
@@ -283,21 +337,13 @@ describe('live lesson GLB ↔ manifest contracts', () => {
       }
     });
 
-    it('exports each declared clip as a named, hotspot-bound GLB animation', () => {
+    it('exports declared clips as named, hotspot-bound GLB animations', () => {
       const document = glbJson(lesson.glbBytes);
-      const animations = lesson.animations;
-      expect(animations, `${lesson.id} declares hotspot clips`).not.toBeNull();
-      if (!animations) {
-        return;
-      }
       const exported = document.animations ?? [];
       const names = exported.flatMap((animation) =>
         typeof animation.name === 'string' ? [animation.name] : [],
       );
-      expect(new Set(names).size).toBe(names.length);
-      expect(animations.clips).toHaveLength(6);
-      // A strict bijection rules out both missing clips and undeclared ambient clips.
-      expect(names.toSorted()).toEqual(animations.clips.map((clip) => clip.name).toSorted());
+      expect(new Set(names).size, 'exported animation names are unique').toBe(names.length);
       const nodes = document.nodes ?? [];
       const hotspotMeshes = new Set(
         nodes
@@ -307,7 +353,11 @@ describe('live lesson GLB ↔ manifest contracts', () => {
           )
           .map((node) => node.name),
       );
-      expect(hotspotMeshes).toEqual(new Set(lesson.manifestIds));
+      expect(hotspotMeshes, 'named hotspot meshes match the manifest').toEqual(
+        new Set(lesson.manifestIds),
+      );
+
+      // Every exported clip binds to a named hotspot mesh; no ambient-only clips.
       for (const animation of exported) {
         const channels = animation.channels ?? [];
         expect(channels.length, `${animation.name} has channels`).toBeGreaterThan(0);
@@ -325,14 +375,38 @@ describe('live lesson GLB ↔ manifest contracts', () => {
           `${animation.name} animates a named hotspot mesh`,
         ).toBe(true);
       }
+
+      const animations = lesson.animations;
+      if (!animations) {
+        return; // Animation metadata is optional; a static lesson is valid.
+      }
+      const clipIds = animations.clips.map((clip) => clip.id);
+      expect(new Set(clipIds).size, 'declared clip IDs are unique').toBe(clipIds.length);
       for (const clip of animations.clips) {
-        expect(clip.duration).toBeGreaterThan(0);
+        const name = clip.name ?? clip.id;
+        expect(names.includes(name), `${clip.id} resolves GLB animation "${name}"`).toBe(true);
+        if (clip.duration !== undefined) {
+          expect(clip.duration, `${clip.id} duration`).toBeGreaterThan(0);
+        }
+      }
+
+      if (FULL_ANIMATION_LESSONS.has(lesson.id)) {
+        expect(animations.clips, `${lesson.id} authors six clips`).toHaveLength(6);
+        // Authored lessons keep the strict bijection: no missing or ambient clips.
+        expect(names.toSorted(), `${lesson.id} has no undeclared ambient clip`).toEqual(
+          animations.clips.map((clip) => clip.name ?? clip.id).toSorted(),
+        );
+        for (const clip of animations.clips) {
+          expect(clip.name, `${clip.id} has a GLB animation name`).toBeTruthy();
+          expect(clip.duration, `${clip.id} duration`).toBeGreaterThan(0);
+        }
       }
     });
 
-    it('triggers every hotspot once and leaves no undeclared ambient clip', () => {
+    it('validates declared triggers without requiring full coverage', () => {
+      expect(() => validateDeclaredTriggers(lesson.manifestIds, lesson.animations)).not.toThrow();
       const animations = lesson.animations;
-      if (!animations) {
+      if (!animations || !FULL_ANIMATION_LESSONS.has(lesson.id)) {
         return;
       }
       expect(animations.triggers.map((trigger) => trigger.hotspot).toSorted()).toEqual(
@@ -431,5 +505,56 @@ describe('live lesson GLB ↔ manifest contracts', () => {
         }
       }
     });
+  });
+});
+
+describe('declared animation validation', () => {
+  const hotspots = ['first', 'second'];
+  const declarations: LessonAnimations = {
+    clips: [
+      { id: 'gentle_pulse', name: 'SyntheticPulse', duration: 0.5 },
+      { id: 'settle' },
+    ],
+    triggers: [
+      { hotspot: 'first', clip: 'gentle_pulse' },
+      { hotspot: 'second', clip: 'settle' },
+    ],
+  };
+
+  it('parses clips with an omitted name and duration', () => {
+    const block =
+      '  clips:\n    - id: settle\n  triggers:\n    - hotspot: first\n      clip: settle\n';
+    expect(parseDeclaredAnimations(block).clips).toEqual([{ id: 'settle' }]);
+    expect(parseDeclaredAnimations(block).triggers).toEqual([
+      { hotspot: 'first', clip: 'settle' },
+    ]);
+  });
+
+  it('accepts lessons without animation metadata', () => {
+    expect(() => validateDeclaredTriggers(hotspots, null)).not.toThrow();
+  });
+
+  it('accepts a valid subset of hotspot triggers', () => {
+    const subset: LessonAnimations = {
+      clips: declarations.clips,
+      triggers: [declarations.triggers[0]],
+    };
+    expect(() => validateDeclaredTriggers(hotspots, subset)).not.toThrow();
+  });
+
+  it('rejects a trigger referencing an undeclared clip', () => {
+    const invalid: LessonAnimations = {
+      clips: declarations.clips,
+      triggers: [{ hotspot: 'first', clip: 'missing_clip' }],
+    };
+    expect(() => validateDeclaredTriggers(hotspots, invalid)).toThrow(/unknown clip/);
+  });
+
+  it('rejects a trigger referencing an undeclared hotspot', () => {
+    const invalid: LessonAnimations = {
+      clips: declarations.clips,
+      triggers: [{ hotspot: 'missing', clip: 'settle' }],
+    };
+    expect(() => validateDeclaredTriggers(hotspots, invalid)).toThrow(/unknown hotspot/);
   });
 });

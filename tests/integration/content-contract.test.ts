@@ -5,6 +5,13 @@ import {
   validateHotspotReferences,
 } from '../../src/lib/scene-manifest';
 
+/** Lessons whose manifests explicitly author one animation clip per hotspot. */
+const FULL_ANIMATION_LESSONS = new Set(['heart', 'earth-interior']);
+
+function lessonId(path: string): string {
+  return path.split('/').at(-1)?.replace(/\.mdx$/, '') ?? path;
+}
+
 const mdxFiles = import.meta.glob('../../src/content/lessons/*.mdx', {
   query: '?raw',
   import: 'default',
@@ -189,19 +196,44 @@ describe('lesson content contracts', () => {
       expect(lesson.manifest.camera.target).toHaveLength(3);
     });
 
-    it('validates optional animation metadata without requiring it', () => {
+    it('validates declared animation metadata without requiring it', () => {
       const animations = lesson.manifest.animations;
-      if (animations) {
-        expect(animations.clips.length).toBeGreaterThan(0);
-        expect(animations.triggers.length).toBeGreaterThan(0);
-      } else {
+      if (!animations) {
         expect(lesson.animations).toBeUndefined();
+        return;
       }
+      expect(animations.clips.length).toBeGreaterThan(0);
+      expect(animations.triggers.length).toBeGreaterThan(0);
+
+      const clipIds = animations.clips.map((clip) => clip.id);
+      expect(new Set(clipIds).size, 'clip IDs are unique').toBe(clipIds.length);
+      for (const clip of animations.clips) {
+        if (clip.name !== undefined) {
+          expect(clip.name.trim(), `${clip.id} GLB animation name`).not.toBe('');
+        }
+        if (clip.duration !== undefined) {
+          expect(clip.duration, `${clip.id} duration`).toBeGreaterThan(0);
+        }
+      }
+
+      const declaredIds = new Set(lesson.declaredIds);
+      const declaredClips = new Set(clipIds);
+      const triggered = new Set<string>();
+      for (const trigger of animations.triggers) {
+        expect(declaredIds.has(trigger.hotspot), `${trigger.hotspot} is declared`).toBe(true);
+        expect(declaredClips.has(trigger.clip), `${trigger.clip} is declared`).toBe(true);
+        expect(triggered.has(trigger.hotspot), `${trigger.hotspot} has one trigger`).toBe(false);
+        triggered.add(trigger.hotspot);
+      }
+      // A subset of animated hotspots is valid; full coverage is an authored choice, not a contract.
     });
 
-    it('declares one named, hotspot-triggered clip per landmark', () => {
+    it('declares one named clip per landmark when fully authored', () => {
+      if (!FULL_ANIMATION_LESSONS.has(lessonId(lesson.path))) {
+        return;
+      }
       const animations = lesson.manifest.animations;
-      expect(animations).toBeDefined();
+      expect(animations, `${lesson.path} declares hotspot clips`).toBeDefined();
       if (!animations) {
         return;
       }
@@ -268,9 +300,28 @@ describe('frontmatter animation metadata', () => {
       clip: settle
 `;
 
+  const subsetAnimations = `animations:
+  clips:
+    - id: gentle_pulse
+      name: SyntheticPulse
+      duration: 0.5
+    - id: settle
+  triggers:
+    - hotspot: first
+      clip: gentle_pulse
+`;
+
   it('accepts a lesson with no animations block', () => {
     const lesson = parseLesson('synthetic.mdx', syntheticLesson(''));
     expect(lesson.manifest.animations).toBeUndefined();
+  });
+
+  it('accepts a valid subset of hotspot triggers', () => {
+    const lesson = parseLesson('synthetic.mdx', syntheticLesson(subsetAnimations));
+    expect(lesson.manifest.animations?.clips).toHaveLength(2);
+    expect(lesson.manifest.animations?.triggers).toEqual([
+      { hotspot: 'first', clip: 'gentle_pulse' },
+    ]);
   });
 
   it('accepts valid clips and triggers declared in frontmatter', () => {
