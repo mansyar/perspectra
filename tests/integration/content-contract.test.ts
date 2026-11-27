@@ -292,6 +292,13 @@ describe('frontmatter animation metadata', () => {
     );
   });
 
+  it('rejects frontmatter triggers that reference an undeclared clip', () => {
+    const invalid = validAnimations.replace('clip: gentle_pulse', 'clip: missing_clip');
+    expect(() => parseLesson('synthetic.mdx', syntheticLesson(invalid))).toThrow(
+      /not declared in the manifest/,
+    );
+  });
+
   it('rejects frontmatter animations with duplicate clips or triggers', () => {
     const duplicateClip = validAnimations.replace('id: settle', 'id: gentle_pulse');
     expect(() => parseLesson('synthetic.mdx', syntheticLesson(duplicateClip))).toThrow(

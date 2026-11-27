@@ -4,6 +4,7 @@ import {
   VIEWPORT_ASPECTS,
   focusPose,
   projectedBounds,
+  responsivePose,
   viewHeight,
   type Bounds,
   type Vec3,
@@ -282,30 +283,49 @@ describe('live lesson GLB ↔ manifest contracts', () => {
       }
     });
 
-    it('exports each declared clip as a named, node-bound GLB animation', () => {
+    it('exports each declared clip as a named, hotspot-bound GLB animation', () => {
       const document = glbJson(lesson.glbBytes);
       const animations = lesson.animations;
       expect(animations, `${lesson.id} declares hotspot clips`).not.toBeNull();
       if (!animations) {
         return;
       }
-      const names = (document.animations ?? []).flatMap((animation) =>
+      const exported = document.animations ?? [];
+      const names = exported.flatMap((animation) =>
         typeof animation.name === 'string' ? [animation.name] : [],
       );
       expect(new Set(names).size).toBe(names.length);
       expect(animations.clips).toHaveLength(6);
-      const nodeCount = document.nodes?.length ?? 0;
-      for (const animation of document.animations ?? []) {
+      // A strict bijection rules out both missing clips and undeclared ambient clips.
+      expect(names.toSorted()).toEqual(animations.clips.map((clip) => clip.name).toSorted());
+      const nodes = document.nodes ?? [];
+      const hotspotMeshes = new Set(
+        nodes
+          .filter(
+            (node): node is GlbNode & { name: string } =>
+              typeof node.mesh === 'number' && typeof node.name === 'string',
+          )
+          .map((node) => node.name),
+      );
+      expect(hotspotMeshes).toEqual(new Set(lesson.manifestIds));
+      for (const animation of exported) {
         const channels = animation.channels ?? [];
         expect(channels.length, `${animation.name} has channels`).toBeGreaterThan(0);
         for (const channel of channels) {
           const node = channel.target?.node;
           expect(node, `${animation.name} target`).toBeGreaterThanOrEqual(0);
-          expect(node, `${animation.name} target`).toBeLessThan(nodeCount);
+          expect(node, `${animation.name} target`).toBeLessThan(nodes.length);
         }
+        const targets = channels.flatMap((channel) => {
+          const node = channel.target?.node;
+          return node === undefined ? [] : [nodes[node]?.name ?? ''];
+        });
+        expect(
+          targets.some((name) => hotspotMeshes.has(name)),
+          `${animation.name} animates a named hotspot mesh`,
+        ).toBe(true);
       }
       for (const clip of animations.clips) {
-        expect(names, `${lesson.id}:${clip.id}`).toContain(clip.name);
         expect(clip.duration).toBeGreaterThan(0);
       }
     });
@@ -376,6 +396,37 @@ describe('live lesson GLB ↔ manifest contracts', () => {
           expect(
             framed.horizontal,
             `horizontal framing for ${pose.label} at aspect ${aspect}`,
+          ).toBeLessThanOrEqual(1);
+        }
+      }
+    });
+
+    it('keeps responsive camera poses safe at the target page aspect ratios', () => {
+      const document = glbJson(lesson.glbBytes);
+      const boxes = (document.nodes ?? [])
+        .filter((node): node is GlbNode & { mesh: number } => typeof node.mesh === 'number')
+        .map((node) => meshBounds(document, node));
+      expect(boxes.length).toBeGreaterThan(0);
+      const bounds = overallBounds(boxes);
+      // The runtime feeds the canvas aspect to responsivePose; cover the exact
+      // desktop and mobile page ratios used by the acceptance pass.
+      const pageAspects = {
+        '1024x768': 1024 / 768,
+        '1280x800': 1280 / 800,
+        '390x844': 390 / 844,
+      } as const;
+      const hotspots: (Vec3 | null)[] = [null, ...lesson.positions.values()];
+      for (const [label, aspect] of Object.entries(pageAspects)) {
+        for (const [index, hotspot] of hotspots.entries()) {
+          const pose = responsivePose(lesson.camera, lesson.target, hotspot, lesson.fov, aspect);
+          const framed = projectedBounds(pose.camera, pose.target, lesson.fov, aspect, bounds);
+          expect(
+            framed.vertical,
+            `${lesson.id} ${label} vertical pose ${index}`,
+          ).toBeLessThanOrEqual(1);
+          expect(
+            framed.horizontal,
+            `${lesson.id} ${label} horizontal pose ${index}`,
           ).toBeLessThanOrEqual(1);
         }
       }
