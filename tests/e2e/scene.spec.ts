@@ -78,15 +78,88 @@ for (const lesson of LESSONS) {
       await expect(poster).toBeHidden();
     });
 
+    test('guidance explains selection and scroll, with no unsupported controls', async ({
+      page,
+    }) => {
+      await openLesson(page, lesson.path);
+      const guidance = page.getByTestId('scene-guidance');
+      await expect(guidance).toBeVisible();
+      await expect(guidance).toHaveText(/select a landmark/i);
+      await expect(guidance).toHaveText(/scroll/i);
+      await expect(guidance).not.toHaveText(/drag|orbit|pinch|rotate|zoom/i);
+      await expect(page.locator('.scene-island__hotspots')).toHaveAttribute(
+        'aria-describedby',
+        'scene-guidance',
+      );
+      await expect(page.locator('.scene-island__start')).toHaveAttribute(
+        'aria-describedby',
+        'scene-guidance',
+      );
+    });
+
     test('poster fallback when model is unavailable', async ({ page }) => {
       await page.route('**/*.glb', (route) => {
         return route.abort();
       });
       await openLesson(page, lesson.path);
-      await expect(page.locator('.scene-island')).toHaveAttribute('data-renderer', 'poster');
+      const island = page.locator('.scene-island');
+      await expect(island).toHaveAttribute('data-renderer', 'poster');
       await expect(page.locator('.scene-island__poster')).toBeVisible();
+      await expect(page.locator('.scene-island canvas')).toHaveCount(0);
       await expect(page.locator('.landmarks a')).toHaveCount(6);
       await expect(page.locator('[data-hotspot-button]')).toHaveCount(6);
+      await expect(page.getByTestId('scene-guidance')).toBeVisible();
+      await expect(island).toHaveAttribute('data-animation-clip', '');
+      await expect(island).toHaveAttribute('data-animation-run', '0');
+      await page.locator(`[data-hotspot-button="${lesson.focusId}"]`).click();
+      await expect(island).toHaveAttribute('data-active-hotspot', lesson.focusId);
+      await expect(island).toHaveAttribute('data-animation-run', '0');
+      await expect(page.locator(`[data-hotspot="${lesson.focusId}"]`)).toHaveClass(/is-active/);
+    });
+
+    test('focusing hotspots replays their declared clip on return', async ({ page }) => {
+      await openLesson(page, lesson.path);
+      await page.locator('.scene-island__start').click();
+      const island = page.locator('.scene-island');
+      await expect(island).toHaveAttribute('data-scene-ready', 'true', { timeout: 20_000 });
+      const initialClip = await island.getAttribute('data-animation-clip');
+      const initialRun = Number(await island.getAttribute('data-animation-run'));
+
+      await page.locator(`[data-hotspot-button="${lesson.focusId}"]`).click();
+      await expect(island).toHaveAttribute('data-active-hotspot', lesson.focusId);
+      await expect
+        .poll(async () => {
+          return Number(await island.getAttribute('data-animation-run')) > initialRun;
+        })
+        .toBe(true);
+      const firstRun = Number(await island.getAttribute('data-animation-run'));
+      const firstClip = await island.getAttribute('data-animation-clip');
+      expect(firstClip).not.toBe('');
+      expect(firstClip).not.toBe(initialClip);
+      await expect
+        .poll(async () => {
+          return Number(await island.getAttribute('data-animation-run'));
+        })
+        .toBe(firstRun);
+
+      await page.locator(`[data-hotspot-button="${lesson.proseId}"]`).click();
+      await expect(island).toHaveAttribute('data-active-hotspot', lesson.proseId);
+      await expect
+        .poll(async () => {
+          return (await island.getAttribute('data-animation-clip')) !== firstClip;
+        })
+        .toBe(true);
+      const secondRun = Number(await island.getAttribute('data-animation-run'));
+      expect(secondRun).toBeGreaterThan(firstRun);
+
+      await page.locator(`[data-hotspot-button="${lesson.focusId}"]`).click();
+      await expect(island).toHaveAttribute('data-active-hotspot', lesson.focusId);
+      await expect
+        .poll(async () => {
+          return Number(await island.getAttribute('data-animation-run')) > secondRun;
+        })
+        .toBe(true);
+      await expect(island).toHaveAttribute('data-animation-clip', firstClip ?? '');
     });
 
     test('scene click highlights and scrolls prose', async ({ page }) => {
@@ -141,6 +214,10 @@ for (const lesson of LESSONS) {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await openLesson(page, lesson.path);
       await expect(page.locator('.scene-island')).toHaveAttribute('data-motion', 'reduced');
+      await page.locator('.scene-island__start').click();
+      await expect(page.locator('.scene-island')).toHaveAttribute('data-scene-ready', 'true', {
+        timeout: 20_000,
+      });
 
       await page.locator(`[data-hotspot-button="${lesson.reducedMotionId}"]`).click();
       await expect(page.locator(`[data-hotspot="${lesson.reducedMotionId}"]`)).toHaveClass(
@@ -151,6 +228,10 @@ for (const lesson of LESSONS) {
         'data-active-hotspot',
         lesson.reducedMotionId,
       );
+      const island = page.locator('.scene-island');
+      await expect(island).toHaveAttribute('data-motion', 'reduced');
+      await expect(island).toHaveAttribute('data-animation-clip', '');
+      await expect(island).toHaveAttribute('data-animation-run', '0');
     });
 
     test('a failed WebGPU scene remounts on WebGL with a visible recovery', async ({ page }) => {

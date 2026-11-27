@@ -159,5 +159,37 @@ test(
     await page.locator('[data-hotspot-button="mitral_valve"]').click();
     await expect(page.locator('[data-hotspot="mitral_valve"]')).toHaveClass(/is-active/);
     await expect(page.locator('.prose')).toBeVisible();
+    await expect(page.locator('.scene-island')).toHaveAttribute('data-animation-run', '0');
+  },
+);
+
+test(
+  'guidance is announced by controls without unsupported control hints',
+  { tag: '@a11y' },
+  async ({ page }) => {
+    await page.goto('/lessons/heart/');
+    const guidance = page.getByTestId('scene-guidance');
+    await expect(guidance).toBeVisible();
+    const text = (await guidance.textContent()) ?? '';
+    expect(text).toMatch(/select a landmark/i);
+    expect(text).toMatch(/scroll/i);
+    expect(text).not.toMatch(/drag|orbit|pinch|rotate|zoom/i);
+    await expect(page.locator('.scene-island__hotspots')).toHaveAttribute(
+      'aria-describedby',
+      'scene-guidance',
+    );
+    await expect(page.locator('.scene-island__start')).toHaveAttribute(
+      'aria-describedby',
+      'scene-guidance',
+    );
+
+    const button = await tabUntil(page, (info) => info.hotspotButton !== null);
+    expect(button?.outline).not.toBe('none');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.scene-island')).toHaveAttribute(
+      'data-active-hotspot',
+      button?.hotspotButton ?? '',
+    );
+    expect((await focusInfo(page)).outline).not.toBe('none');
   },
 );
