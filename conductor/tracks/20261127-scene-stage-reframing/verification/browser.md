@@ -39,3 +39,14 @@ Private artifacts (gitignored):
 - `.conductor/media/20261127-scene-stage-reframing/*-{1280,1024,390}-{poster,focused}.png`
 
 Requirement coverage: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6; FR-1, FR-2, FR-3, FR-4, FR-7, FR-8; NFR-2, NFR-3.
+
+## Review pass (2026-11-27, primary)
+
+The same primary Playwright script was rerun against the integrated build. All 8 checks passed again with no page errors:
+
+- Heart and Earth Interior at 1280x800 and 1024x768 rendered WebGL after poster opt-in, kept the 550x412.5 canvas within the viewport, showed only selection/scroll guidance, and replayed `pulmonary_flow` / `outer_core_convection` after focus changes.
+- Both lessons at 390x844 used an unclipped 356x356 stage and replayed the correct declared clip.
+- Reduced-motion checks on both lessons left `data-animation-run="0"` and `data-animation-clip` empty.
+- Focused screenshots were refreshed in `.conductor/media/20261127-scene-stage-reframing/` for PR media.
+
+Result: pass. This is the mandatory primary review-time browser pass; no in-app browser pass is claimed.
