@@ -122,6 +122,7 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
         />
         {(tier === 'webgpu' || tier === 'webgl') && !interactive && (
           <button
+            aria-describedby="scene-guidance"
             className="scene-island__start"
             onClick={() => setInteractive(true)}
             type="button"
@@ -162,7 +163,16 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
           </p>
         )}
       </div>
-      <div aria-label="Scene landmarks" className="scene-island__hotspots" role="group">
+      <p className="scene-island__guidance" data-testid="scene-guidance" id="scene-guidance">
+        Select a landmark below, or a highlighted structure in the model, to focus the scene. Scroll
+        the lesson text to read about each landmark.
+      </p>
+      <div
+        aria-describedby="scene-guidance"
+        aria-label="Scene landmarks"
+        className="scene-island__hotspots"
+        role="group"
+      >
         {manifest.hotspots.map((hotspot) => (
           <button
             aria-pressed={activeHotspot === hotspot.id}
