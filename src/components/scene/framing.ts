@@ -56,6 +56,48 @@ export function viewWidth(
   return viewHeight(camera, target, fovDegrees) * aspectRatio;
 }
 
+/** Unit-distance camera used to compare viewport spans without a lesson model. */
+const UNIT_CAMERA: Vec3 = [0, 0, 1];
+const UNIT_TARGET: Vec3 = [0, 0, 0];
+
+/**
+ * Distance multiplier that restores the square-viewport horizontal span on a
+ * narrower stage. Wider stages reuse the tuned camera untouched.
+ */
+export function responsiveDistanceScale(fovDegrees: number, aspectRatio: number): number {
+  if (!Number.isFinite(aspectRatio) || aspectRatio <= 0) {
+    return 1;
+  }
+  const squareWidth = viewWidth(UNIT_CAMERA, UNIT_TARGET, fovDegrees, VIEWPORT_ASPECTS.square);
+  const stageWidth = viewWidth(UNIT_CAMERA, UNIT_TARGET, fovDegrees, aspectRatio);
+  return Math.max(1, squareWidth / stageWidth);
+}
+
+/**
+ * Camera-first framing: the model keeps its authored scale, and only the camera
+ * moves back toward a narrower stage. There is no orbit or model scaling.
+ */
+export function responsivePose(
+  baseCamera: Vec3,
+  baseTarget: Vec3,
+  hotspot: Vec3 | null,
+  fovDegrees: number,
+  aspectRatio: number,
+): FocusPose {
+  const pose =
+    hotspot === null
+      ? { camera: baseCamera, target: baseTarget }
+      : focusPose(baseCamera, baseTarget, hotspot);
+  const scale = responsiveDistanceScale(fovDegrees, aspectRatio);
+  if (scale === 1) {
+    return pose;
+  }
+  const camera = pose.camera.map((value, index) => {
+    return pose.target[index] + (value - pose.target[index]) * scale;
+  }) as unknown as Vec3;
+  return { camera, target: pose.target };
+}
+
 function dot(left: Vec3, right: Vec3): number {
   return left[0] * right[0] + left[1] * right[1] + left[2] * right[2];
 }

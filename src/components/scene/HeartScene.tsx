@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
 import type { SceneManifest } from '../../lib/scene-manifest';
-import { focusPose } from './framing';
+import { responsivePose } from './framing';
 import type { RendererTier } from './renderer-support';
 
 const ACTIVE_EMISSIVE = 0x4de0c8;
@@ -108,7 +108,6 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
   const group = useRef<THREE.Group>(null);
   const lookAt = useRef(new THREE.Vector3(...manifest.camera.target));
-  const cameraInitialised = useRef(false);
   const savedEmissive = useRef(new Map<string, SavedEmissive>());
 
   const hotspotIds = useMemo(() => {
@@ -182,28 +181,35 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
   );
 
   useFrame((state, delta) => {
+    const fov = manifest.camera.fov ?? 42;
+    const aspect = state.size.width / Math.max(1, state.size.height);
     if (reducedMotion) {
       flow.points.visible = false;
-      if (!cameraInitialised.current) {
-        state.camera.position.copy(basePosition);
-        lookAt.current.copy(baseTarget);
-        state.camera.lookAt(lookAt.current);
-        cameraInitialised.current = true;
-      }
+      const staticPose = responsivePose(
+        basePosition.toArray() as [number, number, number],
+        baseTarget.toArray() as [number, number, number],
+        null,
+        fov,
+        aspect,
+      );
+      state.camera.position.set(...staticPose.camera);
+      lookAt.current.set(...staticPose.target);
+      state.camera.lookAt(lookAt.current);
       return;
     }
 
-    cameraInitialised.current = false;
     if (group.current) {
       group.current.scale.setScalar(1 + Math.sin(state.elapsed * 2.6) * 0.012);
     }
 
     flow.points.visible = true;
-    const desired = positionsById.get(activeHotspot ?? '') ?? baseTarget;
-    const pose = focusPose(
+    const desired = positionsById.get(activeHotspot ?? '') ?? null;
+    const pose = responsivePose(
       basePosition.toArray() as [number, number, number],
       baseTarget.toArray() as [number, number, number],
-      desired.toArray() as [number, number, number],
+      desired === null ? null : (desired.toArray() as [number, number, number]),
+      fov,
+      aspect,
     );
     const cameraGoal = new THREE.Vector3(...pose.camera);
     const focusTarget = new THREE.Vector3(...pose.target);
