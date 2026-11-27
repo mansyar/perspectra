@@ -102,7 +102,7 @@ The primary appends after acceptance:
 
 - **Goal:** Prove the approved behavior across both lessons, target viewports, reduced motion, and all renderer tiers.
 - **Depends on:** Phase 3
-- **Covers:** AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-8, AC-9, NFR-2, NFR-3, NFR-4
+- **Covers:** AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-8, AC-9, NFR-2, NFR-3, NFR-4, NFR-6
 - **Touches:** `tests/integration/glb-manifest.test.ts`, `tests/integration/content-contract.test.ts`, `tests/e2e/scene.spec.ts`, `tests/e2e/a11y.spec.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e && pnpm test:a11y`
 - **Status:** pending
@@ -114,7 +114,7 @@ The primary appends after acceptance:
 - [ ] **P4.T2: Add viewport and motion E2E coverage** — covers: AC-1, AC-2, AC-3, AC-4, AC-6
   - [ ] Exercise both lessons at 1024×768, 1280×800, and 390×844.
   - [ ] Assert guidance, safe stage bounds, focus changes, animation replay, and static reduced-motion/poster behavior.
-- [ ] **P4.T3: Verify accessibility, fallback, and unchanged budgets** — covers: AC-6, AC-8, AC-9
+- [ ] **P4.T3: Verify accessibility, fallback, and unchanged budgets** — covers: AC-6, AC-8, AC-9, NFR-6
   - [ ] Extend accessibility checks to both lesson stages and keyboard guidance.
   - [ ] Confirm clean console behavior and unchanged Lighthouse thresholds/retries.
   - [ ] Confirm the final diff contains no deploy/config/threshold, secret, production-data, or unrelated feature changes.
