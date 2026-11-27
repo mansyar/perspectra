@@ -88,8 +88,15 @@
 - No manual or visual browser pass, screenshots, or hand-driven browser interaction were
   performed by this subagent; only automated Playwright runs were used.
 
+## Primary verification
+
+- The stale preview process on port 4322 (PID 29820) was stopped. `git diff --check` passed, and `git diff --name-only 740a580...HEAD` matched the four Phase 4 test files exactly; no runtime, asset, config, threshold, secret, deploy, or production-data files changed.
+- The exact chain `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e && pnpm test:a11y` was run by the primary. Every layer through smoke passed: lint had only the five pre-existing warnings; format/typecheck/build passed; 23 unit files / 242 tests; coverage gate; 7 integration files / 90 tests; 2 smoke tests.
+- Default 8-worker E2E repeatedly hit the documented CPU-contention Lighthouse flake and the known unrelated mobile-tutor hydration flake. No threshold, retry, config, or test expectation was changed. Focused Lighthouse and mobile-tutor reruns passed.
+- The complete E2E suite was then run serially with `pnpm exec playwright test --workers=1`: exit 0, 70 passed, 1 external-origin test skipped. All 18 new viewport tests passed. Lighthouse scores were catalog 100/96/100/100, Heart 100/96/95/100, and Earth 100/96/95/100.
+- `pnpm test:a11y` then passed 7/7, exit 0, including Earth axe, reduced-motion, guidance, keyboard, and console checks.
+- Phase 3 primary browser evidence remains applicable because Phase 4 changed tests only. A fresh primary browser pass is still required at review and after any fix round.
+
 ## Status
 
-Implementation is complete and validated with the allowed equivalent commands. The exact
-full verification chain remains unverified here because of the preview lock and the denied
-commands described above; the primary can close those out.
+Verified by the primary after closing the subagent's permission/environment blockers. The default parallel run's contention flakes are recorded above; the serial full E2E suite and all configured static/unit/integration/smoke/a11y layers pass with unchanged budgets and retries.
