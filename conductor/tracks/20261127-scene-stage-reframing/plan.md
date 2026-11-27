@@ -46,7 +46,7 @@ The primary appends after acceptance:
 - **Covers:** FR-1, FR-6, FR-9, NFR-5, AC-1, AC-7
 - **Touches:** `assets/heart/**`, `assets/earth-interior/**`, `public/assets/heart/**`, `public/assets/earth-interior/**`, `src/content/lessons/heart.mdx`, `src/content/lessons/earth-interior.mdx`, `tests/integration/glb-manifest.test.ts`, `tests/integration/content-contract.test.ts`
 - **Verification:** `blender --background --python assets/heart/build_heart.py && blender --background --python assets/earth-interior/build_earth.py && pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Tune camera-first framing per lesson** — covers: FR-1, FR-8, FR-9, AC-1
   - [ ] Use measured GLB bounds to choose closer camera/target/FOV values for both lessons.
