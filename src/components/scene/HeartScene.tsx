@@ -3,7 +3,7 @@ import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
-import type { SceneManifest } from '../../lib/scene-manifest';
+import type { AnimationClip as ManifestClip, SceneManifest } from '../../lib/scene-manifest';
 import { responsivePose } from './framing';
 import type { RendererTier } from './renderer-support';
 
@@ -19,6 +19,7 @@ interface HeartSceneProps {
   tier: Exclude<RendererTier, 'poster'>;
   reducedMotion: boolean;
   onReady: () => void;
+  onAnimation: (clipId: string) => void;
   /** QA hook: throw on mount so the fallback ladder can be exercised in E2E. */
   failRender?: boolean;
 }
@@ -34,6 +35,11 @@ interface FlowParticles {
 interface SavedEmissive {
   color: THREE.Color;
   intensity: number;
+}
+
+interface TriggeredClip {
+  action: THREE.AnimationAction;
+  clip: ManifestClip;
 }
 
 function lift(point: THREE.Vector3, amount: number): THREE.Vector3 {
@@ -94,6 +100,7 @@ interface SceneContentsProps {
   modelSrc: string;
   reducedMotion: boolean;
   onReady: () => void;
+  onAnimation: (clipId: string) => void;
 }
 
 /** Signals readiness only after the suspended GLTF has resolved. */
@@ -104,8 +111,14 @@ function SceneReady({ onReady }: { onReady: () => void }) {
   return null;
 }
 
-function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneContentsProps) {
-  const { scene } = useGLTF(modelSrc);
+function SceneContents({
+  manifest,
+  modelSrc,
+  reducedMotion,
+  onReady,
+  onAnimation,
+}: SceneContentsProps) {
+  const { animations, scene } = useGLTF(modelSrc);
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
   const lookAt = useRef(new THREE.Vector3(...manifest.camera.target));
   const savedEmissive = useRef(new Map<string, SavedEmissive>());
@@ -142,6 +155,55 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
     return createFlowParticles(manifest);
   }, [manifest]);
 
+  const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
+  const clipActions = useMemo(() => {
+    const found = new Map<string, THREE.AnimationAction>();
+    const declarations = manifest.animations;
+    if (!declarations) {
+      return found;
+    }
+    for (const clip of declarations.clips) {
+      const source = animations.find((candidate) => candidate.name === (clip.name ?? clip.id));
+      if (source) {
+        found.set(clip.id, mixer.clipAction(source));
+      }
+    }
+    return found;
+  }, [animations, manifest, mixer]);
+  const triggeredClips = useMemo(() => {
+    const found = new Map<string, TriggeredClip>();
+    const declarations = manifest.animations;
+    if (!declarations) {
+      return found;
+    }
+    for (const trigger of declarations.triggers) {
+      const action = clipActions.get(trigger.clip);
+      const clip = declarations.clips.find((candidate) => candidate.id === trigger.clip);
+      if (action && clip) {
+        found.set(trigger.hotspot, { action, clip });
+      }
+    }
+    return found;
+  }, [clipActions, manifest]);
+
+  useEffect(() => {
+    mixer.stopAllAction();
+    const triggered = activeHotspot === null ? undefined : triggeredClips.get(activeHotspot);
+    if (reducedMotion || !triggered) {
+      return;
+    }
+    const { action, clip } = triggered;
+    action.reset();
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.timeScale = clip.duration === undefined ? 1 : action.getClip().duration / clip.duration;
+    action.play();
+    onAnimation(clip.id);
+    return () => {
+      action.stop();
+    };
+  }, [activeHotspot, mixer, onAnimation, reducedMotion, triggeredClips]);
+
   useEffect(() => {
     const saved = savedEmissive.current;
     for (const [id, mesh] of meshNodes) {
@@ -166,6 +228,8 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
 
   useEffect(
     () => () => {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(scene);
       for (const [id, mesh] of meshNodes) {
         const previous = savedEmissive.current.get(id);
         if (previous && mesh.material instanceof THREE.MeshStandardMaterial) {
@@ -177,7 +241,7 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
       flow.points.geometry.dispose();
       (flow.points.material as THREE.Material).dispose();
     },
-    [flow, meshNodes],
+    [flow, meshNodes, mixer, scene],
   );
 
   useFrame((state, delta) => {
@@ -198,6 +262,7 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
       return;
     }
 
+    mixer.update(delta);
     flow.points.visible = true;
     const desired = positionsById.get(activeHotspot ?? '') ?? null;
     const pose = responsivePose(
@@ -251,6 +316,7 @@ export function HeartScene({
   tier,
   reducedMotion,
   onReady,
+  onAnimation,
 }: HeartSceneProps) {
   if (failRender) {
     throw new Error('Forced renderer failure (QA hook)');
@@ -270,6 +336,7 @@ export function HeartScene({
         <SceneContents
           manifest={manifest}
           modelSrc={modelSrc}
+          onAnimation={onAnimation}
           onReady={onReady}
           reducedMotion={reducedMotion}
         />
