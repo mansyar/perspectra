@@ -15,11 +15,11 @@
   "progress": {
     "phases_total": 4,
     "phases_verified": 4,
-    "tasks_total": 14,
+    "tasks_total": 15,
     "tasks_done": 14
   },
   "last_checkpoint": "8e28478",
-  "review_verdict": "PASS WITH FINDINGS",
+  "review_verdict": "BLOCK",
   "review_rounds": 1,
   "doc_sync": "pending",
   "pr_url": null,

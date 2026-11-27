@@ -130,6 +130,21 @@ The primary appends after acceptance:
 **Evidence:** conductor/tracks/20261127-scene-stage-reframing/verification/phase-4.md
 **Browser evidence:** conductor/tracks/20261127-scene-stage-reframing/verification/browser.md (fresh pass required at review)
 
+## Phase R1: Review Fixes
+
+- **Goal:** Fix F1 so optional animation metadata remains optional in both content and GLB integration contracts while preserving strict validation for declared clips/triggers.
+- **Depends on:** Phase 4
+- **Covers:** FR-4, NFR-1, AC-5
+- **Touches:** `tests/integration/content-contract.test.ts`, `tests/integration/glb-manifest.test.ts`
+- **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration && pnpm smoke && pnpm test:e2e && pnpm test:a11y`
+- **Status:** pending
+
+- [ ] **R1.T1: Keep animation test contracts optional and partial-safe** — covers: FR-4, NFR-1, AC-5
+  - [ ] Remove unconditional six-clip/every-hotspot requirements from shared live-lesson assertions.
+  - [ ] Validate declared clip IDs/names/durations and trigger references without requiring complete coverage.
+  - [ ] Add regression coverage for omitted animations and a valid subset of hotspot triggers; keep current Heart/Earth outputs strictly checked.
+  - [ ] Run configured checks and record evidence; primary owns browser verification.
+
 ## Verification notes
 
 - The known `oxfmt` exit-5 flake is handled by confirming `pnpm exec oxfmt --check .` directly and rerunning the chain once; thresholds and configuration remain unchanged.
