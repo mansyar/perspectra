@@ -14,7 +14,7 @@
 - **Covers:** FR-4, FR-8, NFR-1, NFR-5, AC-5
 - **Touches:** `src/lib/scene-manifest.ts`, `src/components/scene/framing.ts`, `tests/unit/manifest-schema.test.ts`, `tests/unit/framing.test.ts`, `tests/integration/content-contract.test.ts`, `tests/integration/glb-manifest.test.ts`
 - **Verification:** `pnpm lint && pnpm fmt:check && pnpm typecheck && pnpm build && pnpm test && pnpm coverage && pnpm test:integration`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Define the hotspot-animation manifest contract** — covers: FR-4, NFR-1, AC-5
   - [ ] Add optional hotspot-to-clip declarations with stable IDs and positive optional durations.
