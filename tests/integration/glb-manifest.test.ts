@@ -19,6 +19,8 @@ interface GlbNode {
   name?: string;
   mesh?: number;
   translation?: number[];
+  camera?: number;
+  extensions?: Record<string, unknown>;
 }
 
 interface GlbAccessor {
@@ -26,10 +28,23 @@ interface GlbAccessor {
   max?: number[];
 }
 
+interface GlbAnimation {
+  name?: string;
+  channels?: { target?: { node?: number } }[];
+}
+
 interface GlbDocument {
   nodes?: GlbNode[];
   meshes?: { primitives?: { attributes?: { POSITION?: number } }[] }[];
   accessors?: GlbAccessor[];
+  animations?: GlbAnimation[];
+  cameras?: unknown[];
+  extensionsUsed?: string[];
+}
+
+interface LessonAnimations {
+  clips: { id: string; name: string; duration: number }[];
+  triggers: { hotspot: string; clip: string }[];
 }
 
 interface LessonAsset {
@@ -41,6 +56,7 @@ interface LessonAsset {
   fov: number;
   manifestIds: string[];
   positions: Map<string, Vec3>;
+  animations: LessonAnimations | null;
   glbBytes: Uint8Array;
   posterBytes: Uint8Array;
 }
@@ -101,6 +117,26 @@ function parseLesson(path: string, source: string): LessonAsset | null {
     frontmatter,
     context,
   )[1];
+  const hotspotsBlock = requiredMatch(
+    /^hotspots:[ \t]*\r?\n([\s\S]*?)(?=\r?\nanimations:|(?![\s\S]))/m,
+    frontmatter,
+    context,
+  )[1];
+  const animationsBlock = /^animations:[ \t]*\r?\n([\s\S]*?)(?=(?![\s\S]))/m.exec(frontmatter)?.[1];
+  const animations: LessonAnimations | null = animationsBlock
+    ? {
+        clips: Array.from(
+          animationsBlock.matchAll(
+            /^[ \t]+- id:\s*(\S+)\s*\r?\n[ \t]+name:\s*(\S+)\s*\r?\n[ \t]+duration:\s*([\d.]+)/gm,
+          ),
+          (match) => ({ id: match[1], name: match[2], duration: Number(match[3]) }),
+        ),
+        triggers: Array.from(
+          animationsBlock.matchAll(/^[ \t]+- hotspot:\s*(\S+)\s*\r?\n[ \t]+clip:\s*(\S+)/gm),
+          (match) => ({ hotspot: match[1], clip: match[2] }),
+        ),
+      }
+    : null;
   const id = path
     .split('/')
     .at(-1)
@@ -117,10 +153,11 @@ function parseLesson(path: string, source: string): LessonAsset | null {
     target: parseVec3(requiredMatch(/target:\s*\[([^\]]+)\]/, cameraBlock, context)[1]),
     fov: Number(requiredMatch(/fov:\s*([\d.]+)/, cameraBlock, context)[1]),
     manifestIds: Array.from(
-      frontmatter.matchAll(/^[ \t]+- id:\s*(\S+)\s*$/gm),
+      hotspotsBlock.matchAll(/^[ \t]+- id:\s*(\S+)\s*$/gm),
       (match) => match[1],
     ).toSorted(),
-    positions: mdxPositions(frontmatter),
+    positions: mdxPositions(hotspotsBlock),
+    animations,
     glbBytes: readFileSync(new URL(`../../${modelSrc.slice(1)}`, import.meta.url)),
     posterBytes: readFileSync(new URL(`../../public${posterPath}`, import.meta.url)),
   };
@@ -245,6 +282,59 @@ describe('live lesson GLB ↔ manifest contracts', () => {
       }
     });
 
+    it('exports each declared clip as a named, node-bound GLB animation', () => {
+      const document = glbJson(lesson.glbBytes);
+      const animations = lesson.animations;
+      expect(animations, `${lesson.id} declares hotspot clips`).not.toBeNull();
+      if (!animations) {
+        return;
+      }
+      const names = (document.animations ?? []).flatMap((animation) =>
+        typeof animation.name === 'string' ? [animation.name] : [],
+      );
+      expect(new Set(names).size).toBe(names.length);
+      expect(animations.clips).toHaveLength(6);
+      const nodeCount = document.nodes?.length ?? 0;
+      for (const animation of document.animations ?? []) {
+        const channels = animation.channels ?? [];
+        expect(channels.length, `${animation.name} has channels`).toBeGreaterThan(0);
+        for (const channel of channels) {
+          const node = channel.target?.node;
+          expect(node, `${animation.name} target`).toBeGreaterThanOrEqual(0);
+          expect(node, `${animation.name} target`).toBeLessThan(nodeCount);
+        }
+      }
+      for (const clip of animations.clips) {
+        expect(names, `${lesson.id}:${clip.id}`).toContain(clip.name);
+        expect(clip.duration).toBeGreaterThan(0);
+      }
+    });
+
+    it('triggers every hotspot once and leaves no undeclared ambient clip', () => {
+      const animations = lesson.animations;
+      if (!animations) {
+        return;
+      }
+      expect(animations.triggers.map((trigger) => trigger.hotspot).toSorted()).toEqual(
+        lesson.manifestIds,
+      );
+      const clipIds = new Set(animations.clips.map((clip) => clip.id));
+      expect(new Set(animations.triggers.map((trigger) => trigger.clip))).toEqual(clipIds);
+      for (const trigger of animations.triggers) {
+        expect(clipIds.has(trigger.clip), `${trigger.hotspot} -> ${trigger.clip}`).toBe(true);
+      }
+    });
+
+    it('exports no cameras or punctual lights', () => {
+      const document = glbJson(lesson.glbBytes);
+      expect(document.cameras ?? []).toHaveLength(0);
+      expect(document.extensionsUsed ?? []).not.toContain('KHR_lights_punctual');
+      for (const node of document.nodes ?? []) {
+        expect(node.camera, `${node.name} camera`).toBeUndefined();
+        expect(node.extensions?.KHR_lights_punctual, `${node.name} light`).toBeUndefined();
+      }
+    });
+
     it('frames the whole GLB with margin at rest and when any hotspot is focused', () => {
       const document = glbJson(lesson.glbBytes);
       const boxes = (document.nodes ?? [])
@@ -254,35 +344,40 @@ describe('live lesson GLB ↔ manifest contracts', () => {
       const bounds = overallBounds(boxes);
       const modelHeight = bounds.max[1] - bounds.min[1];
 
-      expect(
-        viewHeight(lesson.camera, lesson.target, lesson.fov) / modelHeight,
-      ).toBeGreaterThanOrEqual(1.2);
-      expect(
-        projectedBounds(
-          lesson.camera,
-          lesson.target,
-          lesson.fov,
-          VIEWPORT_ASPECTS.fourByThree,
-          bounds,
-        ).vertical,
-      ).toBeLessThanOrEqual(1);
+      const restRatio = viewHeight(lesson.camera, lesson.target, lesson.fov) / modelHeight;
+      expect(restRatio).toBeGreaterThanOrEqual(1.2);
+      const baselineRatio =
+        lesson.id === 'heart' ? 1.5077 : lesson.id === 'earth-interior' ? 2.5257 : undefined;
+      if (baselineRatio !== undefined) {
+        expect(restRatio, `${lesson.id} presence exceeds the phase-1 baseline`).toBeLessThan(
+          baselineRatio - 0.05,
+        );
+      }
 
+      const poses: { label: string; camera: Vec3; target: Vec3 }[] = [
+        { label: 'rest', camera: lesson.camera, target: lesson.target },
+      ];
       for (const [id, hotspot] of lesson.positions) {
         const pose = focusPose(lesson.camera, lesson.target, hotspot);
+        poses.push({ label: id, camera: pose.camera, target: pose.target });
+      }
+
+      for (const pose of poses) {
         expect(
           viewHeight(pose.camera, pose.target, lesson.fov) / modelHeight,
-          `view height for ${id}`,
+          `view height for ${pose.label}`,
         ).toBeGreaterThanOrEqual(1.2);
-        expect(
-          projectedBounds(
-            pose.camera,
-            pose.target,
-            lesson.fov,
-            VIEWPORT_ASPECTS.fourByThree,
-            bounds,
-          ).vertical,
-          `vertical framing for ${id}`,
-        ).toBeLessThanOrEqual(1);
+        for (const aspect of Object.values(VIEWPORT_ASPECTS)) {
+          const framed = projectedBounds(pose.camera, pose.target, lesson.fov, aspect, bounds);
+          expect(
+            framed.vertical,
+            `vertical framing for ${pose.label} at aspect ${aspect}`,
+          ).toBeLessThanOrEqual(1);
+          expect(
+            framed.horizontal,
+            `horizontal framing for ${pose.label} at aspect ${aspect}`,
+          ).toBeLessThanOrEqual(1);
+        }
       }
     });
   });

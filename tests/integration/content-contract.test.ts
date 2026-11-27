@@ -199,6 +199,26 @@ describe('lesson content contracts', () => {
       }
     });
 
+    it('declares one named, hotspot-triggered clip per landmark', () => {
+      const animations = lesson.manifest.animations;
+      expect(animations).toBeDefined();
+      if (!animations) {
+        return;
+      }
+      expect(animations.clips).toHaveLength(6);
+      expect(new Set(animations.clips.map((clip) => clip.id)).size).toBe(6);
+      for (const clip of animations.clips) {
+        expect(clip.name, `${clip.id} has a GLB animation name`).toBeTruthy();
+        expect(clip.duration, `${clip.id} duration`).toBeGreaterThan(0);
+      }
+      expect(animations.triggers.map((trigger) => trigger.hotspot).toSorted()).toEqual(
+        lesson.declaredIds.toSorted(),
+      );
+      expect(new Set(animations.triggers.map((trigger) => trigger.clip))).toEqual(
+        new Set(animations.clips.map((clip) => clip.id)),
+      );
+    });
+
     it('passes the same build-time hotspot validation used by getStaticPaths', () => {
       expect(() =>
         validateHotspotReferences(lesson.body, lesson.manifest, { requireAll: true }),
