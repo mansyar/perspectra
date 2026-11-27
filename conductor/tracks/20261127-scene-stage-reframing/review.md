@@ -99,7 +99,7 @@ No new finding belongs to another track. Deployment, credentials, production dat
 
 ## Doc sync
 
-`pending` — pre-review `tech-stack.md` sync is committed; post-review disposition will be finalized after R1.
+`none` — no product/guideline/technical-stack change was required by the review findings. The pre-review `tech-stack.md` sync remains committed; R1 changed test contracts and evidence only.
 
 ## History
 
