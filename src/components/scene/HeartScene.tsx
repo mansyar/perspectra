@@ -3,12 +3,13 @@ import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { focusHotspot, useHotspotStore } from '../../lib/hotspot-store';
-import type { SceneManifest } from '../../lib/scene-manifest';
-import { focusPose } from './framing';
+import type { AnimationClip as ManifestClip, SceneManifest } from '../../lib/scene-manifest';
+import { responsivePose } from './framing';
 import type { RendererTier } from './renderer-support';
 
 const ACTIVE_EMISSIVE = 0x4de0c8;
 const ACTIVE_EMISSIVE_INTENSITY = 0.22;
+const CAMERA_EASE_RATE = 1.4;
 const PARTICLE_COUNT = 72;
 const POSITION_SCALE = 1;
 
@@ -18,6 +19,7 @@ interface HeartSceneProps {
   tier: Exclude<RendererTier, 'poster'>;
   reducedMotion: boolean;
   onReady: () => void;
+  onAnimation: (clipId: string) => void;
   /** QA hook: throw on mount so the fallback ladder can be exercised in E2E. */
   failRender?: boolean;
 }
@@ -33,6 +35,11 @@ interface FlowParticles {
 interface SavedEmissive {
   color: THREE.Color;
   intensity: number;
+}
+
+interface TriggeredClip {
+  action: THREE.AnimationAction;
+  clip: ManifestClip;
 }
 
 function lift(point: THREE.Vector3, amount: number): THREE.Vector3 {
@@ -66,7 +73,7 @@ function createFlowParticles(manifest: SceneManifest): FlowParticles {
 
   for (let index = 0; index < PARTICLE_COUNT; index++) {
     offsets.push((index / PARTICLE_COUNT) * 2);
-    speeds.push(0.06 + (index % 5) * 0.012);
+    speeds.push(0.025 + (index % 5) * 0.005);
     const point = curves[index % 2].getPointAt(offsets[index] % 1);
     positions[index * 3] = point.x;
     positions[index * 3 + 1] = point.y;
@@ -80,8 +87,8 @@ function createFlowParticles(manifest: SceneManifest): FlowParticles {
     new THREE.PointsMaterial({
       color: 0x9fe8dd,
       depthWrite: false,
-      opacity: 0.75,
-      size: 0.028,
+      opacity: 0.6,
+      size: 0.024,
       transparent: true,
     }),
   );
@@ -93,6 +100,7 @@ interface SceneContentsProps {
   modelSrc: string;
   reducedMotion: boolean;
   onReady: () => void;
+  onAnimation: (clipId: string) => void;
 }
 
 /** Signals readiness only after the suspended GLTF has resolved. */
@@ -103,12 +111,16 @@ function SceneReady({ onReady }: { onReady: () => void }) {
   return null;
 }
 
-function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneContentsProps) {
-  const { scene } = useGLTF(modelSrc);
+function SceneContents({
+  manifest,
+  modelSrc,
+  reducedMotion,
+  onReady,
+  onAnimation,
+}: SceneContentsProps) {
+  const { animations, scene } = useGLTF(modelSrc);
   const activeHotspot = useHotspotStore((state) => state.activeHotspot);
-  const group = useRef<THREE.Group>(null);
   const lookAt = useRef(new THREE.Vector3(...manifest.camera.target));
-  const cameraInitialised = useRef(false);
   const savedEmissive = useRef(new Map<string, SavedEmissive>());
 
   const hotspotIds = useMemo(() => {
@@ -143,6 +155,55 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
     return createFlowParticles(manifest);
   }, [manifest]);
 
+  const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
+  const clipActions = useMemo(() => {
+    const found = new Map<string, THREE.AnimationAction>();
+    const declarations = manifest.animations;
+    if (!declarations) {
+      return found;
+    }
+    for (const clip of declarations.clips) {
+      const source = animations.find((candidate) => candidate.name === (clip.name ?? clip.id));
+      if (source) {
+        found.set(clip.id, mixer.clipAction(source));
+      }
+    }
+    return found;
+  }, [animations, manifest, mixer]);
+  const triggeredClips = useMemo(() => {
+    const found = new Map<string, TriggeredClip>();
+    const declarations = manifest.animations;
+    if (!declarations) {
+      return found;
+    }
+    for (const trigger of declarations.triggers) {
+      const action = clipActions.get(trigger.clip);
+      const clip = declarations.clips.find((candidate) => candidate.id === trigger.clip);
+      if (action && clip) {
+        found.set(trigger.hotspot, { action, clip });
+      }
+    }
+    return found;
+  }, [clipActions, manifest]);
+
+  useEffect(() => {
+    mixer.stopAllAction();
+    const triggered = activeHotspot === null ? undefined : triggeredClips.get(activeHotspot);
+    if (reducedMotion || !triggered) {
+      return;
+    }
+    const { action, clip } = triggered;
+    action.reset();
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.timeScale = clip.duration === undefined ? 1 : action.getClip().duration / clip.duration;
+    action.play();
+    onAnimation(clip.id);
+    return () => {
+      action.stop();
+    };
+  }, [activeHotspot, mixer, onAnimation, reducedMotion, triggeredClips]);
+
   useEffect(() => {
     const saved = savedEmissive.current;
     for (const [id, mesh] of meshNodes) {
@@ -167,6 +228,8 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
 
   useEffect(
     () => () => {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(scene);
       for (const [id, mesh] of meshNodes) {
         const previous = savedEmissive.current.get(id);
         if (previous && mesh.material instanceof THREE.MeshStandardMaterial) {
@@ -178,36 +241,40 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
       flow.points.geometry.dispose();
       (flow.points.material as THREE.Material).dispose();
     },
-    [flow, meshNodes],
+    [flow, meshNodes, mixer, scene],
   );
 
   useFrame((state, delta) => {
+    const fov = manifest.camera.fov ?? 42;
+    const aspect = state.size.width / Math.max(1, state.size.height);
     if (reducedMotion) {
       flow.points.visible = false;
-      if (!cameraInitialised.current) {
-        state.camera.position.copy(basePosition);
-        lookAt.current.copy(baseTarget);
-        state.camera.lookAt(lookAt.current);
-        cameraInitialised.current = true;
-      }
+      const staticPose = responsivePose(
+        basePosition.toArray() as [number, number, number],
+        baseTarget.toArray() as [number, number, number],
+        null,
+        fov,
+        aspect,
+      );
+      state.camera.position.set(...staticPose.camera);
+      lookAt.current.set(...staticPose.target);
+      state.camera.lookAt(lookAt.current);
       return;
     }
 
-    cameraInitialised.current = false;
-    if (group.current) {
-      group.current.scale.setScalar(1 + Math.sin(state.elapsed * 2.6) * 0.012);
-    }
-
+    mixer.update(delta);
     flow.points.visible = true;
-    const desired = positionsById.get(activeHotspot ?? '') ?? baseTarget;
-    const pose = focusPose(
+    const desired = positionsById.get(activeHotspot ?? '') ?? null;
+    const pose = responsivePose(
       basePosition.toArray() as [number, number, number],
       baseTarget.toArray() as [number, number, number],
-      desired.toArray() as [number, number, number],
+      desired === null ? null : (desired.toArray() as [number, number, number]),
+      fov,
+      aspect,
     );
     const cameraGoal = new THREE.Vector3(...pose.camera);
     const focusTarget = new THREE.Vector3(...pose.target);
-    const alpha = 1 - Math.exp(-delta * 2.8);
+    const alpha = 1 - Math.exp(-delta * CAMERA_EASE_RATE);
     state.camera.position.lerp(cameraGoal, alpha);
     lookAt.current.lerp(focusTarget, alpha);
     state.camera.lookAt(lookAt.current);
@@ -233,7 +300,7 @@ function SceneContents({ manifest, modelSrc, reducedMotion, onReady }: SceneCont
   }
 
   return (
-    <group ref={group}>
+    <group>
       <SceneReady onReady={onReady} />
       <primitive object={scene} onClick={handleClick} />
       <primitive object={flow.points} />
@@ -249,6 +316,7 @@ export function HeartScene({
   tier,
   reducedMotion,
   onReady,
+  onAnimation,
 }: HeartSceneProps) {
   if (failRender) {
     throw new Error('Forced renderer failure (QA hook)');
@@ -268,6 +336,7 @@ export function HeartScene({
         <SceneContents
           manifest={manifest}
           modelSrc={modelSrc}
+          onAnimation={onAnimation}
           onReady={onReady}
           reducedMotion={reducedMotion}
         />

@@ -86,9 +86,9 @@ def terrain(theta, phi):
 def surface_field(theta, phi):
     """Broad, smooth continental shapes rather than per-face pixel noise."""
     return (
-        0.55 * math.sin(phi * 2.7 + math.sin(theta * 3.1))
-        + 0.30 * math.sin(phi * 5.1 - theta * 3.3)
-        + 0.15 * math.sin(phi * 8.3 + theta * 6.7)
+        0.60 * math.sin(phi * 2.7 + math.sin(theta * 3.1))
+        + 0.28 * math.sin(phi * 5.1 - theta * 3.3)
+        + 0.12 * math.sin(phi * 8.3 + theta * 6.7)
     )
 
 
@@ -165,21 +165,21 @@ def shell(name, outer_radius, inner_radius, materials, anchor, surface=False, va
     vertex_colors = None
     if surface:
         vertex_colors = [(1.0, 1.0, 1.0)] * len(vertices)
-        ocean_color = (0.035, 0.19, 0.34)
-        shelf_color = (0.06, 0.34, 0.45)
-        land_color = (0.24, 0.34, 0.18)
+        ocean_color = (0.028, 0.16, 0.31)
+        shelf_color = (0.05, 0.32, 0.44)
+        land_color = (0.27, 0.37, 0.17)
         for theta_index in range(THETA_SEGMENTS + 1):
             theta = 0.001 + (math.pi - 0.002) * theta_index / THETA_SEGMENTS
             for phi_index in range(PHI_SEGMENTS + 1):
                 phi = PHI_START + (PHI_END - PHI_START) * phi_index / PHI_SEGMENTS
                 field = surface_field(theta, phi)
-                if field < 0.12:
+                if field < 0.10:
                     color = ocean_color
-                elif field < 0.34:
-                    blend = (field - 0.12) / 0.22
+                elif field < 0.32:
+                    blend = (field - 0.10) / 0.22
                     color = tuple(a + (b - a) * blend for a, b in zip(ocean_color, shelf_color))
                 else:
-                    blend = min(1.0, (field - 0.34) / 0.25)
+                    blend = min(1.0, (field - 0.32) / 0.25)
                     color = tuple(a + (b - a) * blend for a, b in zip(shelf_color, land_color))
                 vertex_colors[outer_grid[theta_index][phi_index]] = color
 
@@ -251,6 +251,34 @@ def core(name, radius, mat, anchor, segments=40, rings=20):
     return obj
 
 
+def scale_clip(obj, name, peak):
+    """One-shot core pulse keyed 1-7-13 at 24 fps (0.5 s total)."""
+    action = bpy.data.actions.new(name)
+    obj.animation_data_create()
+    obj.animation_data.action = action
+    obj.scale = (1.0, 1.0, 1.0)
+    obj.keyframe_insert(data_path="scale", frame=1)
+    obj.scale = peak
+    obj.keyframe_insert(data_path="scale", frame=7)
+    obj.scale = (1.0, 1.0, 1.0)
+    obj.keyframe_insert(data_path="scale", frame=13)
+    return action
+
+
+def drift_clip(obj, name, delta):
+    """One-shot layer drift; shell origins sit at their anchors, not at the planet centre."""
+    action = bpy.data.actions.new(name)
+    obj.animation_data_create()
+    obj.animation_data.action = action
+    origin = obj.location.copy()
+    obj.keyframe_insert(data_path="location", frame=1)
+    obj.location = origin + Vector(delta)
+    obj.keyframe_insert(data_path="location", frame=7)
+    obj.location = origin
+    obj.keyframe_insert(data_path="location", frame=13)
+    return action
+
+
 def build():
     clear_scene()
 
@@ -273,9 +301,9 @@ def build():
     lower_b = material("lower_mantle_orange", (0.72, 0.17, 0.055), roughness=0.6)
     lower_c = material("lower_mantle_deep", (0.36, 0.055, 0.035), roughness=0.68)
 
-    outer_a = material("outer_core_gold", (0.95, 0.42, 0.045), roughness=0.32, metallic=0.22, emission=0.18)
-    outer_b = material("outer_core_yellow", (1.0, 0.66, 0.12), roughness=0.28, metallic=0.18, emission=0.24)
-    inner = material("inner_core_light", (1.0, 0.86, 0.42), roughness=0.24, metallic=0.12, emission=0.42)
+    outer_a = material("outer_core_gold", (0.95, 0.42, 0.045), roughness=0.32, metallic=0.22, emission=0.22)
+    outer_b = material("outer_core_yellow", (1.0, 0.66, 0.12), roughness=0.28, metallic=0.18, emission=0.30)
+    inner = material("inner_core_light", (1.0, 0.86, 0.42), roughness=0.24, metallic=0.12, emission=0.50)
 
     objects = []
     objects.append(
@@ -332,6 +360,17 @@ def build():
 
     assert tuple(sorted((obj.name for obj in objects), key=HOTSPOTS.index)) == HOTSPOTS
 
+    by_name = {obj.name: obj for obj in objects}
+    drift_clip(by_name["crust"], "CrustShift", (0.0, 0.0, 0.006))
+    drift_clip(by_name["upper_mantle"], "UpperMantleFlow", (0.0, 0.0, 0.008))
+    drift_clip(by_name["lower_mantle"], "LowerMantleFlow", (0.0, 0.0, 0.006))
+    drift_clip(by_name["outer_core"], "OuterCoreConvection", (0.0, 0.0, 0.006))
+    scale_clip(by_name["inner_core"], "InnerCorePulse", (1.05, 1.05, 1.05))
+    drift_clip(by_name["lithosphere"], "LithosphereDrift", (0.0, 0.0, 0.006))
+
+    bpy.context.scene.render.fps = 24
+    bpy.context.scene.frame_set(1)
+
     bpy.ops.object.select_all(action="DESELECT")
     for obj in objects:
         obj.select_set(True)
@@ -348,6 +387,8 @@ def build():
         export_vertex_color="ACTIVE",
         export_vertex_color_name="Color",
         export_all_vertex_colors=True,
+        export_animations=True,
+        export_animation_mode="ACTIONS",
         export_cameras=False,
         export_lights=False,
     )
@@ -374,12 +415,12 @@ def render_poster(objects):
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = "PNG"
 
-    # Matches the glTF camera after Z-up -> Y-up conversion.
-    bpy.ops.object.camera_add(location=(4.2, -4.8, 2.2))
+    # glTF [4.2, 1.6, 3.6] looking at [0, -0.1, 0] -> Blender (4.2, -3.6, 1.6).
+    bpy.ops.object.camera_add(location=(4.2, -3.6, 1.6))
     camera = bpy.context.object
-    direction = Vector((0.0, 0.0, 0.0)) - camera.location
+    direction = Vector((0.0, 0.0, -0.1)) - camera.location
     camera.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
-    camera.data.lens = 58
+    camera.data.lens = 52.3
     scene.camera = camera
 
     POSTER_PATH.parent.mkdir(parents=True, exist_ok=True)

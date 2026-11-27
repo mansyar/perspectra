@@ -9,8 +9,11 @@ Source of truth: `build_earth.py` (Blender 5.2, deterministic procedural geometr
 - Budgets: GLB < 1,000,000 bytes; WebP < 120,000 bytes.
 - Style: detailed semi-realistic cutaway with smooth vertex-coloured continents,
   visible strata, distinct mantle/core materials, and a warm emissive core.
-- Motion: the generic scene may provide subtle scale/particle motion; no
-  Earth-specific TypeScript or geometry logic is required.
+- Six named one-shot animations, each driven by exactly one hotspot trigger:
+  `CrustShift`, `UpperMantleFlow`, `LowerMantleFlow`, `OuterCoreConvection`,
+  `InnerCorePulse`, `LithosphereDrift`. The renderer must play them only on
+  trigger, never as an ambient loop. No Earth-specific TypeScript or geometry
+  logic is required.
 
 ## Hotspot nodes
 
@@ -25,8 +28,8 @@ The GLB contains exactly these mesh-node names, matching MDX hotspot IDs:
 | `inner_core` | `[0.0, 0.0, 0.14]` |
 | `lithosphere` | `[-0.82, 0.58, 0.56]` |
 
-The MDX camera is `[4.2, 2.2, 4.8]`, target `[0, 0, 0]`, FOV 42. It matches the
-poster camera after Blender Z-up to glTF Y-up conversion.
+The MDX camera is `[4.2, 1.6, 3.6]`, target `[0, -0.1, 0]`, FOV 38°. It matches
+the poster camera after Blender Z-up to glTF Y-up conversion (lens 52.3 mm).
 
 ## Portability
 

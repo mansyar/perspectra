@@ -8,27 +8,100 @@ export const hotspotIdSchema = z
   .string()
   .regex(/^[a-z][a-z0-9_]*$/, 'Hotspot IDs must be lowercase snake_case identifiers');
 
+/** Clip IDs are stable, lowercase animation anchors shared by MDX and the GLB. */
+export const clipIdSchema = z
+  .string()
+  .regex(/^[a-z][a-z0-9_]*$/, 'Clip IDs must be lowercase snake_case identifiers');
+
 export const hotspotSchema = z.object({
   id: hotspotIdSchema,
   label: z.string().min(1),
   position: vec3Schema,
 });
 
-/** The renderer consumes only this shape; no subject-specific vocabulary lives here. */
-export const sceneManifestSchema = z.object({
-  model: z.object({
-    src: z.string().min(1),
-    poster: z.string().min(1),
-  }),
-  camera: z.object({
-    position: vec3Schema,
-    target: vec3Schema,
-    fov: z.number().positive().optional(),
-  }),
-  hotspots: z.array(hotspotSchema).min(1),
+/** A brief, one-shot GLB animation that a hotspot trigger may play. */
+export const animationClipSchema = z.object({
+  id: clipIdSchema,
+  /** GLB animation name; defaults to `id` when the renderer resolves the clip. */
+  name: z.string().min(1).optional(),
+  /** Playback length in seconds, overriding the authored clip duration when present. */
+  duration: z.number().positive().optional(),
 });
 
+/** Links one declared hotspot to one declared animation clip. */
+export const hotspotTriggerSchema = z.object({
+  hotspot: hotspotIdSchema,
+  clip: clipIdSchema,
+});
+
+/** The renderer consumes only this shape; no subject-specific vocabulary lives here. */
+export const sceneManifestSchema = z
+  .object({
+    model: z.object({
+      src: z.string().min(1),
+      poster: z.string().min(1),
+    }),
+    camera: z.object({
+      position: vec3Schema,
+      target: vec3Schema,
+      fov: z.number().positive().optional(),
+    }),
+    hotspots: z.array(hotspotSchema).min(1),
+    /** Omitted by static lessons; when declared, all references must resolve. */
+    animations: z
+      .object({
+        clips: z.array(animationClipSchema).min(1),
+        triggers: z.array(hotspotTriggerSchema).min(1),
+      })
+      .optional(),
+  })
+  .superRefine((manifest, ctx) => {
+    const animations = manifest.animations;
+    if (!animations) {
+      return;
+    }
+    const hotspotIds = new Set(manifest.hotspots.map((hotspot) => hotspot.id));
+    const clipIds = new Set<string>();
+    for (const [index, clip] of animations.clips.entries()) {
+      if (clipIds.has(clip.id)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['animations', 'clips', index, 'id'],
+          message: `Duplicate animation clip "${clip.id}".`,
+        });
+      }
+      clipIds.add(clip.id);
+    }
+    const triggered = new Set<string>();
+    for (const [index, trigger] of animations.triggers.entries()) {
+      if (!hotspotIds.has(trigger.hotspot)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['animations', 'triggers', index, 'hotspot'],
+          message: `Animation trigger references hotspot "${trigger.hotspot}" that is not declared in the scene manifest.`,
+        });
+      }
+      if (!clipIds.has(trigger.clip)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['animations', 'triggers', index, 'clip'],
+          message: `Animation trigger references clip "${trigger.clip}" that is not declared in the manifest.`,
+        });
+      }
+      if (triggered.has(trigger.hotspot)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['animations', 'triggers', index],
+          message: `Duplicate animation trigger for hotspot "${trigger.hotspot}".`,
+        });
+      }
+      triggered.add(trigger.hotspot);
+    }
+  });
+
 export type Hotspot = z.infer<typeof hotspotSchema>;
+export type AnimationClip = z.infer<typeof animationClipSchema>;
+export type HotspotTrigger = z.infer<typeof hotspotTriggerSchema>;
 export type SceneManifest = z.infer<typeof sceneManifestSchema>;
 
 export interface HotspotValidationOptions {

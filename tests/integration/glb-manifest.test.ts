@@ -1,6 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { focusPose, viewHeight, type Vec3 } from '../../src/components/scene/framing';
+import {
+  VIEWPORT_ASPECTS,
+  focusPose,
+  projectedBounds,
+  responsivePose,
+  viewHeight,
+  type Bounds,
+  type Vec3,
+} from '../../src/components/scene/framing';
 
 const mdxFiles = import.meta.glob('../../src/content/lessons/*.mdx', {
   query: '?raw',
@@ -12,6 +20,8 @@ interface GlbNode {
   name?: string;
   mesh?: number;
   translation?: number[];
+  camera?: number;
+  extensions?: Record<string, unknown>;
 }
 
 interface GlbAccessor {
@@ -19,16 +29,27 @@ interface GlbAccessor {
   max?: number[];
 }
 
+interface GlbAnimation {
+  name?: string;
+  channels?: { target?: { node?: number } }[];
+}
+
 interface GlbDocument {
   nodes?: GlbNode[];
   meshes?: { primitives?: { attributes?: { POSITION?: number } }[] }[];
   accessors?: GlbAccessor[];
+  animations?: GlbAnimation[];
+  cameras?: unknown[];
+  extensionsUsed?: string[];
 }
 
-interface Bounds {
-  max: Vec3;
-  min: Vec3;
+interface LessonAnimations {
+  clips: { id: string; name?: string; duration?: number }[];
+  triggers: { hotspot: string; clip: string }[];
 }
+
+/** Lessons whose manifests explicitly author a clip and trigger for every hotspot. */
+const FULL_ANIMATION_LESSONS = new Set(['heart', 'earth-interior']);
 
 interface LessonAsset {
   id: string;
@@ -39,8 +60,71 @@ interface LessonAsset {
   fov: number;
   manifestIds: string[];
   positions: Map<string, Vec3>;
+  animations: LessonAnimations | null;
   glbBytes: Uint8Array;
   posterBytes: Uint8Array;
+}
+
+/** Reads declared clips/triggers from an `animations:` block without a YAML dependency. */
+function parseDeclaredAnimations(block: string): LessonAnimations {
+  const lines = block.split(/\r?\n/);
+
+  function sectionLines(name: string): string[] {
+    const start = lines.findIndex((line) => new RegExp(`^[ \\t]+${name}:[ \\t]*$`).test(line));
+    if (start === -1) {
+      return [];
+    }
+    const stop = lines.findIndex(
+      (line, index) => index > start && /^[ \t]+[a-z_]+:[ \t]*$/.test(line),
+    );
+    return lines.slice(start + 1, stop === -1 ? undefined : stop);
+  }
+
+  const clips = sectionLines('clips')
+    .join('\n')
+    .split(/^[ \t]+-[ \t]+id:[ \t]*/m)
+    .slice(1)
+    .map((entry) => {
+      const id = /^(\S+)/.exec(entry)?.[1] ?? '';
+      const name = /^[ \t]+name:[ \t]*(\S+)/m.exec(entry)?.[1];
+      const duration = /^[ \t]+duration:[ \t]*([\d.]+)/m.exec(entry)?.[1];
+      return {
+        id,
+        ...(name === undefined ? {} : { name }),
+        ...(duration === undefined ? {} : { duration: Number(duration) }),
+      };
+    });
+  const triggers = sectionLines('triggers')
+    .join('\n')
+    .split(/^[ \t]+-[ \t]+hotspot:[ \t]*/m)
+    .slice(1)
+    .map((entry) => ({
+      hotspot: /^(\S+)/.exec(entry)?.[1] ?? '',
+      clip: /^[ \t]+clip:[ \t]*(\S+)/m.exec(entry)?.[1] ?? '',
+    }));
+  return { clips, triggers };
+}
+
+/** Validates declared references without requiring animations or full hotspot coverage. */
+function validateDeclaredTriggers(hotspotIds: string[], animations: LessonAnimations | null): void {
+  if (!animations) {
+    return;
+  }
+  const clips = new Set(animations.clips.map((clip) => clip.id));
+  const hotspots = new Set(hotspotIds);
+  const triggered = new Set<string>();
+  for (const trigger of animations.triggers) {
+    if (!hotspots.has(trigger.hotspot)) {
+      throw new Error(`Trigger references unknown hotspot "${trigger.hotspot}"`);
+    }
+    if (!clips.has(trigger.clip)) {
+      throw new Error(`Trigger references unknown clip "${trigger.clip}"`);
+    }
+    if (triggered.has(trigger.hotspot)) {
+      throw new Error(`Duplicate trigger for hotspot "${trigger.hotspot}"`);
+    }
+    triggered.add(trigger.hotspot);
+  }
 }
 
 function requiredMatch(pattern: RegExp, text: string, context: string): RegExpExecArray {
@@ -99,6 +183,15 @@ function parseLesson(path: string, source: string): LessonAsset | null {
     frontmatter,
     context,
   )[1];
+  const hotspotsBlock = requiredMatch(
+    /^hotspots:[ \t]*\r?\n([\s\S]*?)(?=\r?\nanimations:|(?![\s\S]))/m,
+    frontmatter,
+    context,
+  )[1];
+  const animationsBlock = /^animations:[ \t]*\r?\n([\s\S]*?)(?=(?![\s\S]))/m.exec(frontmatter)?.[1];
+  const animations: LessonAnimations | null = animationsBlock
+    ? parseDeclaredAnimations(animationsBlock)
+    : null;
   const id = path
     .split('/')
     .at(-1)
@@ -115,10 +208,11 @@ function parseLesson(path: string, source: string): LessonAsset | null {
     target: parseVec3(requiredMatch(/target:\s*\[([^\]]+)\]/, cameraBlock, context)[1]),
     fov: Number(requiredMatch(/fov:\s*([\d.]+)/, cameraBlock, context)[1]),
     manifestIds: Array.from(
-      frontmatter.matchAll(/^[ \t]+- id:\s*(\S+)\s*$/gm),
+      hotspotsBlock.matchAll(/^[ \t]+- id:\s*(\S+)\s*$/gm),
       (match) => match[1],
     ).toSorted(),
-    positions: mdxPositions(frontmatter),
+    positions: mdxPositions(hotspotsBlock),
+    animations,
     glbBytes: readFileSync(new URL(`../../${modelSrc.slice(1)}`, import.meta.url)),
     posterBytes: readFileSync(new URL(`../../public${posterPath}`, import.meta.url)),
   };
@@ -182,43 +276,6 @@ function centre(box: Bounds): Vec3 {
   return [0, 1, 2].map((axis) => (box.min[axis] + box.max[axis]) / 2) as unknown as Vec3;
 }
 
-function dot(left: Vec3, right: Vec3): number {
-  return left[0] * right[0] + left[1] * right[1] + left[2] * right[2];
-}
-
-function cross(left: Vec3, right: Vec3): Vec3 {
-  return [
-    left[1] * right[2] - left[2] * right[1],
-    left[2] * right[0] - left[0] * right[2],
-    left[0] * right[1] - left[1] * right[0],
-  ];
-}
-
-function normalize(vector: Vec3): Vec3 {
-  const size = Math.hypot(...vector);
-  return [vector[0] / size, vector[1] / size, vector[2] / size];
-}
-
-/** Largest absolute vertical NDC coordinate among the model's eight bounding-box corners. */
-function maxVerticalNdc(camera: Vec3, target: Vec3, fov: number, box: Bounds): number {
-  const forward = normalize([target[0] - camera[0], target[1] - camera[1], target[2] - camera[2]]);
-  const right = normalize(cross(forward, [0, 1, 0]));
-  const up = cross(right, forward);
-  const tanHalf = Math.tan((fov * Math.PI) / 360);
-  let largest = 0;
-  for (const x of [box.min[0], box.max[0]]) {
-    for (const y of [box.min[1], box.max[1]]) {
-      for (const z of [box.min[2], box.max[2]]) {
-        const vector: Vec3 = [x - camera[0], y - camera[1], z - camera[2]];
-        const depth = dot(vector, forward);
-        expect(depth).toBeGreaterThan(0);
-        largest = Math.max(largest, Math.abs(dot(vector, up) / (depth * tanHalf)));
-      }
-    }
-  }
-  return largest;
-}
-
 describe('live lesson GLB ↔ manifest contracts', () => {
   it('discovers live lesson assets to validate', () => {
     expect(lessons.length).toBeGreaterThan(0);
@@ -280,6 +337,98 @@ describe('live lesson GLB ↔ manifest contracts', () => {
       }
     });
 
+    it('exports declared clips as named, hotspot-bound GLB animations', () => {
+      const document = glbJson(lesson.glbBytes);
+      const exported = document.animations ?? [];
+      const names = exported.flatMap((animation) =>
+        typeof animation.name === 'string' ? [animation.name] : [],
+      );
+      expect(new Set(names).size, 'exported animation names are unique').toBe(names.length);
+      const nodes = document.nodes ?? [];
+      const hotspotMeshes = new Set(
+        nodes
+          .filter(
+            (node): node is GlbNode & { name: string } =>
+              typeof node.mesh === 'number' && typeof node.name === 'string',
+          )
+          .map((node) => node.name),
+      );
+      expect(hotspotMeshes, 'named hotspot meshes match the manifest').toEqual(
+        new Set(lesson.manifestIds),
+      );
+
+      // Every exported clip binds to a named hotspot mesh; no ambient-only clips.
+      for (const animation of exported) {
+        const channels = animation.channels ?? [];
+        expect(channels.length, `${animation.name} has channels`).toBeGreaterThan(0);
+        for (const channel of channels) {
+          const node = channel.target?.node;
+          expect(node, `${animation.name} target`).toBeGreaterThanOrEqual(0);
+          expect(node, `${animation.name} target`).toBeLessThan(nodes.length);
+        }
+        const targets = channels.flatMap((channel) => {
+          const node = channel.target?.node;
+          return node === undefined ? [] : [nodes[node]?.name ?? ''];
+        });
+        expect(
+          targets.some((name) => hotspotMeshes.has(name)),
+          `${animation.name} animates a named hotspot mesh`,
+        ).toBe(true);
+      }
+
+      const animations = lesson.animations;
+      if (!animations) {
+        return; // Animation metadata is optional; a static lesson is valid.
+      }
+      const clipIds = animations.clips.map((clip) => clip.id);
+      expect(new Set(clipIds).size, 'declared clip IDs are unique').toBe(clipIds.length);
+      for (const clip of animations.clips) {
+        const name = clip.name ?? clip.id;
+        expect(names.includes(name), `${clip.id} resolves GLB animation "${name}"`).toBe(true);
+        if (clip.duration !== undefined) {
+          expect(clip.duration, `${clip.id} duration`).toBeGreaterThan(0);
+        }
+      }
+
+      if (FULL_ANIMATION_LESSONS.has(lesson.id)) {
+        expect(animations.clips, `${lesson.id} authors six clips`).toHaveLength(6);
+        // Authored lessons keep the strict bijection: no missing or ambient clips.
+        expect(names.toSorted(), `${lesson.id} has no undeclared ambient clip`).toEqual(
+          animations.clips.map((clip) => clip.name ?? clip.id).toSorted(),
+        );
+        for (const clip of animations.clips) {
+          expect(clip.name, `${clip.id} has a GLB animation name`).toBeTruthy();
+          expect(clip.duration, `${clip.id} duration`).toBeGreaterThan(0);
+        }
+      }
+    });
+
+    it('validates declared triggers without requiring full coverage', () => {
+      expect(() => validateDeclaredTriggers(lesson.manifestIds, lesson.animations)).not.toThrow();
+      const animations = lesson.animations;
+      if (!animations || !FULL_ANIMATION_LESSONS.has(lesson.id)) {
+        return;
+      }
+      expect(animations.triggers.map((trigger) => trigger.hotspot).toSorted()).toEqual(
+        lesson.manifestIds,
+      );
+      const clipIds = new Set(animations.clips.map((clip) => clip.id));
+      expect(new Set(animations.triggers.map((trigger) => trigger.clip))).toEqual(clipIds);
+      for (const trigger of animations.triggers) {
+        expect(clipIds.has(trigger.clip), `${trigger.hotspot} -> ${trigger.clip}`).toBe(true);
+      }
+    });
+
+    it('exports no cameras or punctual lights', () => {
+      const document = glbJson(lesson.glbBytes);
+      expect(document.cameras ?? []).toHaveLength(0);
+      expect(document.extensionsUsed ?? []).not.toContain('KHR_lights_punctual');
+      for (const node of document.nodes ?? []) {
+        expect(node.camera, `${node.name} camera`).toBeUndefined();
+        expect(node.extensions?.KHR_lights_punctual, `${node.name} light`).toBeUndefined();
+      }
+    });
+
     it('frames the whole GLB with margin at rest and when any hotspot is focused', () => {
       const document = glbJson(lesson.glbBytes);
       const boxes = (document.nodes ?? [])
@@ -289,24 +438,118 @@ describe('live lesson GLB ↔ manifest contracts', () => {
       const bounds = overallBounds(boxes);
       const modelHeight = bounds.max[1] - bounds.min[1];
 
-      expect(
-        viewHeight(lesson.camera, lesson.target, lesson.fov) / modelHeight,
-      ).toBeGreaterThanOrEqual(1.2);
-      expect(maxVerticalNdc(lesson.camera, lesson.target, lesson.fov, bounds)).toBeLessThanOrEqual(
-        1,
-      );
+      const restRatio = viewHeight(lesson.camera, lesson.target, lesson.fov) / modelHeight;
+      expect(restRatio).toBeGreaterThanOrEqual(1.2);
+      const baselineRatio =
+        lesson.id === 'heart' ? 1.5077 : lesson.id === 'earth-interior' ? 2.5257 : undefined;
+      if (baselineRatio !== undefined) {
+        expect(restRatio, `${lesson.id} presence exceeds the phase-1 baseline`).toBeLessThan(
+          baselineRatio - 0.05,
+        );
+      }
 
+      const poses: { label: string; camera: Vec3; target: Vec3 }[] = [
+        { label: 'rest', camera: lesson.camera, target: lesson.target },
+      ];
       for (const [id, hotspot] of lesson.positions) {
         const pose = focusPose(lesson.camera, lesson.target, hotspot);
+        poses.push({ label: id, camera: pose.camera, target: pose.target });
+      }
+
+      for (const pose of poses) {
         expect(
           viewHeight(pose.camera, pose.target, lesson.fov) / modelHeight,
-          `view height for ${id}`,
+          `view height for ${pose.label}`,
         ).toBeGreaterThanOrEqual(1.2);
-        expect(
-          maxVerticalNdc(pose.camera, pose.target, lesson.fov, bounds),
-          `vertical framing for ${id}`,
-        ).toBeLessThanOrEqual(1);
+        for (const aspect of Object.values(VIEWPORT_ASPECTS)) {
+          const framed = projectedBounds(pose.camera, pose.target, lesson.fov, aspect, bounds);
+          expect(
+            framed.vertical,
+            `vertical framing for ${pose.label} at aspect ${aspect}`,
+          ).toBeLessThanOrEqual(1);
+          expect(
+            framed.horizontal,
+            `horizontal framing for ${pose.label} at aspect ${aspect}`,
+          ).toBeLessThanOrEqual(1);
+        }
       }
     });
+
+    it('keeps responsive camera poses safe at the target page aspect ratios', () => {
+      const document = glbJson(lesson.glbBytes);
+      const boxes = (document.nodes ?? [])
+        .filter((node): node is GlbNode & { mesh: number } => typeof node.mesh === 'number')
+        .map((node) => meshBounds(document, node));
+      expect(boxes.length).toBeGreaterThan(0);
+      const bounds = overallBounds(boxes);
+      // The runtime feeds the canvas aspect to responsivePose; cover the exact
+      // desktop and mobile page ratios used by the acceptance pass.
+      const pageAspects = {
+        '1024x768': 1024 / 768,
+        '1280x800': 1280 / 800,
+        '390x844': 390 / 844,
+      } as const;
+      const hotspots: (Vec3 | null)[] = [null, ...lesson.positions.values()];
+      for (const [label, aspect] of Object.entries(pageAspects)) {
+        for (const [index, hotspot] of hotspots.entries()) {
+          const pose = responsivePose(lesson.camera, lesson.target, hotspot, lesson.fov, aspect);
+          const framed = projectedBounds(pose.camera, pose.target, lesson.fov, aspect, bounds);
+          expect(
+            framed.vertical,
+            `${lesson.id} ${label} vertical pose ${index}`,
+          ).toBeLessThanOrEqual(1);
+          expect(
+            framed.horizontal,
+            `${lesson.id} ${label} horizontal pose ${index}`,
+          ).toBeLessThanOrEqual(1);
+        }
+      }
+    });
+  });
+});
+
+describe('declared animation validation', () => {
+  const hotspots = ['first', 'second'];
+  const declarations: LessonAnimations = {
+    clips: [{ id: 'gentle_pulse', name: 'SyntheticPulse', duration: 0.5 }, { id: 'settle' }],
+    triggers: [
+      { hotspot: 'first', clip: 'gentle_pulse' },
+      { hotspot: 'second', clip: 'settle' },
+    ],
+  };
+
+  it('parses clips with an omitted name and duration', () => {
+    const block =
+      '  clips:\n    - id: settle\n  triggers:\n    - hotspot: first\n      clip: settle\n';
+    expect(parseDeclaredAnimations(block).clips).toEqual([{ id: 'settle' }]);
+    expect(parseDeclaredAnimations(block).triggers).toEqual([{ hotspot: 'first', clip: 'settle' }]);
+  });
+
+  it('accepts lessons without animation metadata', () => {
+    expect(() => validateDeclaredTriggers(hotspots, null)).not.toThrow();
+  });
+
+  it('accepts a valid subset of hotspot triggers', () => {
+    const subset: LessonAnimations = {
+      clips: declarations.clips,
+      triggers: [declarations.triggers[0]],
+    };
+    expect(() => validateDeclaredTriggers(hotspots, subset)).not.toThrow();
+  });
+
+  it('rejects a trigger referencing an undeclared clip', () => {
+    const invalid: LessonAnimations = {
+      clips: declarations.clips,
+      triggers: [{ hotspot: 'first', clip: 'missing_clip' }],
+    };
+    expect(() => validateDeclaredTriggers(hotspots, invalid)).toThrow(/unknown clip/);
+  });
+
+  it('rejects a trigger referencing an undeclared hotspot', () => {
+    const invalid: LessonAnimations = {
+      clips: declarations.clips,
+      triggers: [{ hotspot: 'missing', clip: 'settle' }],
+    };
+    expect(() => validateDeclaredTriggers(hotspots, invalid)).toThrow(/unknown hotspot/);
   });
 });

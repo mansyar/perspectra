@@ -8,9 +8,9 @@ model:
   src: /assets/earth-interior/earth.glb
   poster: /assets/earth-interior/earth-poster.webp
 camera:
-  position: [4.2, 2.2, 4.8]
-  target: [0, 0, 0]
-  fov: 42
+  position: [4.2, 1.6, 3.6]
+  target: [0, -0.1, 0]
+  fov: 38
 hotspots:
   - id: crust
     label: Crust
@@ -30,6 +30,39 @@ hotspots:
   - id: lithosphere
     label: Lithosphere
     position: [-0.82, 0.58, 0.56]
+animations:
+  clips:
+    - id: crust_shift
+      name: CrustShift
+      duration: 0.5
+    - id: upper_mantle_flow
+      name: UpperMantleFlow
+      duration: 0.5
+    - id: lower_mantle_flow
+      name: LowerMantleFlow
+      duration: 0.5
+    - id: outer_core_convection
+      name: OuterCoreConvection
+      duration: 0.5
+    - id: inner_core_pulse
+      name: InnerCorePulse
+      duration: 0.5
+    - id: lithosphere_drift
+      name: LithosphereDrift
+      duration: 0.5
+  triggers:
+    - hotspot: crust
+      clip: crust_shift
+    - hotspot: upper_mantle
+      clip: upper_mantle_flow
+    - hotspot: lower_mantle
+      clip: lower_mantle_flow
+    - hotspot: outer_core
+      clip: outer_core_convection
+    - hotspot: inner_core
+      clip: inner_core_pulse
+    - hotspot: lithosphere
+      clip: lithosphere_drift
 ---
 
 Earth is not a uniform ball of rock. A thin crust surrounds a thick silicate mantle, which in turn

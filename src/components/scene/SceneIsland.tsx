@@ -30,6 +30,7 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
   const [attempt, setAttempt] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [animation, setAnimation] = useState({ clip: '', run: 0 });
 
   const forcedFailures = (() => {
     if (typeof window === 'undefined') {
@@ -41,6 +42,9 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
   })();
 
   const handleReady = useCallback(() => setReady(true), []);
+  const handleAnimation = useCallback((clip: string) => {
+    setAnimation((current) => ({ clip, run: current.run + 1 }));
+  }, []);
 
   useEffect(() => setHydrated(true), []);
 
@@ -108,6 +112,8 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
     <div
       className="scene-island"
       data-active-hotspot={activeHotspot ?? ''}
+      data-animation-clip={animation.clip}
+      data-animation-run={animation.run}
       data-scene-hydrated={hydrated ? 'true' : 'false'}
       data-motion={reducedMotion ? 'reduced' : 'full'}
       data-renderer={tier}
@@ -122,6 +128,7 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
         />
         {(tier === 'webgpu' || tier === 'webgl') && !interactive && (
           <button
+            aria-describedby="scene-guidance"
             className="scene-island__start"
             onClick={() => setInteractive(true)}
             type="button"
@@ -136,6 +143,7 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
                 failRender={attempt < forcedFailures}
                 manifest={manifest}
                 modelSrc={modelSrc}
+                onAnimation={handleAnimation}
                 onReady={handleReady}
                 reducedMotion={reducedMotion}
                 tier={tier}
@@ -162,7 +170,16 @@ export function SceneIsland({ manifest, modelSrc }: SceneIslandProps) {
           </p>
         )}
       </div>
-      <div aria-label="Scene landmarks" className="scene-island__hotspots" role="group">
+      <p className="scene-island__guidance" data-testid="scene-guidance" id="scene-guidance">
+        Select a landmark below, or a highlighted structure in the model, to focus the scene. Scroll
+        the lesson text to read about each landmark.
+      </p>
+      <div
+        aria-describedby="scene-guidance"
+        aria-label="Scene landmarks"
+        className="scene-island__hotspots"
+        role="group"
+      >
         {manifest.hotspots.map((hotspot) => (
           <button
             aria-pressed={activeHotspot === hotspot.id}

@@ -1,7 +1,11 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type ConsoleMessage, type Page } from '@playwright/test';
 
-const AUDITED_PATHS = ['/', '/lessons/heart/', '/verify/'] as const;
+const AUDITED_PATHS = ['/', '/lessons/heart/', '/lessons/earth-interior/', '/verify/'] as const;
+const LESSON_STAGES = [
+  { path: '/lessons/heart/', reducedMotionHotspot: 'mitral_valve' },
+  { path: '/lessons/earth-interior/', reducedMotionHotspot: 'inner_core' },
+] as const;
 const TRIVIALLY_FIXABLE_RULES = new Set([
   'button-name',
   'color-contrast',
@@ -149,15 +153,82 @@ test(
   },
 );
 
-test(
-  'reduced motion keeps prose and hotspot binding usable',
-  { tag: '@a11y' },
-  async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/lessons/heart/');
-    await expect(page.locator('.scene-island')).toHaveAttribute('data-motion', 'reduced');
-    await page.locator('[data-hotspot-button="mitral_valve"]').click();
-    await expect(page.locator('[data-hotspot="mitral_valve"]')).toHaveClass(/is-active/);
-    await expect(page.locator('.prose')).toBeVisible();
-  },
-);
+for (const stage of LESSON_STAGES) {
+  test(
+    `reduced motion keeps prose and hotspot binding usable on ${stage.path}`,
+    { tag: '@a11y' },
+    async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto(stage.path);
+      await expect(page.locator('.scene-island')).toHaveAttribute('data-motion', 'reduced');
+      await page.locator(`[data-hotspot-button="${stage.reducedMotionHotspot}"]`).click();
+      await expect(page.locator(`[data-hotspot="${stage.reducedMotionHotspot}"]`)).toHaveClass(
+        /is-active/,
+      );
+      await expect(page.locator('.prose')).toBeVisible();
+      await expect(page.locator('.scene-island')).toHaveAttribute('data-animation-run', '0');
+    },
+  );
+}
+
+for (const stage of LESSON_STAGES) {
+  test(`guidance is announced by controls on ${stage.path}`, { tag: '@a11y' }, async ({ page }) => {
+    await page.goto(stage.path);
+    const guidance = page.getByTestId('scene-guidance');
+    await expect(guidance).toBeVisible();
+    const text = (await guidance.textContent()) ?? '';
+    expect(text).toMatch(/select a landmark/i);
+    expect(text).toMatch(/scroll/i);
+    expect(text).not.toMatch(/drag|orbit|pinch|rotate|zoom/i);
+    await expect(page.locator('.scene-island__hotspots')).toHaveAttribute(
+      'aria-describedby',
+      'scene-guidance',
+    );
+    await expect(page.locator('.scene-island__start')).toHaveAttribute(
+      'aria-describedby',
+      'scene-guidance',
+    );
+
+    const button = await tabUntil(page, (info) => info.hotspotButton !== null);
+    expect(button?.outline).not.toBe('none');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.scene-island')).toHaveAttribute(
+      'data-active-hotspot',
+      button?.hotspotButton ?? '',
+    );
+    expect((await focusInfo(page)).outline).not.toBe('none');
+  });
+}
+
+/** Static preview has no API routes; only those expected 404s are ignored. */
+function isExpectedStaticApi404(message: ConsoleMessage): boolean {
+  if (!message.text().includes('404')) return false;
+  try {
+    return new URL(message.location().url).pathname.startsWith('/api/');
+  } catch {
+    return false;
+  }
+}
+
+test('lesson stages load without unexpected console errors', { tag: '@a11y' }, async ({ page }) => {
+  for (const stage of LESSON_STAGES) {
+    const errors: string[] = [];
+    const onConsole = (message: ConsoleMessage): void => {
+      if (message.type() !== 'error' || isExpectedStaticApi404(message)) return;
+      errors.push(`console: ${message.text()}`);
+    };
+    const onPageError = (error: Error): void => {
+      errors.push(`page: ${error.message}`);
+    };
+    page.on('console', onConsole);
+    page.on('pageerror', onPageError);
+    try {
+      await page.goto(stage.path);
+      await expect(page.locator('.scene-island')).toHaveAttribute('data-scene-hydrated', 'true');
+      expect(errors, `${stage.path}: ${errors.join('\n')}`).toEqual([]);
+    } finally {
+      page.off('console', onConsole);
+      page.off('pageerror', onPageError);
+    }
+  }
+});
